@@ -1,4 +1,6 @@
-# Pixlink
+# Pixlink 
+
+Website: https://fatalquackers.github.io/pixlink/ 
 
 **Your Pixel, on your Windows PC.** Pixlink is a free, open-source companion app that links a Google Pixel phone to a Windows PC: notifications and texts, screen mirroring with control, one-click hotspot, calls through your PC, your photo gallery and your phone's files.
 
@@ -37,17 +39,6 @@ Full details: [docs/PROTOCOL.md](docs/PROTOCOL.md).
 
 ## Building
 
-### Android
-1. Install [Android Studio](https://developer.android.com/studio) (Ladybug or newer).
-2. Open the `android/` folder. Let Gradle sync.
-3. Plug in your Pixel with USB debugging on and press **Run**.
-
-### Windows
-1. Install [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **Windows application development** workload (includes Windows App SDK).
-2. Open `windows/Pixlink.sln`.
-3. Set the platform to **x64** and press **F5**.
-4. Allow Pixlink through Windows Firewall on private networks when asked.
-
 ## Status
 
 Early development — the code is scaffolded and the core flow (pairing → notifications → mirroring) is the first thing to get working on real hardware. See open issues and the project tracker.
@@ -58,9 +49,9 @@ PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support the project
 
-Pixlink is free forever. If it helps you, consider sponsoring development (link coming soon).
+Pixlink is free forever. If it helps you, consider sponsoring development
 
-Website: https://fatalquackers.github.io/pixlink/ (after GitHub Pages is turned on)
+Website: https://fatalquackers.github.io/pixlink/ 
 
 ## License
 
