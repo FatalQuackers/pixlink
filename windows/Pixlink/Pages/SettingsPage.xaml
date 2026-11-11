@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Pixlink.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Padding="24" Spacing="8" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,12" />
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Show phone notifications on this PC" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="Pop-ups with quick reply for texts" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="ToastsSwitch" HorizontalAlignment="Right" Toggled="OnToggle" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Join hotspot automatically" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="When you turn on Hotspot, connect this PC to it" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="HotspotSwitch" HorizontalAlignment="Right" Toggled="OnToggle" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Security" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Everything travels directly between your phone and PC on your network, encrypted with TLS. No cloud, no account." />
+                    <TextBlock x:Name="FingerprintText" Style="{StaticResource CaptionTextBlockStyle}" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock x:Name="PhoneText" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="Unlink to pair a different phone" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <Button Content="Unlink phone" HorizontalAlignment="Right" Click="OnUnpair" />
+                </Grid>
+            </Border>
+
+            <TextBlock Margin="0,16,0,0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextWrapping="Wrap"
+                       Text="Pixlink 0.1.0 · Open source (MIT) · Not affiliated with Google or Microsoft." />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

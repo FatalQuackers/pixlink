@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Pixlink</string>
+    <string name="channel_link">Connection</string>
+    <string name="channel_mirror">Screen mirroring</string>
+</resources>

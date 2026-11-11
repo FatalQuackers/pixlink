@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Pixlink.Pages.FilesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:Pixlink.Models"
+    AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Padding="16,12">
+            <BreadcrumbBar x:Name="Crumbs" ItemClicked="OnCrumb" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button x:Name="DownloadButton" Click="OnDownload" IsEnabled="False">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE896;" FontSize="14" />
+                        <TextBlock Text="Save to PC" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnUpload">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE898;" FontSize="14" />
+                        <TextBlock Text="Send to phone" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <InfoBar x:Name="PowerBar" Grid.Row="1" Margin="16,0" Severity="Informational" IsClosable="True"
+                 Title="Want to browse everything?"
+                 Message="Turn on Power mode in the Pixlink phone app to see all storage. For now you can browse the folders you shared." />
+
+        <ListView x:Name="FileList" Grid.Row="2" SelectionMode="Extended" IsItemClickEnabled="True"
+                  ItemClick="OnItemClick" SelectionChanged="OnSelection">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:FileEntry">
+                    <Grid ColumnSpacing="12" Padding="0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="90" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind SizeText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <ProgressRing x:Name="Loading" Grid.Row="2" IsActive="False" />
+        <TextBlock x:Name="EmptyText" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380" TextAlignment="Center"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Grid>
+</Page>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixlink — your Pixel on your Windows PC</title>
+<meta name="description" content="Pixlink is a free, open-source app that links your Google Pixel to your Windows PC: notifications, texts, calls, photos, files, screen mirroring and hotspot.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233D7BFF'/%3E%3Crect x='16' y='13' width='17' height='38' rx='4' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M39 26q5 6 0 12M44 21q10 11 0 22' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #E8EEF8;        /* page */
+    --paper: #FFFFFF;      /* surfaces */
+    --navy: #16213A;       /* ink */
+    --slate: #4A5675;      /* secondary ink */
+    --blue: #3D7BFF;       /* brand */
+    --blue-deep: #2557D6;  /* brand on light, hover */
+    --mint: #C9F0DE;       /* connected */
+    --line: #CDD7EA;
+    --display: "Familjen Grotesk", system-ui, sans-serif;
+    --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--sky); color: var(--navy);
+    font: 18px/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--blue-deep); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+
+  /* Header */
+  header { padding: 22px 0; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy);
+    font: 700 22px/1 var(--display); letter-spacing: -0.01em; }
+  nav { display: flex; gap: 28px; font-size: 16px; }
+  nav a { color: var(--slate); text-decoration: none; }
+  nav a:hover { color: var(--navy); }
+
+  /* Hero */
+  .hero { padding: 48px 0 96px; }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0,0.8fr) minmax(0,1.2fr); gap: 48px; align-items: center; }
+  h1 {
+    font: 700 clamp(46px, 5.6vw, 76px)/0.98 var(--display);
+    letter-spacing: -0.035em; margin: 0 0 24px;
+  }
+  .lede { font-size: 20px; color: var(--slate); max-width: 30em; margin: 0 0 32px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font: 600 17px/1 var(--display); text-decoration: none;
+    padding: 16px 22px; border-radius: 999px; border: 2px solid var(--navy);
+    color: var(--navy); background: transparent;
+  }
+  .btn.primary { background: var(--navy); color: var(--paper); }
+  .btn.primary:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+  .btn:not(.primary):hover { background: var(--paper); }
+  .fine { margin-top: 18px; font-size: 15px; color: var(--slate); }
+
+  /* Hero scene: phone + PC window */
+  .scene { position: relative; height: 520px; }
+  .pc {
+    position: absolute; right: 0; top: 30px; width: calc(100% - 150px); height: 420px;
+    background: #F7F9FD; border-radius: 14px; border: 1px solid var(--line);
+    box-shadow: 0 30px 60px -30px rgba(22,33,58,.35);
+    overflow: hidden; display: grid; grid-template-rows: 36px 1fr;
+  }
+  .pc-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+    font: 600 13px/1 var(--display); color: var(--slate); }
+  .pc-bar .dots { display: flex; gap: 16px; color: #8892AB; font-size: 12px; }
+  .pc-body { display: grid; grid-template-columns: 41% 1fr; gap: 10px; padding: 4px 10px 10px; min-height: 0; }
+  .panel { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .phone-card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    display: flex; gap: 12px; align-items: center; }
+  .mini-phone { width: 24px; height: 40px; border: 2px solid var(--slate); border-radius: 6px; flex: none; }
+  .phone-card b { display: block; font: 600 15px/1.2 var(--display); }
+  .phone-card span { font-size: 12px; color: var(--slate); }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2BB673; margin-right: 5px; vertical-align: 1px; }
+  .panel h4 { margin: 6px 2px 0; font: 600 13px/1 var(--display); }
+  .notif { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; font-size: 12px; line-height: 1.35; }
+  .notif .app { color: var(--slate); font-size: 11px; }
+  .notif b { display: block; font-size: 13px; }
+  .notif.new { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(61,123,255,.15); }
+  .tabs-area { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+  .tabs { display: flex; gap: 12px; padding: 11px 12px 0; white-space: nowrap; overflow: hidden; font: 600 12px/1 var(--display); color: var(--slate); }
+  .tabs span { padding-bottom: 9px; }
+  .tabs .on { color: var(--navy); border-bottom: 2px solid var(--blue); }
+  .thread { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--line); }
+  .bubble { max-width: 78%; padding: 8px 12px; border-radius: 14px; font-size: 13px; background: #EEF2F9; }
+  .bubble.me { align-self: flex-end; background: var(--blue); color: white; }
+  .reply { margin: 0 14px 14px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 12px; color: #8892AB; }
+
+  .pixel {
+    position: absolute; left: 0; bottom: 0; width: 168px; height: 350px;
+    background: var(--navy); border-radius: 34px; padding: 10px;
+    box-shadow: 0 30px 50px -20px rgba(22,33,58,.5);
+    z-index: 2;
+  }
+  .pixel-screen { width: 100%; height: 100%; border-radius: 26px; overflow: hidden;
+    background: linear-gradient(180deg, #DCE6FF 0%, #F2E8FF 100%); position: relative; padding: 34px 12px 12px; }
+  .pixel-screen::before { content: ""; position: absolute; top: 12px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--navy); }
+  .clock { font: 500 38px/1 var(--display); letter-spacing: -0.03em; color: var(--navy); margin: 10px 4px 2px; }
+  .date { font-size: 12px; color: var(--slate); margin: 0 4px 18px; }
+  .phone-notif { background: rgba(255,255,255,.9); border-radius: 16px; padding: 10px 12px; font-size: 12px; line-height: 1.35; }
+  .phone-notif b { display: block; font-size: 13px; }
+  .phone-notif .app { color: var(--slate); font-size: 11px; }
+
+  /* The one orchestrated moment: a message leaves the phone and lands on the PC. */
+  .flyer { position: absolute; z-index: 3; width: 146px; left: 12px; top: 268px; pointer-events: none;
+    background: var(--paper); border: 1px solid var(--blue); border-radius: 12px; padding: 9px 11px; font-size: 12px; line-height: 1.35;
+    opacity: 0; }
+  .flyer b { display: block; font-size: 13px; }
+  .landed { opacity: 0; transform: translateY(-6px); transition: opacity .35s ease, transform .35s ease; }
+  .landed.in { opacity: 1; transform: none; }
+  @keyframes fly {
+    0%   { opacity: 0; transform: translate(0, 0) scale(.96); }
+    12%  { opacity: 1; transform: translate(0, 0) scale(1); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--fx), var(--fy)) scale(.95); }
+  }
+  .flyer.go { animation: fly 1.3s cubic-bezier(.6,.05,.3,1) .7s both; }
+  @media (prefers-reduced-motion: reduce) {
+    .flyer { display: none; }
+    .landed { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* Sections */
+  section { padding: 88px 0; }
+  h2 { font: 700 clamp(34px, 4vw, 52px)/1.04 var(--display); letter-spacing: -0.03em; margin: 0 0 18px; max-width: 16em; }
+  .intro { color: var(--slate); max-width: 36em; margin: 0 0 44px; font-size: 19px; }
+
+  /* Features table: real information, so it's a table. */
+  .features { background: var(--paper); }
+  table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  th { text-align: left; font: 600 16px/1.3 var(--display); color: var(--slate); padding: 0 20px 16px 0; border-bottom: 2px solid var(--navy); }
+  td { padding: 22px 20px 22px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font: 600 21px/1.3 var(--display); width: 26%; white-space: nowrap; }
+  td:first-child svg { width: 22px; height: 22px; vertical-align: -4px; margin-right: 10px; color: var(--blue); }
+  .power-col { color: var(--slate); }
+  .power-col .tag { display: inline-block; font-size: 13px; font-weight: 700; background: var(--mint); color: #145C3E; padding: 2px 9px; border-radius: 999px; margin-right: 6px; }
+  .none { color: #A0A9C0; }
+
+  /* Steps: genuinely a sequence */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  .steps li { counter-increment: s; border-top: 2px solid var(--navy); padding-top: 22px; }
+  .steps li::before { content: counter(s); display: block; font: 700 64px/1 var(--display); color: var(--blue); letter-spacing: -0.04em; margin-bottom: 14px; }
+  .steps h3 { font: 600 24px/1.2 var(--display); margin: 0 0 8px; }
+  .steps p { margin: 0; color: var(--slate); }
+
+  /* Privacy */
+  .privacy { background: var(--navy); color: #E7ECF7; }
+  .privacy .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 64px; align-items: center; }
+  .privacy h2 { color: white; }
+  .privacy p { color: #B9C3DB; font-size: 19px; max-width: 32em; }
+  .privacy a { color: #9EBEFF; }
+  .link-diagram { width: 100%; height: auto; }
+
+  /* Power mode */
+  .power .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  .power ul { margin: 0; padding: 0; list-style: none; }
+  .power li { padding: 16px 0; border-bottom: 1px solid var(--line); display: flex; gap: 14px; }
+  .power li svg { flex: none; width: 22px; height: 22px; color: var(--blue); margin-top: 3px; }
+
+  /* FAQ */
+  details { border-bottom: 1px solid var(--line); padding: 20px 0; max-width: 46em; }
+  summary { cursor: pointer; font: 600 21px/1.3 var(--display); list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-weight: 500; color: var(--blue); font-size: 26px; line-height: 1; }
+  details[open] summary::after { content: "−"; }
+  details p { color: var(--slate); margin: 12px 0 0; }
+
+  footer { padding: 48px 0 64px; font-size: 15px; color: var(--slate); border-top: 1px solid var(--line); }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+
+  @media (max-width: 920px) {
+    .pc { width: calc(100% - 120px); }
+    .hero .wrap, .privacy .wrap, .power .wrap { grid-template-columns: 1fr; }
+    .scene { height: 470px; max-width: 560px; }
+    .steps { grid-template-columns: 1fr; gap: 32px; }
+    nav a:not(.gh) { display: none; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 17px; }
+    .scene { height: 420px; }
+    .pc { width: 100%; top: 0; height: 300px; }
+    .pc-body { grid-template-columns: 1fr; }
+    .tabs-area { display: none; }
+    .pixel { width: 140px; height: 280px; border-radius: 28px; }
+    .clock { font-size: 34px; }
+    .flyer { display: none; }
+    .landed { opacity: 1; transform: none; }
+    td:first-child { white-space: normal; font-size: 18px; }
+    th:nth-child(3), td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#3D7BFF"/><rect x="16" y="13" width="17" height="38" rx="4" fill="none" stroke="white" stroke-width="4"/><path d="M39 26q5 6 0 12M44 21q10 11 0 22" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>
+      Pixlink
+    </a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#setup">Set up</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a class="gh repo-link" href="https://github.com/">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <h1 id="hero-title">Your Pixel, on your Windows PC.</h1>
+        <p class="lede">Read and reply to texts, take calls, grab photos, move files and use your phone's screen without picking it up. Free and open source.</p>
+        <div class="actions">
+          <a class="btn primary repo-link" href="https://github.com/">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Get Pixlink on GitHub
+          </a>
+          <a class="btn" href="#setup">See how setup works</a>
+        </div>
+        <p class="fine">For Google Pixel phones (Android 13+) and Windows 10 or 11.</p>
+      </div>
+
+      <div class="scene" id="scene" aria-label="A Pixel phone showing a text message, which also appears in the Pixlink window on a PC" role="img">
+        <div class="pc">
+          <div class="pc-bar"><span>Pixlink</span><span class="dots"><span>—</span><span>☐</span><span>✕</span></span></div>
+          <div class="pc-body">
+            <div class="panel">
+              <div class="phone-card">
+                <div class="mini-phone"></div>
+                <div><b>Pixel 9</b><span><i class="status-dot"></i>Connected, 82%</span></div>
+              </div>
+              <h4>Notifications</h4>
+              <div class="notif new landed" id="landed">
+                <div class="app">Messages, now</div>
+                <b>Maya</b>Dinner at 7? I booked the noodle place
+              </div>
+              <div class="notif">
+                <div class="app">Calendar, 9:40</div>
+                <b>Dentist tomorrow</b>10:30 at Park Street
+              </div>
+              <div class="notif">
+                <div class="app">Gmail, 9:12</div>
+                <b>Your parcel is out for delivery</b>Arriving today by 6 pm
+              </div>
+            </div>
+            <div class="tabs-area">
+              <div class="tabs"><span class="on">Messages</span><span>Calls</span><span>Photos</span><span>Files</span><span>Screen</span></div>
+              <div class="thread">
+                <div class="bubble">Are you still free tonight?</div>
+                <div class="bubble me">Yes! What time?</div>
+                <div class="bubble landed" id="landed2">Dinner at 7? I booked the noodle place</div>
+              </div>
+              <div class="reply">Send a message</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pixel">
+          <div class="pixel-screen">
+            <div class="clock">9:41</div>
+            <div class="date">Thursday 12 November</div>
+            <div class="phone-notif">
+              <div class="app">Messages</div>
+              <b>Maya</b>Dinner at 7? I booked the noodle place
+            </div>
+          </div>
+        </div>
+
+        <div class="flyer" id="flyer" aria-hidden="true"><b>Maya</b>Dinner at 7? I booked the noodle place</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <h2 id="features-title">Texts, calls, photos and your screen, all on your PC.</h2>
+      <p class="intro">Every feature works straight away. Turn on the optional Power mode for the extras Android normally keeps for system apps.</p>
+      <table>
+        <thead><tr><th scope="col">Feature</th><th scope="col">Works for everyone</th><th scope="col">Power mode adds</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>Texts</td>
+            <td>See notifications and reply to SMS, RCS and chat apps from your PC. Open Google Messages for Web for full history.</td>
+            <td class="power-col none">Nothing extra needed</td>
+          </tr>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/></svg>Screen</td>
+            <td>See your phone screen live on your PC.</td>
+            <td class="power-col">Tap, type and scroll with your mouse and keyboard</td>
+          </tr>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="15" r="1.5"/></svg>Hotspot</td>
+            <td>One tap opens your phone's hotspot switch, and your PC joins by itself.</td>
+            <td class="power-col">Turn the hotspot on and off from your PC</td>
+          </tr>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Calls</td>
+            <td>Dial from your PC, pick from your contacts, and talk through your PC's speakers and mic over Bluetooth.</td>
+            <td class="power-col">Recent calls list</td>
+          </tr>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/></svg>Photos</td>
+            <td>Browse your whole gallery and save any photo to your PC.</td>
+            <td class="power-col none">Nothing extra needed</td>
+          </tr>
+          <tr>
+            <td><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/></svg>Files</td>
+            <td>Drag files to your phone, and browse the folders you choose to share.</td>
+            <td class="power-col">Browse all of your phone's storage</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="setup" aria-labelledby="setup-title">
+    <div class="wrap">
+      <h2 id="setup-title">Linked in about a minute.</h2>
+      <p class="intro">No account to create. Your phone and PC just need to be on the same Wi-Fi.</p>
+      <ol class="steps">
+        <li>
+          <h3>Install both apps</h3>
+          <p>Get Pixlink for Windows and the Pixlink app for your Pixel.</p>
+        </li>
+        <li>
+          <h3>Scan the code</h3>
+          <p>Open Pixlink on your PC. It shows a QR code. Scan it with the Pixlink app on your phone.</p>
+        </li>
+        <li>
+          <h3>Allow access</h3>
+          <p>Give Pixlink notification access and the permissions for calls and photos. That's it.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="privacy" id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <div>
+        <h2 id="privacy-title">Your messages never leave your home network.</h2>
+        <p>Pixlink talks straight from your phone to your PC over your Wi-Fi, encrypted with TLS. There's no Pixlink server, no account and no tracking. Your phone and PC check each other's security certificate every time they connect.</p>
+        <p>The code is public, so anyone can check exactly what it does. <a class="repo-link" href="https://github.com/">Read the source on GitHub</a>.</p>
+      </div>
+      <svg class="link-diagram" viewBox="0 0 420 220" role="img" aria-label="Phone and PC connected directly by an encrypted link, with no cloud in between">
+        <rect x="20" y="40" width="80" height="150" rx="16" fill="none" stroke="#E7ECF7" stroke-width="3"/>
+        <rect x="250" y="50" width="150" height="100" rx="10" fill="none" stroke="#E7ECF7" stroke-width="3"/>
+        <path d="M300 150v22m-30 0h90" stroke="#E7ECF7" stroke-width="3" stroke-linecap="round"/>
+        <path d="M110 115h130" stroke="#3D7BFF" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+        <rect x="157" y="98" width="36" height="32" rx="6" fill="#16213A" stroke="#9EBEFF" stroke-width="2.5"/>
+        <path d="M165 98v-8a10 10 0 0 1 20 0v8" fill="none" stroke="#9EBEFF" stroke-width="2.5"/>
+        <text x="60" y="215" text-anchor="middle" fill="#B9C3DB" font-family="Atkinson Hyperlegible, sans-serif" font-size="14">Your Pixel</text>
+        <text x="325" y="200" text-anchor="middle" fill="#B9C3DB" font-family="Atkinson Hyperlegible, sans-serif" font-size="14">Your PC</text>
+        <text x="175" y="160" text-anchor="middle" fill="#9EBEFF" font-family="Atkinson Hyperlegible, sans-serif" font-size="14">Same Wi-Fi, encrypted</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="power" id="power" aria-labelledby="power-title">
+    <div class="wrap">
+      <div>
+        <h2 id="power-title">Power mode, when you want more.</h2>
+        <p class="intro">Android only lets system apps control the hotspot or tap the screen. Power mode uses the free, open-source Shizuku app to let Pixlink do these things too, without rooting your phone. It takes about 3 minutes to set up, once.</p>
+        <a class="btn repo-link-power" href="https://github.com/">Read the Power mode guide</a>
+      </div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>Control your phone with your mouse and keyboard</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>Switch the hotspot on and off from your PC</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>See your recent calls</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>Browse every folder on your phone</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg><span>Start screen sharing from your PC without touching your phone</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <h2 id="faq-title">Questions</h2>
+      <details>
+        <summary>Is Pixlink made by Google or Microsoft?</summary>
+        <p>No. Pixlink is an independent open-source project. It isn't affiliated with or endorsed by Google or Microsoft.</p>
+      </details>
+      <details>
+        <summary>Does it work with Samsung or other Android phones?</summary>
+        <p>Not right now. Pixlink is built and tested for Google Pixel phones running Android 13 or newer. Samsung phones already have Microsoft's Phone Link built in.</p>
+      </details>
+      <details>
+        <summary>Does it cost anything?</summary>
+        <p>No. Pixlink is free, with no ads. If it's useful to you, you can support development through GitHub Sponsors.</p>
+      </details>
+      <details>
+        <summary>Why do I have to confirm screen sharing on my phone?</summary>
+        <p>Android asks every time an app wants to share your screen. It's a security rule that no app can skip. With Power mode on, the prompt still appears, but your PC can open it for you.</p>
+      </details>
+      <details>
+        <summary>Can I see my full text history?</summary>
+        <p>Pixlink shows new messages as they arrive and lets you reply. For your full history, the Messages tab can open Google Messages for Web right inside Pixlink.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Pixlink is free and open source under the MIT license.</span>
+    <span>Not affiliated with Google or Microsoft. Pixel is a trademark of Google LLC.</span>
+  </div>
+</footer>
+
+<script>
+  // Set this once the GitHub repo exists.
+  const REPO_URL = "https://github.com/";
+  document.querySelectorAll(".repo-link").forEach(a => a.href = REPO_URL);
+  document.querySelectorAll(".repo-link-power").forEach(a => a.href = REPO_URL + "/blob/main/docs/POWER_MODE.md");
+
+  // The hero's one animated moment: the phone notification flies onto the PC.
+  (function () {
+    const scene = document.getElementById("scene");
+    const flyer = document.getElementById("flyer");
+    const target = document.getElementById("landed");
+    const extra = document.getElementById("landed2");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const land = () => { target.classList.add("in"); extra.classList.add("in"); };
+    if (reduce || getComputedStyle(flyer).display === "none") { land(); return; }
+    const s = scene.getBoundingClientRect(), f = flyer.getBoundingClientRect(), t = target.getBoundingClientRect();
+    flyer.style.setProperty("--fx", (t.left - f.left) + "px");
+    flyer.style.setProperty("--fy", (t.top - f.top) + "px");
+    flyer.classList.add("go");
+    flyer.addEventListener("animationend", land, { once: true });
+    setTimeout(land, 2600); // safety net
+  })();
+</script>
+</body>
+</html>
