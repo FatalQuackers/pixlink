@@ -180,7 +180,10 @@
   footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
 
   @media (max-width: 920px) {
-    .pc { width: calc(100% - 120px); }
+    .pc { width: calc(100% - 130px); }
+    .pixel { width: 136px; height: 290px; border-radius: 28px; }
+    .clock { font-size: 30px; }
+    .flyer { width: 116px; top: 220px; }
     .hero .wrap, .privacy .wrap, .power .wrap { grid-template-columns: 1fr; }
     .scene { height: 470px; max-width: 560px; }
     .steps { grid-template-columns: 1fr; gap: 32px; }
@@ -226,11 +229,11 @@
         <h1 id="hero-title">Your Pixel, on your Windows PC.</h1>
         <p class="lede">Read and reply to texts, take calls, grab photos, move files and use your phone's screen without picking it up. Free and open source.</p>
         <div class="actions">
-          <a class="btn primary repo-link" href="https://github.com/">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            Get Pixlink on GitHub
+          <a class="btn primary release-link" href="https://github.com/FatalQuackers/pixlink/releases/latest">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>
+            Download Pixlink
           </a>
-          <a class="btn" href="#setup">See how setup works</a>
+          <a class="btn install-link" href="https://github.com/FatalQuackers/pixlink#how-to-install">How to install</a>
         </div>
         <p class="fine">For Google Pixel phones (Android 13+) and Windows 10 or 11.</p>
       </div>
