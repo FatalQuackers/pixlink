@@ -92,6 +92,10 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.titleLarge,
                             )
                             if (link is LinkState.Error) Text((link as LinkState.Error).message, style = MaterialTheme.typography.bodySmall)
+                            val reason = LinkHub.lastDisconnectReason
+                            if (paired != null && link !is LinkState.Connected && reason != null) {
+                                Text("Last disconnect: $reason", style = MaterialTheme.typography.bodySmall)
+                            }
                             if (paired == null) Text("Open Pixlink on your PC and scan the QR code.", style = MaterialTheme.typography.bodyMedium)
                         }
                     }

@@ -23,6 +23,7 @@ import app.pixlink.status.StatusReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.put
@@ -103,9 +104,16 @@ class LinkService : LifecycleService() {
             LinkHub.client = client
             try {
                 client.run() // blocks until the connection ends
-                Log.i(TAG, "Connection closed")
+                LinkHub.lastDisconnectReason = client.closeReason ?: "Connection closed"
+                Log.i(TAG, "Connection closed: ${LinkHub.lastDisconnectReason}")
             } catch (e: Exception) {
-                Log.w(TAG, "Connection failed: ${e.message}")
+                LinkHub.lastDisconnectReason = when (e) {
+                    is javax.net.ssl.SSLHandshakeException -> "Security check failed: ${e.message}"
+                    is java.net.SocketTimeoutException -> "Couldn't reach $name at $host:$port. Same Wi-Fi? Firewall?"
+                    is java.net.ConnectException -> "$name refused the connection. Is Pixlink open on the PC?"
+                    else -> "${e.javaClass.simpleName}: ${e.message}"
+                }
+                Log.w(TAG, "Connection failed: ${LinkHub.lastDisconnectReason}", e)
                 if (e is javax.net.ssl.SSLHandshakeException) {
                     LinkHub.setState(LinkState.Error("Security check failed — re-pair with your PC"))
                 }
@@ -115,6 +123,8 @@ class LinkService : LifecycleService() {
                 status.stop()
             }
 
+            // A newer connect loop may have replaced this one; don't overwrite its state.
+            if (!currentCoroutineContext().isActive) return
             if (LinkHub.state.value !is LinkState.Error) LinkHub.setState(LinkState.Disconnected)
             updateNotification("Waiting for ${name}…")
             delay(backoffMs)

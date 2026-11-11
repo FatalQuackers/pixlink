@@ -45,6 +45,18 @@ Pixlink isn't on Google Play yet, so for now you install it from this page. It t
 2. On your Pixel, open Pixlink and tap **Scan QR code**, then point the camera at your screen.
 3. Done. Your notifications appear on your PC within a few seconds.
 
+### Try the phone app on your PC first (Android emulator)
+
+You can test the Android app without installing it on your phone, using Google's free Android emulator.
+
+1. Install [Android Studio](https://developer.android.com/studio) and open it.
+2. Click **More Actions → Virtual Device Manager → Create device**. Pick **Pixel 8**, then a system image with API 35, and click **Finish**. Press ▶ to start it.
+3. Drag **Pixlink-android.apk** onto the emulator window to install it.
+4. Open Pixlink on your PC and click **Copy link** under the QR code.
+5. In the emulator, open Pixlink, tap **Scan QR code**, then tap **Paste pairing link**. The emulator shares your PC's clipboard.
+
+The emulator has no real phone calls or photos, but pairing, notifications and screen mirroring all work.
+
 ### Optional extras
 
 - **Calls through your PC:** pair your phone with your PC in **Windows Settings → Bluetooth & devices → Add device**.
@@ -54,6 +66,7 @@ Pixlink isn't on Google Play yet, so for now you install it from this page. It t
 ### Troubleshooting
 
 - **Pixlink doesn't open on Windows:** download the newest release. If it still won't start, it shows an error and saves details to `%LOCALAPPDATA%\Pixlink\crash.log`; please attach that file to a [GitHub issue](https://github.com/FatalQuackers/pixlink/issues).
+- **It connects, then drops straight away:** update to the newest release on both phone and PC. The phone's home screen shows the reason for the last disconnect; please include it if you report a problem.
 - **The phone can't find the PC:** check both are on the same Wi-Fi (not a guest network), and that Pixlink is allowed in Windows Firewall on private networks.
 - **The QR code expired:** click **Get a new code** on your PC.
 - **Notifications stopped:** on your phone, check Pixlink still has notification access, and that battery saver isn't stopping it.

@@ -26,6 +26,18 @@ public sealed partial class PairingPage : Page
 
     private void OnRefresh(object sender, RoutedEventArgs e) => ShowNewCode();
 
+    /// <summary>Copies the pairing link so it can be pasted into the phone app (handy for the Android emulator).</summary>
+    private async void OnCopy(object sender, RoutedEventArgs e)
+    {
+        if (App.Session.PairingUri is not { } uri) return;
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(uri);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        CopyButton.Content = "Copied";
+        await Task.Delay(2000);
+        CopyButton.Content = "Copy link";
+    }
+
     private void ShowNewCode()
     {
         if (App.Session.IsPaired) { _timer.Stop(); return; }

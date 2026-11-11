@@ -27,7 +27,8 @@ class PairedStore(context: Context) {
                 id = prefs.getString("pcId", "")!!,
             )
         }
-        set(value) = prefs.edit {
+        // commit = true: write to disk now, so pairing survives even if the app is killed right after.
+        set(value) = prefs.edit(commit = true) {
             if (value == null) {
                 remove("host"); remove("port"); remove("fp"); remove("pcName"); remove("pcId")
             } else {

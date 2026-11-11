@@ -22,6 +22,9 @@ object LinkHub {
 
     @Volatile internal var client: LinkClient? = null
 
+    /** Why the last connection ended, shown on the home screen to help troubleshoot. */
+    @Volatile var lastDisconnectReason: String? = null
+
     internal fun setState(s: LinkState) { _state.value = s }
 
     val isConnected get() = _state.value is LinkState.Connected

@@ -7,11 +7,18 @@ import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.InetSocketAddress
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLSocket
+import kotlin.concurrent.thread
 
 /**
  * One TLS connection to the PC's control port. Reads newline-delimited JSON and
  * hands each message to [onMessage]. Blocking — run [run] on a background thread.
+ *
+ * Sending never touches the network on the caller's thread: messages go into a queue
+ * that a dedicated writer thread drains. (Android forbids network I/O on the main
+ * thread, and notifications, battery updates and call events all arrive there.)
  */
 class LinkClient(
     private val host: String,
@@ -21,8 +28,12 @@ class LinkClient(
     private val onMessage: (Envelope) -> Unit,
 ) {
     @Volatile private var socket: SSLSocket? = null
-    @Volatile private var writer: BufferedWriter? = null
-    private val writeLock = Any()
+    @Volatile private var closed = false
+    private val outbox = LinkedBlockingQueue<String>(2_000)
+
+    /** Why the connection ended, for the UI. */
+    @Volatile var closeReason: String? = null
+        private set
 
     /** Connects and blocks reading until the connection closes or fails. */
     fun run() {
@@ -33,12 +44,18 @@ class LinkClient(
         s.soTimeout = READ_TIMEOUT_MS
         s.startHandshake()
 
-        writer = BufferedWriter(OutputStreamWriter(s.outputStream, Charsets.UTF_8))
+        val writer = BufferedWriter(OutputStreamWriter(s.outputStream, Charsets.UTF_8))
+        thread(name = "pixlink-writer", isDaemon = true) { writeLoop(writer) }
+
         val reader = BufferedReader(InputStreamReader(s.inputStream, Charsets.UTF_8))
         onConnected(this)
 
-        while (true) {
-            val line = reader.readLine() ?: break
+        while (!closed) {
+            val line = reader.readLine()
+            if (line == null) {
+                closeReason = closeReason ?: "PC closed the connection"
+                break
+            }
             if (line.isBlank()) continue
             val env = runCatching { Codec.decodeFromString(Envelope.serializer(), line) }
                 .onFailure { Log.w(TAG, "Bad message: ${line.take(200)}", it) }
@@ -47,22 +64,38 @@ class LinkClient(
         }
     }
 
-    fun send(env: Envelope) {
-        val w = writer ?: return
-        val line = Codec.encodeToString(Envelope.serializer(), env)
-        synchronized(writeLock) {
-            runCatching {
-                w.write(line)
-                w.write("\n")
-                w.flush()
-            }.onFailure { Log.w(TAG, "Send failed", it); close() }
+    private fun writeLoop(writer: BufferedWriter) {
+        try {
+            while (!closed) {
+                val line = outbox.poll(1, TimeUnit.SECONDS) ?: continue
+                writer.write(line)
+                writer.write("\n")
+                // Batch whatever else is waiting before flushing.
+                while (true) {
+                    val next = outbox.poll() ?: break
+                    writer.write(next)
+                    writer.write("\n")
+                }
+                writer.flush()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Write failed", e)
+            closeReason = closeReason ?: "Couldn't send to PC: ${e.message}"
+            close()
         }
     }
 
+    /** Queues a message. Safe to call from any thread, including the main thread. */
+    fun send(env: Envelope) {
+        if (closed) return
+        val line = Codec.encodeToString(Envelope.serializer(), env)
+        if (!outbox.offer(line)) Log.w(TAG, "Outbox full, dropping ${env.t}")
+    }
+
     fun close() {
+        closed = true
         runCatching { socket?.close() }
         socket = null
-        writer = null
     }
 
     companion object {

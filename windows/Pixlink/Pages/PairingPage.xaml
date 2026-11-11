@@ -43,7 +43,11 @@
             <Border Background="White" CornerRadius="12" Padding="20">
                 <Image x:Name="QrImage" Width="280" Height="280" />
             </Border>
-            <Button Content="Get a new code" HorizontalAlignment="Center" Click="OnRefresh" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                <Button Content="Get a new code" Click="OnRefresh" />
+                <Button x:Name="CopyButton" Content="Copy link" Click="OnCopy"
+                        ToolTipService.ToolTip="For phones or emulators without a camera: paste this link in the Pixlink app" />
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Page>
