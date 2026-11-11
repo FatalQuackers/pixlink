@@ -53,6 +53,7 @@ Pixlink isn't on Google Play yet, so for now you install it from this page. It t
 
 ### Troubleshooting
 
+- **Pixlink doesn't open on Windows:** download the newest release. If it still won't start, it shows an error and saves details to `%LOCALAPPDATA%\Pixlink\crash.log`; please attach that file to a [GitHub issue](https://github.com/FatalQuackers/pixlink/issues).
 - **The phone can't find the PC:** check both are on the same Wi-Fi (not a guest network), and that Pixlink is allowed in Windows Firewall on private networks.
 - **The QR code expired:** click **Get a new code** on your PC.
 - **Notifications stopped:** on your phone, check Pixlink still has notification access, and that battery saver isn't stopping it.

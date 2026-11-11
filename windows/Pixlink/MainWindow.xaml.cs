@@ -17,7 +17,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon("Assets/Pixlink.ico");
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Pixlink.ico"));
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1240, 820));
 
         ContentFrame.Navigate(typeof(MessagesPage));

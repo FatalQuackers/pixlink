@@ -13,6 +13,10 @@
     <!-- Unpackaged for easy F5 debugging; an MSIX installer project is added for release. -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Bundle .NET so users don't need to install anything else. -->
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' != 'ARM64'">win-x64</RuntimeIdentifier>
     <ApplicationIcon>Assets\Pixlink.ico</ApplicationIcon>
     <Version>0.1.0</Version>
     <Product>Pixlink</Product>

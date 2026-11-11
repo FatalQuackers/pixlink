@@ -280,19 +280,15 @@ public partial class PhoneSession : ObservableObject
         foreach (var c in Conversations.Where(c => c.App == app)) c.Icon = img;
     }
 
-    public static BitmapImage ImageFromBase64(string b64)
+    /// <summary>Decodes PNG/JPEG bytes into an image without blocking the UI thread on async I/O.</summary>
+    public static BitmapImage ImageFromBytes(byte[] bytes)
     {
         var img = new BitmapImage();
-        var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
-        using (var writer = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
-        {
-            writer.WriteBytes(Convert.FromBase64String(b64));
-            writer.StoreAsync().AsTask().Wait();
-        }
-        stream.Seek(0);
-        img.SetSource(stream);
+        img.SetSource(new MemoryStream(bytes).AsRandomAccessStream());
         return img;
     }
+
+    public static BitmapImage ImageFromBase64(string b64) => ImageFromBytes(Convert.FromBase64String(b64));
 
     // ---------- Calls ----------
 

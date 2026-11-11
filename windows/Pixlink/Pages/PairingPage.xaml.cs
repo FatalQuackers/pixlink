@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using QRCoder;
 
@@ -36,15 +35,7 @@ public sealed partial class PairingPage : Page
         using var data = gen.CreateQrCode(uri, QRCodeGenerator.ECCLevel.M);
         var png = new PngByteQRCode(data).GetGraphic(10);
 
-        var img = new BitmapImage();
-        var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
-        using (var w = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
-        {
-            w.WriteBytes(png);
-            w.StoreAsync().AsTask().Wait();
-        }
-        stream.Seek(0);
-        img.SetSource(stream);
+        var img = Services.PhoneSession.ImageFromBytes(png);
         QrImage.Source = img;
         ExpiryText.Text = $"This code works for 5 minutes · PC: {Environment.MachineName}";
     }
