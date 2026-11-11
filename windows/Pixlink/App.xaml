@@ -13,6 +13,14 @@
             <Color x:Key="PixlinkBlue">#3D7BFF</Color>
             <SolidColorBrush x:Key="PixlinkBlueBrush" Color="{StaticResource PixlinkBlue}" />
 
+            <!-- Borderless icon button (title bar, dismiss buttons). WinUI 3 doesn't ship this style. -->
+            <Style x:Key="SubtleButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="8" />
+            </Style>
+
             <Style x:Key="PanelCardStyle" TargetType="Border">
                 <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
                 <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
