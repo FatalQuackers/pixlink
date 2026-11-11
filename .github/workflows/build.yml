@@ -36,10 +36,15 @@ jobs:
       - name: Build
         # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
         run: msbuild windows/Pixlink/Pixlink.csproj /restore /p:Configuration=Release /p:Platform=x64 /v:minimal
+      - name: Find the app folder
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse windows/Pixlink/bin -Filter Pixlink.exe | Select-Object -First 1
+          "APP_DIR=$($exe.DirectoryName)" >> $env:GITHUB_ENV
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-windows-x64
-          path: windows/Pixlink/bin/x64/Release/
+          path: ${{ env.APP_DIR }}
 
   pages:
     # Publishes website/ to GitHub Pages once Pages is enabled (Settings → Pages → Source: GitHub Actions).
@@ -58,3 +63,30 @@ jobs:
         with:
           path: website
       - uses: actions/deploy-pages@v4
+
+  release:
+    # Publishes each build on main as the latest release, so the README install links always work.
+    if: github.ref == 'refs/heads/main'
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Package files
+        run: |
+          cp dist/pixlink-android-debug/*.apk Pixlink-android.apk
+          (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64.zip .)
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.${{ github.run_number }}
+          name: Pixlink 0.1.${{ github.run_number }} (preview)
+          make_latest: true
+          body: |
+            Early preview build. See the README for install steps:
+            https://github.com/FatalQuackers/pixlink#how-to-install
+          files: |
+            Pixlink-android.apk
+            Pixlink-windows-x64.zip
