@@ -60,6 +60,8 @@ PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Pixlink is free forever. If it helps you, consider sponsoring development (link coming soon).
 
+Website: https://fatalquackers.github.io/pixlink/ (after GitHub Pages is turned on)
+
 ## License
 
 [MIT](LICENSE)
