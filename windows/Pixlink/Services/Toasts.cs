@@ -9,7 +9,7 @@ public static class Toasts
 {
     public static void Register()
     {
-        AppNotificationManager.Default.NotificationInvoked += (_, args) =>
+        AppNotificationManager.Default.NotificationInvoked += (sender, args) =>
         {
             if (!args.Arguments.TryGetValue("key", out var key)) return;
             if (args.Arguments.TryGetValue("action", out var action) && action == "reply"
