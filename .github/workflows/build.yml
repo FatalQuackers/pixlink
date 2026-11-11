@@ -32,8 +32,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - uses: microsoft/setup-msbuild@v2
       - name: Build
-        run: dotnet build windows/Pixlink/Pixlink.csproj -c Release -p:Platform=x64
+        # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
+        run: msbuild windows/Pixlink/Pixlink.csproj /restore /p:Configuration=Release /p:Platform=x64 /v:minimal
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-windows-x64
@@ -44,6 +46,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:

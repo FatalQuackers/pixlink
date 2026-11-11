@@ -52,11 +52,13 @@ class FileBridge(private val context: Context) {
 
     suspend fun list(request: Envelope, path: String?): Envelope {
         if (path == null) return roots(request)
+        // Shell listing is a suspend call, so run it before building the reply.
+        val shellEntries = if (path.startsWith("/")) ShellFiles.list(path) else emptyList()
         return request.reply("files.list") {
             put("path", path)
             putJsonArray("entries") {
                 if (path.startsWith("/")) {
-                    ShellFiles.list(path).forEach { e ->
+                    shellEntries.forEach { e ->
                         addJsonObject {
                             put("name", e.name); put("dir", e.dir); put("size", e.size); put("modified", e.modified)
                             put("path", path.trimEnd('/') + "/" + e.name)
