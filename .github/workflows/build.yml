@@ -75,7 +75,14 @@ jobs:
         # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
         run: |
           $v = "$env:VERSION".TrimStart('v')
-          msbuild windows/Pixlink/Pixlink.csproj /restore /p:Configuration=Release /p:Platform=x64 /p:Version=$v /v:minimal
+          # Package downloads occasionally fail on the build servers; try the restore a few times.
+          for ($i = 1; $i -le 3; $i++) {
+            msbuild windows/Pixlink/Pixlink.csproj /t:Restore /p:Configuration=Release /p:Platform=x64 /v:minimal
+            if ($LASTEXITCODE -eq 0) { break }
+            Write-Host "Restore failed (attempt $i), retrying…"; Start-Sleep -Seconds 15
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          msbuild windows/Pixlink/Pixlink.csproj /p:Configuration=Release /p:Platform=x64 /p:Version=$v /v:minimal
       - name: Find the app folder
         shell: pwsh
         run: |
@@ -119,6 +126,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+      - name: Release notes
+        run: |
+          if [ -f "${{ github.workspace }}/notes/${{ inputs.tag || github.ref_name }}.md" ]; then cp "notes/${{ inputs.tag || github.ref_name }}.md" release-notes.md; else echo "Bug fixes and improvements." > release-notes.md; fi
       - name: Package files
         run: |
           cp dist/pixlink-android/*.apk Pixlink-android.apk
@@ -127,12 +137,16 @@ jobs:
           # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
           printf 'Pixlink portable\r\n\r\nPixlink keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
-      # Rebuild of an existing version: replace its files, leave its notes alone.
+      # Rebuild of an existing version: replace its files (re-creating the release if it was deleted).
       - if: inputs.tag
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
+          name: Pixlink ${{ inputs.tag }}
           overwrite_files: true
+          make_latest: true
+          prerelease: false
+          body_path: release-notes.md
           files: |
             Pixlink-android.apk
             Pixlink-Setup-x64.exe
