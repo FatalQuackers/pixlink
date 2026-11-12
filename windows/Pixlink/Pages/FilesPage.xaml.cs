@@ -38,7 +38,7 @@ public sealed partial class FilesPage : Page
         Loading.IsActive = true;
         var (roots, power) = await Session.Files.GetRootsAsync();
         Loading.IsActive = false;
-        PowerBar.IsOpen = !power;
+        PowerBar.IsOpen = !power && !Session.IsIPhone; // iPhones only share Pixlink's own folder
         FileList.ItemsSource = roots;
         EmptyText.Text = roots.Count == 0
             ? "Nothing shared yet. On your phone, open Pixlink → Settings → Add a folder, or turn on Power mode."

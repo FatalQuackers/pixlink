@@ -35,10 +35,12 @@
 
         <!-- Controls -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,12,0,0" x:Name="Controls" Visibility="Collapsed">
-            <Button ToolTipService.ToolTip="Back" Click="OnBack"><FontIcon Glyph="&#xE72B;" FontSize="16" /></Button>
-            <Button ToolTipService.ToolTip="Home" Click="OnHome"><FontIcon Glyph="&#xE80F;" FontSize="16" /></Button>
-            <Button ToolTipService.ToolTip="Recent apps" Click="OnRecents"><FontIcon Glyph="&#xE8A9;" FontSize="16" /></Button>
-            <AppBarSeparator />
+            <StackPanel x:Name="NavButtons" Orientation="Horizontal" Spacing="8">
+                <Button ToolTipService.ToolTip="Back" Click="OnBack"><FontIcon Glyph="&#xE72B;" FontSize="16" /></Button>
+                <Button ToolTipService.ToolTip="Home" Click="OnHome"><FontIcon Glyph="&#xE80F;" FontSize="16" /></Button>
+                <Button ToolTipService.ToolTip="Recent apps" Click="OnRecents"><FontIcon Glyph="&#xE8A9;" FontSize="16" /></Button>
+                <AppBarSeparator />
+            </StackPanel>
             <Button Content="Stop" Click="OnStop" />
             <TextBlock x:Name="ControlNote" VerticalAlignment="Center" Margin="12,0,0,0" Style="{StaticResource CaptionTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="View only. To control your phone, open Pixlink on the phone and turn on Screen control (no Power mode needed)." />

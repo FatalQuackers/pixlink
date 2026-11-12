@@ -272,7 +272,7 @@
                         </ItemsRepeater>
                         <StackPanel x:Name="NoNotifications" Spacing="6" Margin="0,24,0,0" HorizontalAlignment="Center">
                             <FontIcon Glyph="&#xEA8F;" FontSize="28" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                            <TextBlock Text="You're all caught up" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="NoNotificationsText" Text="You're all caught up" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="260" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
@@ -300,16 +300,16 @@
                         <SelectorBarItem Text="Home" Tag="Home" IsSelected="True">
                             <SelectorBarItem.Icon><FontIcon Glyph="&#xE80F;" /></SelectorBarItem.Icon>
                         </SelectorBarItem>
-                        <SelectorBarItem Text="Messages" Tag="Messages">
+                        <SelectorBarItem x:Name="MessagesTab" Text="Messages" Tag="Messages">
                             <SelectorBarItem.Icon><FontIcon Glyph="&#xE8BD;" /></SelectorBarItem.Icon>
                         </SelectorBarItem>
-                        <SelectorBarItem Text="Calls" Tag="Calls">
+                        <SelectorBarItem x:Name="CallsTab" Text="Calls" Tag="Calls">
                             <SelectorBarItem.Icon><FontIcon Glyph="&#xE717;" /></SelectorBarItem.Icon>
                         </SelectorBarItem>
                         <SelectorBarItem Text="Photos" Tag="Photos">
                             <SelectorBarItem.Icon><FontIcon Glyph="&#xEB9F;" /></SelectorBarItem.Icon>
                         </SelectorBarItem>
-                        <SelectorBarItem Text="Files" Tag="Files">
+                        <SelectorBarItem x:Name="FilesTab" Text="Files" Tag="Files">
                             <SelectorBarItem.Icon><FontIcon Glyph="&#xE8B7;" /></SelectorBarItem.Icon>
                         </SelectorBarItem>
                         <SelectorBarItem Text="Screen" Tag="Screen">

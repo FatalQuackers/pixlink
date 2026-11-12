@@ -92,6 +92,8 @@
                         </Border>
                         <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Scan the QR code or type the 5-digit code in the app" />
                     </Grid>
+                    <TextBlock TextWrapping="Wrap" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Using an iPhone? Install Pixlink for iPhone and scan the QR code with it. iPhones get photos, files, clipboard and screen casting." />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="8">

@@ -16,6 +16,16 @@ The PC also advertises an RFCOMM service (UUID `6f3c1e9a-2b7d-4c5e-9a1f-8d2b3c4e
 
 The phone's **Connect using** setting picks the route: `auto` (Wi-Fi first, Bluetooth if the PC can't be reached; switches back to Wi-Fi when the PC's beacon is seen again), `wifi` or `bluetooth`. Over Bluetooth the phone bridges the RFCOMM socket to a one-time loopback port and runs the normal TLS client through it, so the encryption and certificate pinning are identical to Wi-Fi. `hello` carries `via: "wifi" | "bluetooth"`. Screen mirroring (port 47101) needs Wi-Fi.
 
+## iPhone
+
+Pixlink for iPhone speaks the same protocol, with these differences:
+
+- **Pairing:** iOS can't create a self-signed certificate, so the iPhone connects to the pairing screen without one (the PC allows that only while pairing is open) and sends `pair.request` with `platform: "ios"` and `needsIdentity: true`. The PC creates a client certificate for it and replies `pair.accept {pcName, pcId, identityP12, identityPassword}` (PKCS#12, base64). The iPhone stores it, reconnects with it and says `hello`. From then on the PC pins that certificate like an Android phone's. QR code only: receiving the UDP beacon needs an Apple permission apps outside the App Store can't get.
+- **Finding the PC again:** the PC advertises `<pcId>._pixlink._tcp` with Bonjour (a placeholder listener on port 47103). The iPhone browses for it to learn the PC's new address.
+- **hello:** `platform: "ios"`, `powerMode: false`, `canControl: false`.
+- **Supported:** `status`, `ping`, `photos.*`, `files.roots` / `files.list` (Pixlink's own folder on the iPhone), `file.get`, `file.put`, `file.chunk`, `clipboard.set`, `clipboard.text`, `phone.ring`. Notifications, texts, calls, hotspot and input aren't available on iOS.
+- **Screen casting:** started on the iPhone (Apple's broadcast button), never by the PC. The broadcast extension connects to port 47101 and first sends `"PXLI"` + `uint32 width` + `uint32 height` (big-endian), then normal mirror frames. The PC ends the cast by closing the connection.
+
 ## Several PCs
 
 A phone can be paired with any number of PCs. It keeps one control connection per PC and remembers each PC's host, port, fingerprint and name. Notifications, battery, media and other phone → PC events go to every connected PC; replies to a request go only to the PC that asked. Screen mirroring streams to the PC that asked for it.

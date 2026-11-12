@@ -75,6 +75,18 @@ Then:
 2. On your Pixel, open Pixlink. After the short welcome tour, tap **Scan QR code** and point the camera at your screen, or tap **Enter 5-digit code** and type it.
 3. Done. Your notifications appear on your PC within a few seconds.
 
+### iPhone (early)
+
+Pixlink for iPhone does photos, files, clipboard, screen casting and Find my phone. Apple doesn't let apps share notifications, texts or calls, or let a PC control the screen, so those stay Pixel-only.
+
+1. Download `Pixlink-iOS.ipa` from the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest).
+2. Install it with [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) on your PC. They sign it with your own Apple ID (free accounts need a refresh every 7 days).
+3. On your iPhone, go to Settings → General → VPN & Device Management and trust your Apple ID. On iOS 16+, also turn on Settings → Privacy & Security → Developer Mode.
+4. Open Pixlink on the iPhone and scan the QR code on your PC. The 5-digit code is Pixel-only.
+5. To cast your screen, tap **Cast screen** in the app (or long-press Screen Recording in Control Center and pick Pixlink).
+
+Pixlink stays connected while it's open on your iPhone. iOS pauses apps soon after you leave them, so it reconnects when you open it again.
+
 ### Try the phone app on your PC first (Android emulator)
 
 You can test the Android app without installing it on your phone, using Google's free Android emulator.
@@ -121,6 +133,7 @@ Both apps update themselves. You don't need to download anything again.
 
 ```
 android/   Pixel app — Kotlin + Jetpack Compose (Android 13+)
+ios/       iPhone app — Swift + SwiftUI, screen casting extension (iOS 16+)
 windows/   PC app — C# + WinUI 3 / Windows App SDK (Windows 10 22H2+ / 11)
 docs/      Protocol spec, Power mode guide
 website/   Project website (GitHub Pages)
@@ -138,6 +151,7 @@ Full details: [docs/PROTOCOL.md](docs/PROTOCOL.md).
 ## Building from source
 
 - **Android:** open `android/` in [Android Studio](https://developer.android.com/studio) and press **Run** with your Pixel plugged in (USB debugging on).
+- **iPhone:** on a Mac, `brew install xcodegen`, then `cd ios && xcodegen generate`, open `Pixlink.xcodeproj`, pick your team for both targets and press **Run**.
 - **Windows:** open `windows/Pixlink.sln` in [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **Windows application development** workload, set the platform to **x64**, and press **F5**.
 
 Every push to `main` is built automatically by GitHub Actions and published as a release.

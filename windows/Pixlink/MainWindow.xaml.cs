@@ -36,7 +36,11 @@ public sealed partial class MainWindow : Window
                 ShowConnection(InfoBarSeverity.Warning, $"{Session.PhoneName} is disconnected. Check it's on the same Wi-Fi with Pixlink open.");
             if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Connected && ConnectionBar.Severity == InfoBarSeverity.Warning)
                 ConnectionBar.IsOpen = false;
+            if (e.PropertyName == nameof(PhoneSession.IsIPhone)) ApplyPlatform();
         };
+        // An iPhone starts casting from its own Control Center: jump to the Screen tab to show it.
+        Session.Mirror.SizeAnnounced += (_, _) => DispatcherQueue.TryEnqueue(() => SelectTab("Screen", "cast"));
+        ApplyPlatform();
         Session.Notifications.CollectionChanged += (_, _) => UpdateNotificationView();
         UpdateNotificationView();
 
@@ -315,6 +319,17 @@ public sealed partial class MainWindow : Window
             else if (parameter is null) Tabs.SelectedItem = item;
             else { Tabs.SelectionChanged -= OnTabChanged; Tabs.SelectedItem = item; Tabs.SelectionChanged += OnTabChanged; ContentFrame.Navigate(PageFor(tag), parameter); }
         }
+    }
+
+    /// <summary>iPhones don't let apps read texts or handle calls, so hide those tabs. Files shows Pixlink's own folder.</summary>
+    private void ApplyPlatform()
+    {
+        var iphone = Session.IsIPhone;
+        MessagesTab.Visibility = CallsTab.Visibility = iphone ? Visibility.Collapsed : Visibility.Visible;
+        if (iphone && Tabs.SelectedItem is { Visibility: Visibility.Collapsed }) SelectTab("Home");
+        NoNotificationsText.Text = iphone
+            ? "iPhone notifications aren't available yet. Send photos, files and your clipboard from the Pixlink app on your iPhone."
+            : "You're all caught up";
     }
 
     // ---------- Notifications list ----------

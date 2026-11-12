@@ -29,6 +29,18 @@ public sealed class MirrorServer
     public bool IsStreaming { get; private set; }
     public event Action? StreamEnded;
 
+    /// <summary>
+    /// An iPhone starts casting by itself (from Control Center), so it announces its video size on the
+    /// stream instead of in mirror.started: a "PXLI" header followed by width and height.
+    /// </summary>
+    public event Action<uint, uint>? SizeAnnounced;
+    public (uint width, uint height)? AnnouncedSize { get; private set; }
+
+    private TcpClient? _current;
+
+    /// <summary>Ends the current stream from the PC side. An iPhone then stops broadcasting.</summary>
+    public void Disconnect() { try { _current?.Dispose(); } catch { } }
+
     public MirrorServer(X509Certificate2 cert, Func<string?> pinnedPhone)
     {
         _cert = cert;
@@ -50,6 +62,7 @@ public sealed class MirrorServer
     private async Task ReceiveAsync(TcpClient tcp, CancellationToken ct)
     {
         using var client = tcp;
+        _current = tcp;
         var ssl = new SslStream(tcp.GetStream(), false, (_, cert, _, _) =>
             cert is not null && string.Equals(Certificates.Fingerprint(cert), _pinnedPhone(), StringComparison.OrdinalIgnoreCase));
         try
@@ -66,9 +79,18 @@ public sealed class MirrorServer
             StreamStarted?.Invoke();
 
             var header = new byte[12];
+            AnnouncedSize = null;
             while (!ct.IsCancellationRequested)
             {
                 await ssl.ReadExactlyAsync(header, ct);
+                if (header[0] == (byte)'P' && header[1] == (byte)'X' && header[2] == (byte)'L' && header[3] == (byte)'I')
+                {
+                    var w = BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan(4, 4));
+                    var h = BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan(8, 4));
+                    AnnouncedSize = (w, h);
+                    SizeAnnounced?.Invoke(w, h);
+                    continue;
+                }
                 var len = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(0, 4));
                 var pts = BinaryPrimitives.ReadInt64BigEndian(header.AsSpan(4, 8));
                 if (len <= 0 || len > 8 * 1024 * 1024) break;
@@ -83,6 +105,7 @@ public sealed class MirrorServer
         {
             _frames.CompleteAdding();
             IsStreaming = false;
+            AnnouncedSize = null;
             StreamEnded?.Invoke();
         }
     }

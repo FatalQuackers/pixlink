@@ -108,10 +108,43 @@ jobs:
           name: pixlink-windows-setup
           path: windows/installer/Pixlink-Setup-x64.exe
 
+  ios:
+    # Pixlink for iPhone, as an .ipa to install with AltStore or Sideloadly (they sign it with
+    # your own Apple ID). Fake-signed here so the App Group entitlement the casting extension
+    # needs is kept.
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build
+        run: |
+          V="${VERSION#v}"
+          xcodebuild -project Pixlink.xcodeproj -target Pixlink -configuration Release -sdk iphoneos \
+            SYMROOT="$PWD/build" MARKETING_VERSION="$V" CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Package Pixlink-iOS.ipa
+        run: |
+          APP=build/Release-iphoneos/Pixlink.app
+          codesign -f -s - --entitlements Broadcast/Broadcast.entitlements "$APP/PlugIns/PixlinkBroadcast.appex"
+          codesign -f -s - --entitlements Pixlink/Pixlink.entitlements "$APP"
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry Pixlink-iOS.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pixlink-ios
+          path: ios/Pixlink-iOS.ipa
+
   release:
-    # Only version tags (or a rebuild of one) become releases.
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag
-    needs: [android, windows]
+    # Only version tags (or a rebuild of one) become releases. The iPhone app is attached when it
+    # builds, but never holds up a Pixel/Windows release.
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || inputs.tag) && needs.android.result == 'success' && needs.windows.result == 'success'
+    needs: [android, windows, ios]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -134,6 +167,7 @@ jobs:
           cp dist/pixlink-android/*.apk Pixlink-android.apk
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64.zip .)
           cp dist/pixlink-windows-setup/Pixlink-Setup-x64.exe Pixlink-Setup-x64.exe
+          if [ -f dist/pixlink-ios/Pixlink-iOS.ipa ]; then cp dist/pixlink-ios/Pixlink-iOS.ipa Pixlink-iOS.ipa; fi
           # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
           printf 'Pixlink portable\r\n\r\nPixlink keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
@@ -152,6 +186,7 @@ jobs:
             Pixlink-Setup-x64.exe
             Pixlink-windows-x64-portable.zip
             Pixlink-windows-x64.zip
+            Pixlink-iOS.ipa
 
 
       - if: ${{ !inputs.tag }}
@@ -169,6 +204,7 @@ jobs:
             ## Install
             - **Pixel:** download `Pixlink-android.apk` on your phone and open it.
             - **Windows (installer):** download `Pixlink-Setup-x64.exe` and run it. No admin needed; it adds Start menu and desktop shortcuts and an uninstaller.
+            - **iPhone:** download `Pixlink-iOS.ipa` and install it with AltStore or Sideloadly (free, signs it with your Apple ID).
             - **Windows (portable):** download `Pixlink-windows-x64-portable.zip`, extract it anywhere (even a USB stick) and run `Pixlink.exe`. Settings stay in its own folder.
 
             Full steps: https://github.com/FatalQuackers/pixlink#how-to-install
@@ -179,6 +215,7 @@ jobs:
             Pixlink-Setup-x64.exe
             Pixlink-windows-x64-portable.zip
             Pixlink-windows-x64.zip
+            Pixlink-iOS.ipa
 
   pages:
     # Publishes website/ to GitHub Pages.

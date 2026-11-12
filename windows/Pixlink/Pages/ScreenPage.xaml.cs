@@ -34,8 +34,12 @@ public sealed partial class ScreenPage : Page
         Session.PropertyChanged += OnSessionChanged;
         Session.Mirror.StreamEnded += OnStreamEnded;
         App.Window!.HiddenChanged += OnWindowHidden;
+        Session.Mirror.SizeAnnounced += OnSizeAnnounced;
         StartButton.IsEnabled = Session.IsConnected;
         UpdateControlNote();
+        if (Session.IsIPhone) ShowIPhoneHint();
+        // An iPhone already casting (it started from Control Center).
+        if (Session.Mirror.IsStreaming && Session.Mirror.AnnouncedSize is { } size) { _width = size.width; _height = size.height; ShowStream(); return; }
         // Opened from a notification's Open button: the phone is already starting the stream.
         if (e.Parameter is string s && s == "starting") { StartButton.IsEnabled = false; Waiting.IsActive = true; StartHint.Text = "Opening it on your phone…"; }
     }
@@ -56,6 +60,7 @@ public sealed partial class ScreenPage : Page
         Session.Message -= OnMessage;
         Session.PropertyChanged -= OnSessionChanged;
         Session.Mirror.StreamEnded -= OnStreamEnded;
+        Session.Mirror.SizeAnnounced -= OnSizeAnnounced;
         App.Window!.HiddenChanged -= OnWindowHidden;
         if (_player is not null) _ = Session.SendAsync(Envelope.Of("mirror.stop"));
         Stop();
@@ -66,8 +71,32 @@ public sealed partial class ScreenPage : Page
         if (e.PropertyName is nameof(PhoneSession.PowerMode) or nameof(PhoneSession.CanControl)) UpdateControlNote();
     }
 
-    private void UpdateControlNote() =>
+    private void UpdateControlNote()
+    {
         ControlNote.Visibility = Session.CanControl ? Visibility.Collapsed : Visibility.Visible;
+        if (Session.IsIPhone)
+        {
+            ControlNote.Text = "View only: iPhones don't let other devices control them. Stop casting from your iPhone's red status bar.";
+            NavButtons.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void OnSizeAnnounced(uint width, uint height) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (_player is not null) return;
+        _width = width;
+        _height = height;
+        ShowStream();
+    });
+
+    /// <summary>
+    /// iPhones only let the person start screen broadcasting themselves, so the PC can't start it.
+    /// </summary>
+    private void ShowIPhoneHint()
+    {
+        StartButton.Visibility = Visibility.Collapsed;
+        StartHint.Text = "On your iPhone, open Pixlink and tap Cast screen, or long-press Screen Recording in Control Center and pick Pixlink. Your screen appears here.";
+    }
 
     private async void OnStart(object sender, RoutedEventArgs e)
     {
@@ -122,6 +151,7 @@ public sealed partial class ScreenPage : Page
 
     private void Stop()
     {
+        if (Session.IsIPhone && _player is not null) Session.Mirror.Disconnect();
         _player?.Dispose();
         _player = null;
         PhoneFrame.Visibility = Visibility.Collapsed;
@@ -130,6 +160,7 @@ public sealed partial class ScreenPage : Page
         Waiting.IsActive = false;
         StartButton.IsEnabled = Session.IsConnected;
         if (StartHint.Text.StartsWith("Screen sharing stopped")) return;
+        if (Session.IsIPhone) { ShowIPhoneHint(); return; }
         StartHint.Text = "Your phone will ask you to confirm each time. That's an Android rule.";
     }
 

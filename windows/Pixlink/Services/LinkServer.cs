@@ -51,7 +51,8 @@ public sealed class LinkServer
         string? phoneFp = null;
         var ssl = new SslStream(transport, false, (_, cert, _, _) =>
         {
-            if (cert is null) return false;
+            // An iPhone pairs without a certificate (it can't make one); the PC issues it one in pair.accept.
+            if (cert is null) { phoneFp = ""; return _pairingOpen(); }
             phoneFp = Certificates.Fingerprint(cert);
             var pinned = _pinnedPhone();
             // Paired phone, or any phone while the pairing QR is on screen (token checked next).

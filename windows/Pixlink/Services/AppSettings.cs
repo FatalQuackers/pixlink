@@ -8,6 +8,8 @@ public sealed class AppSettings
     public string PcId { get; set; } = Guid.NewGuid().ToString("N");
     public string? PhoneFingerprint { get; set; }
     public string? PhoneName { get; set; }
+    /// <summary>"android" or "ios".</summary>
+    public string? PhonePlatform { get; set; }
     public bool ShowToasts { get; set; } = true;
     public bool AutoJoinHotspot { get; set; } = true;
     public string? PcDisplayName { get; set; }

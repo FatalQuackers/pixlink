@@ -1,0 +1,77 @@
+# Xcode project for Pixlink for iPhone. Generate it with XcodeGen:  brew install xcodegen && xcodegen generate
+name: Pixlink
+options:
+  bundleIdPrefix: app.pixlink
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_BITCODE: NO
+    CODE_SIGN_STYLE: Automatic
+targets:
+  Pixlink:
+    type: application
+    platform: iOS
+    sources:
+      - path: Pixlink
+      - path: Shared
+    entitlements:
+      path: Pixlink/Pixlink.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.pixlink]
+    info:
+      path: Pixlink/Info.plist
+      properties:
+        CFBundleDisplayName: Pixlink
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIApplicationSupportsIndirectInputEvents: true
+        ITSAppUsesNonExemptEncryption: false
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSCameraUsageDescription: Pixlink uses the camera to scan the QR code on your PC.
+        NSPhotoLibraryUsageDescription: Pixlink shows your photos on your PC when you open the Photos tab there.
+        NSLocalNetworkUsageDescription: Pixlink connects to your PC on your Wi-Fi.
+        NSBonjourServices: [_pixlink._tcp]
+        CFBundleURLTypes:
+          - CFBundleURLName: app.pixlink.pair
+            CFBundleURLSchemes: [pixlink]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.pixlink
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - target: PixlinkBroadcast
+        embed: true
+  PixlinkBroadcast:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Broadcast
+      - path: Shared
+    entitlements:
+      path: Broadcast/Broadcast.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.pixlink]
+    info:
+      path: Broadcast/Info.plist
+      properties:
+        CFBundleDisplayName: Pixlink
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SampleHandler
+          RPBroadcastProcessMode: RPBroadcastProcessModeSampleBuffer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.pixlink.broadcast
+        APPLICATION_EXTENSION_API_ONLY: YES

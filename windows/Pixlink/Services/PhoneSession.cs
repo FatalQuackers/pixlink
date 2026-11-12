@@ -44,6 +44,8 @@ public partial class PhoneSession : ObservableObject
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(BatteryGlyph))] private bool _charging;
     [ObservableProperty] private bool _doNotDisturb;
     [ObservableProperty] private bool _powerMode;
+    /// <summary>The paired phone is an iPhone: no notifications, texts, calls or control (Apple doesn't allow them).</summary>
+    [ObservableProperty] private bool _isIPhone;
     /// <summary>The phone accepts taps and typing: Power mode, or Pixlink's accessibility service.</summary>
     [ObservableProperty] private bool _canControl;
     [ObservableProperty] private string? _pairingUri;
@@ -150,6 +152,7 @@ public partial class PhoneSession : ObservableObject
         _ui = ui;
         IsPaired = _settings.PhoneFingerprint is not null;
         if (_settings.PhoneName is { } n) PhoneName = n;
+        IsIPhone = _settings.PhonePlatform == "ios";
         UpdatePhase();
         RebuildQuickActions();
         StartClipboardSync();
@@ -161,6 +164,7 @@ public partial class PhoneSession : ObservableObject
         if (_settings.AllowBluetooth) _ = _bluetooth.StartAsync(_cts.Token);
         _ = Mirror.RunAsync(_cts.Token);
         _ = Beacon.RunAsync(BeaconPayload, _cts.Token);
+        _ = Bonjour.StartAsync(_settings.PcId);
         try { await server.RunAsync(_cts.Token); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Server stopped: {ex}"); }
     }
@@ -273,6 +277,8 @@ public partial class PhoneSession : ObservableObject
                 _conn?.Dispose();
                 _conn = conn;
                 PhoneName = m.Str("phoneName") ?? PhoneName;
+                IsIPhone = (m.Str("platform") ?? "android") == "ios";
+                if (_settings.PhonePlatform != (IsIPhone ? "ios" : "android")) { _settings.PhonePlatform = IsIPhone ? "ios" : "android"; _settings.Save(); }
                 PowerMode = m.Bool("powerMode") ?? false;
                 CanControl = m.Bool("canControl") ?? PowerMode;
                 ConnectedVia = conn.Via == "bluetooth" ? "Bluetooth" : "Wi-Fi";
@@ -340,13 +346,26 @@ public partial class PhoneSession : ObservableObject
         _pairToken = null;
         PairingUri = null;
         PairingCode = null;
-        _settings.PhoneFingerprint = conn.PhoneFingerprint;
         _settings.PhoneName = m.Str("phoneName");
-        _settings.Save();
+        _settings.PhonePlatform = m.Str("platform") ?? "android";
+        if (m.Bool("needsIdentity") == true || string.IsNullOrEmpty(conn.PhoneFingerprint))
+        {
+            // iPhone: issue it a certificate. It reconnects with it and says hello.
+            var (fp, p12, password) = Certificates.CreatePhoneIdentity(_settings.PhoneName ?? "iPhone");
+            _settings.PhoneFingerprint = fp;
+            _settings.Save();
+            _ = conn.SendAsync(Envelope.Of("pair.accept", new { pcName = PcName, pcId = _settings.PcId, identityP12 = p12, identityPassword = password }));
+        }
+        else
+        {
+            _settings.PhoneFingerprint = conn.PhoneFingerprint;
+            _settings.Save();
+            _ = conn.SendAsync(Envelope.Of("pair.accept", new { pcName = PcName, pcId = _settings.PcId }));
+        }
         PhoneName = _settings.PhoneName ?? PhoneName;
+        IsIPhone = _settings.PhonePlatform == "ios";
         JustPaired?.Invoke();
         IsPaired = true;
-        _ = conn.SendAsync(Envelope.Of("pair.accept", new { pcName = PcName, pcId = _settings.PcId }));
         // The phone follows up with "hello", which makes this the active connection.
     }
 
