@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         handleDeepLink(intent)
-        if (PairedStore(this).pc != null) LinkService.start(this)
+        if (PairedStore(this).pcs.isNotEmpty()) LinkService.start(this)
 
         setContent {
             PixlinkTheme {
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
     private fun AppNav() {
         val nav = rememberNavController()
         val store = remember { PairedStore(this) }
-        val start = if (!store.onboardingDone && store.pc == null) "onboarding" else "home"
+        val start = if (!store.onboardingDone && store.pcs.isEmpty()) "onboarding" else "home"
 
         fun goHome() {
             store.onboardingDone = true

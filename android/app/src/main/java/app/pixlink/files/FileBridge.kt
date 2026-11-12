@@ -8,7 +8,6 @@ import android.provider.MediaStore
 import android.util.Base64
 import androidx.documentfile.provider.DocumentFile
 import app.pixlink.link.Envelope
-import app.pixlink.link.LinkHub
 import app.pixlink.link.msg
 import app.pixlink.media.PhotoBridge
 import app.pixlink.power.PowerMode
@@ -81,7 +80,7 @@ class FileBridge(private val context: Context) {
     }
 
     /** Streams a file or photo to the PC as file.chunk messages. */
-    suspend fun send(request: Envelope, photos: PhotoBridge) {
+    suspend fun send(request: Envelope, photos: PhotoBridge, out: (Envelope) -> Unit) {
         val transferId = request.id ?: UUID.randomUUID().toString()
         val path = request.str("path")
         val photoId = request.long("photoId")
@@ -92,7 +91,7 @@ class FileBridge(private val context: Context) {
             while (true) {
                 val chunk = ShellFiles.readChunk(path, index, CHUNK)
                 val last = chunk.size < CHUNK || (index + 1) * CHUNK >= total
-                LinkHub.send(chunkMsg(transferId, index, last, chunk, if (index == 0L) path.substringAfterLast('/') else null, total))
+                out(chunkMsg(transferId, index, last, chunk, if (index == 0L) path.substringAfterLast('/') else null, total))
                 if (last) break
                 index++
             }
@@ -107,11 +106,11 @@ class FileBridge(private val context: Context) {
             }
             else -> null
         } ?: return
-        streamOut(transferId, name, stream, size)
+        streamOut(transferId, name, stream, size, out)
     }
 
     /** Sends a stream to the PC as file.chunk messages (also used by "Share to PC"). */
-    fun streamOut(transferId: String, name: String, input: InputStream, size: Long) {
+    fun streamOut(transferId: String, name: String, input: InputStream, size: Long, out: (Envelope) -> Unit) {
         // Reads one chunk ahead so we know which chunk is the last one.
         input.use { s ->
             var current = ByteArray(CHUNK)
@@ -121,7 +120,7 @@ class FileBridge(private val context: Context) {
                 val next = ByteArray(CHUNK)
                 val m = if (n == CHUNK) readFully(s, next) else 0
                 val last = m == 0
-                LinkHub.send(chunkMsg(transferId, index, last, current.copyOf(n), if (index == 0L) name else null, size))
+                out(chunkMsg(transferId, index, last, current.copyOf(n), if (index == 0L) name else null, size))
                 if (last) break
                 current = next
                 n = m
@@ -165,7 +164,7 @@ class FileBridge(private val context: Context) {
 
     private val pendingUris = ConcurrentHashMap<String, Uri>()
 
-    fun receiveChunk(m: Envelope) {
+    fun receiveChunk(m: Envelope, out: (Envelope) -> Unit) {
         val id = m.str("transferId") ?: return
         val out = incoming[id] ?: return
         out.write(Base64.decode(m.str("dataBase64") ?: "", Base64.DEFAULT))
@@ -175,7 +174,7 @@ class FileBridge(private val context: Context) {
             pendingUris.remove(id)?.let { uri ->
                 context.contentResolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
             }
-            LinkHub.send(msg("file.done") { put("transferId", id) })
+            out(msg("file.done") { put("transferId", id) })
         }
     }
 

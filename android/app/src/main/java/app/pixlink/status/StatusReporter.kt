@@ -25,6 +25,11 @@ class StatusReporter(private val context: Context) {
         sticky?.let(::send)
     }
 
+    /** Sends the current battery state again (e.g. to a PC that just connected). */
+    fun resend() {
+        context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))?.let(::send)
+    }
+
     fun stop() {
         if (!registered) return
         runCatching { context.unregisterReceiver(receiver) }

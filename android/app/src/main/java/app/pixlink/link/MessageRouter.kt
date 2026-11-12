@@ -3,11 +3,11 @@ package app.pixlink.link
 import android.content.Context
 import android.util.Log
 import app.pixlink.calls.CallBridge
+import app.pixlink.features.PhoneRinger
 import app.pixlink.files.FileBridge
 import app.pixlink.media.PhotoBridge
 import app.pixlink.mirror.MirrorService
 import app.pixlink.mirror.ProjectionPermissionActivity
-import app.pixlink.features.PhoneRinger
 import app.pixlink.notifications.MediaBridge
 import app.pixlink.notifications.NotificationBridge
 import app.pixlink.pairing.PairedStore
@@ -20,55 +20,68 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.put
 
-/** Routes each incoming message to the feature that handles it. */
+/**
+ * Routes each message from one PC to the feature that handles it. There's one router per
+ * connection, so replies ([out]) go back to the PC that asked.
+ */
 class MessageRouter(
     private val context: Context,
     private val store: PairedStore,
-    private val onPaired: (pcName: String, pcId: String) -> Unit,
-    private val onRejected: (reason: String) -> Unit,
+    /** The PC this connection belongs to (null while pairing). */
+    private val pcId: String?,
+    private val out: (Envelope) -> Unit,
+    private val onPaired: ((pcName: String, pcId: String) -> Unit)? = null,
+    private val onRejected: ((reason: String) -> Unit)? = null,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val calls by lazy { CallBridge(context) }
     private val photos by lazy { PhotoBridge(context) }
     private val files by lazy { FileBridge(context) }
     private val hotspot by lazy { HotspotController(context, store) }
 
     fun handle(m: Envelope) {
+        // While pairing, only the pairing answer matters.
+        if (pcId == null) {
+            when (m.t) {
+                MessageTypes.PAIR_ACCEPT -> onPaired?.invoke(m.str("pcName") ?: "PC", m.str("pcId") ?: "")
+                MessageTypes.PAIR_REJECT -> onRejected?.invoke(m.str("reason") ?: "The PC said no")
+            }
+            return
+        }
+
         // Input events are latency-sensitive and already coalesced by InputInjector.
         if (m.t.startsWith("input.")) { InputInjector.handle(context, m); return }
 
         // Incoming file data must be written in order, so handle it on the reading thread.
         if (m.t == "file.put" || m.t == "file.chunk") {
-            runCatching { if (m.t == "file.put") files.beginReceive(m) else files.receiveChunk(m) }
+            runCatching { if (m.t == "file.put") files.beginReceive(m) else files.receiveChunk(m, out) }
                 .onFailure { Log.w(TAG, "File receive failed", it) }
             return
         }
 
         scope.launch {
             try {
-                route(m)
+                route(m, pcId)
             } catch (e: Exception) {
                 Log.w(TAG, "Handler for ${m.t} failed", e)
-                m.id?.let { LinkHub.send(m.reply("error") { put("message", e.message ?: "error") }) }
+                m.id?.let { out(m.reply("error") { put("message", e.message ?: "error") }) }
             }
         }
     }
 
-    private suspend fun route(m: Envelope) {
+    private suspend fun route(m: Envelope, pcId: String) {
         when (m.t) {
-            MessageTypes.PING -> LinkHub.send(msg(MessageTypes.PONG))
-            MessageTypes.PAIR_ACCEPT -> onPaired(m.str("pcName") ?: "PC", m.str("pcId") ?: "")
-            MessageTypes.PAIR_REJECT -> onRejected(m.str("reason") ?: "unknown")
+            MessageTypes.PING -> out(msg(MessageTypes.PONG))
 
             // Notifications
             "notif.dismiss" -> NotificationBridge.dismiss(m.str("key")!!)
             "notif.reply" -> NotificationBridge.reply(m.str("key")!!, m.str("text")!!)
             "notif.action" -> NotificationBridge.action(m.str("key")!!, m.int("actionIndex")!!)
-            "notif.sync" -> NotificationBridge.syncAll()
+            "notif.sync" -> NotificationBridge.syncAll(out)
 
-            // Mirroring
+            // Mirroring (one PC at a time; a new request takes over)
             "mirror.start" -> ProjectionPermissionActivity.launch(
                 context,
+                pcId = pcId,
                 maxSize = m.int("maxSize") ?: 1280,
                 bitrate = m.int("bitrate") ?: 6_000_000,
                 fps = m.int("fps") ?: 60,
@@ -76,7 +89,7 @@ class MessageRouter(
             "mirror.stop" -> MirrorService.stop(context)
 
             // Hotspot
-            "hotspot.set" -> LinkHub.send(hotspot.set(m, m.bool("enabled") ?: true))
+            "hotspot.set" -> out(hotspot.set(m, m.bool("enabled") ?: true))
             "hotspot.get" -> hotspot.reportState()
             "hotspot.config" -> { hotspot.saveConfig(m); hotspot.reportState() }
 
@@ -93,17 +106,17 @@ class MessageRouter(
             "call.dial" -> calls.dial(m.str("number")!!)
             "call.answer" -> calls.answer()
             "call.hangup" -> calls.hangup()
-            "contacts.list" -> LinkHub.send(m.reply("contacts.list") { put("contacts", calls.contacts(m.str("query"))) })
-            "calllog.list" -> LinkHub.send(CallLogReader.list(m, m.int("limit") ?: 100))
+            "contacts.list" -> out(m.reply("contacts.list") { put("contacts", calls.contacts(m.str("query"))) })
+            "calllog.list" -> out(CallLogReader.list(m, m.int("limit") ?: 100))
 
             // Photos
-            "photos.list" -> LinkHub.send(photos.list(m, m.int("offset") ?: 0, m.int("limit") ?: 200))
-            "photos.thumb" -> LinkHub.send(photos.thumb(m, m.long("id")!!, m.int("size") ?: 256))
+            "photos.list" -> out(photos.list(m, m.int("offset") ?: 0, m.int("limit") ?: 200))
+            "photos.thumb" -> out(photos.thumb(m, m.long("id")!!, m.int("size") ?: 256))
 
             // Files
-            "files.list" -> LinkHub.send(files.list(m, m.str("path")))
-            "files.roots" -> LinkHub.send(files.roots(m))
-            "file.get" -> files.send(m, photos)
+            "files.list" -> out(files.list(m, m.str("path")))
+            "files.roots" -> out(files.roots(m))
+            "file.get" -> files.send(m, photos, out)
 
             else -> Log.d(TAG, "Unhandled message ${m.t}")
         }
@@ -116,5 +129,15 @@ class MessageRouter(
         }
     }
 
-    companion object { private const val TAG = "Router" }
+    companion object {
+        private const val TAG = "Router"
+
+        /** Call state is watched once for the whole app, not per connection. */
+        @Volatile private var callBridge: CallBridge? = null
+    }
+
+    private val calls: CallBridge
+        get() = callBridge ?: synchronized(MessageRouter::class.java) {
+            callBridge ?: CallBridge(context.applicationContext).also { callBridge = it }
+        }
 }

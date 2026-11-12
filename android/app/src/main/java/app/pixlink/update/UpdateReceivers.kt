@@ -52,6 +52,6 @@ class RestartReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED && intent.action != Intent.ACTION_BOOT_COMPLETED) return
         context.getSystemService(NotificationManager::class.java).cancel(6)
-        if (PairedStore(context).pc != null) runCatching { LinkService.start(context) }
+        if (PairedStore(context).pcs.isNotEmpty()) runCatching { LinkService.start(context) }
     }
 }

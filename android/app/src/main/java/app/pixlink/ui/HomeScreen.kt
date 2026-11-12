@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -50,6 +51,7 @@ import app.pixlink.link.LinkHub
 import app.pixlink.link.LinkService
 import app.pixlink.link.LinkState
 import app.pixlink.notifications.NotificationBridge
+import app.pixlink.pairing.PairedPc
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
 import app.pixlink.update.AppUpdater
@@ -65,10 +67,10 @@ fun HomeScreen(
     onGrantPermissions: () -> Unit,
 ) {
     val ctx = LocalContext.current
-    val link by LinkHub.state.collectAsState()
+    val states by LinkHub.states.collectAsState()
     val power by PowerMode.state.collectAsState()
-    remember { PairedStore(ctx) } // loads the saved pairing into PairedStore.paired
-    val paired by PairedStore.paired.collectAsState()
+    remember { PairedStore(ctx) } // loads the saved pairings into PairedStore.paired
+    val pcs by PairedStore.paired.collectAsState()
 
     Scaffold(topBar = {
         TopAppBar(
@@ -80,52 +82,30 @@ fun HomeScreen(
             Modifier.fillMaxSize().padding(pad).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Connection card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Computer, null, Modifier.size(32.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                when (val s = link) {
-                                    is LinkState.Connected -> "Connected to ${s.pcName}"
-                                    is LinkState.Connecting -> "Connecting to ${s.pcName}…"
-                                    is LinkState.Error -> "Something went wrong"
-                                    LinkState.NotPaired -> "Not paired"
-                                    LinkState.Disconnected -> paired?.let { "${it.name} is offline" } ?: "Not paired"
-                                },
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                            if (link is LinkState.Error) Text((link as LinkState.Error).message, style = MaterialTheme.typography.bodySmall)
-                            val reason = LinkHub.lastDisconnectReason
-                            if (paired != null && link !is LinkState.Connected && reason != null) {
-                                Text("Last disconnect: $reason", style = MaterialTheme.typography.bodySmall)
+            if (pcs.isEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.Computer, null, Modifier.size(32.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Not linked yet", style = MaterialTheme.typography.titleLarge)
+                                Text("Open Pixlink on your PC, then scan its QR code or enter its code.", style = MaterialTheme.typography.bodyMedium)
                             }
-                            if (paired == null) Text("Open Pixlink on your PC and scan the QR code.", style = MaterialTheme.typography.bodyMedium)
                         }
-                    }
-                    Spacer(Modifier.size(16.dp))
-                    if (paired == null) {
                         Button(onClick = onPair) {
-                            Icon(Icons.Outlined.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("Scan QR code")
+                            Icon(Icons.Outlined.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("Link a PC")
                         }
-                    } else if (link is LinkState.Error) {
-                        // Usually means the PC unlinked this phone: offer a fresh pairing.
-                        Button(onClick = {
-                            PairedStore(ctx).pc = null
-                            LinkService.stop(ctx)
-                            onPair()
-                        }) { Text("Pair again") }
-                    } else {
-                        OutlinedButton(onClick = {
-                            PairedStore(ctx).pc = null
-                            LinkService.stop(ctx)
-                        }) { Text("Forget this PC") }
                     }
+                }
+            } else {
+                // One card per linked PC (e.g. work laptop and home PC); all can be connected at once.
+                pcs.forEach { pc -> PcCard(pc, states[pc.id], onPair) }
+                OutlinedButton(onClick = onPair, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Add, null); Spacer(Modifier.width(8.dp)); Text("Link another PC")
                 }
             }
 
@@ -216,6 +196,48 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
             }
             if (status is AppUpdater.Status.Downloading) {
                 LinearProgressIndicator(progress = { status.progress }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PcCard(pc: PairedPc, state: LinkState?, onPair: () -> Unit) {
+    val ctx = LocalContext.current
+    val connected = state is LinkState.Connected
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (connected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Computer, null, Modifier.size(28.dp))
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(pc.name, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        when (state) {
+                            is LinkState.Connected -> "Connected"
+                            is LinkState.Connecting -> "Connecting…"
+                            is LinkState.Error -> state.message
+                            else -> "Offline. Pixlink connects when it's on the same Wi-Fi."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    val reason = LinkHub.lastDisconnectReason[pc.id]
+                    if (!connected && state !is LinkState.Error && reason != null) {
+                        Text("Last disconnect: $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (state is LinkState.Error) {
+                    // Usually means the PC unlinked this phone: offer a fresh pairing.
+                    Button(onClick = { LinkService.forget(ctx, pc.id); onPair() }) { Text("Pair again") }
+                }
+                OutlinedButton(onClick = { LinkService.forget(ctx, pc.id) }) { Text("Forget") }
             }
         }
     }

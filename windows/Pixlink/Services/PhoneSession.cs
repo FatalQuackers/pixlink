@@ -281,9 +281,10 @@ public partial class PhoneSession : ObservableObject
 
     private void OnNotification(Envelope m)
     {
+        var key = m.Str("key")!;
         var n = new PhoneNotification
         {
-            Key = m.Str("key")!,
+            Key = key,
             App = m.Str("app") ?? "",
             AppName = m.Str("appName") ?? "",
             Title = m.Str("title") ?? "",
@@ -292,16 +293,47 @@ public partial class PhoneSession : ObservableObject
             CanReply = m.Bool("canReply") ?? false,
             IsMessage = m.Bool("isMessage") ?? false,
             Conversation = m.Str("conversation"),
-            Actions = m.Arr("actions")?.Select(a => a?.GetValue<string>() ?? "").ToList() ?? new(),
+            Actions = ParseActions(key, m.Arr("actions")),
             Icon = _icons.GetValueOrDefault(m.Str("app") ?? ""),
         };
+        foreach (var h in m.Arr("history")?.OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
+        {
+            var time = DateTimeOffset.FromUnixTimeMilliseconds(h["time"]?.GetValue<long>() ?? 0).LocalDateTime.ToString("t");
+            n.History.Add(new ChatBubble(h["text"]?.GetValue<string>() ?? "", h["fromMe"]?.GetValue<bool>() ?? false, time,
+                h["sender"]?.GetValue<string>() ?? ""));
+        }
 
         var existing = Notifications.FirstOrDefault(x => x.Key == n.Key);
-        if (existing is not null) Notifications.Remove(existing);
+        if (existing is not null)
+        {
+            n.IsExpanded = existing.IsExpanded; // an update shouldn't collapse a card you opened
+            n.ReplyDraft = existing.ReplyDraft;
+            Notifications.Remove(existing);
+        }
         Notifications.Insert(0, n);
 
         if (n.IsMessage) AddToConversation(n);
         if (existing is null && _settings.ShowToasts) Toasts.Show(n);
+    }
+
+    /// <summary>Accepts the new format ([{title, semantic}]) and the old one (["title"]).</summary>
+    private static List<NotifAction> ParseActions(string key, JsonArray? arr)
+    {
+        var list = new List<NotifAction>();
+        if (arr is null) return list;
+        for (var i = 0; i < arr.Count; i++)
+        {
+            switch (arr[i])
+            {
+                case JsonObject o:
+                    list.Add(new NotifAction(key, i, o["title"]?.GetValue<string>() ?? "", o["semantic"]?.GetValue<string>() ?? ""));
+                    break;
+                case JsonValue v when v.TryGetValue<string>(out var title):
+                    list.Add(new NotifAction(key, i, title, ""));
+                    break;
+            }
+        }
+        return list;
     }
 
     private void AddToConversation(PhoneNotification n)
@@ -310,17 +342,64 @@ public partial class PhoneSession : ObservableObject
         if (convo is null)
         {
             convo = new Conversation { Name = n.ThreadName, App = n.App, Icon = n.Icon };
-            Conversations.Insert(0, convo);
+            convo.IsPinned = _settings.PinnedConversations.Contains(convo.Id);
+            Conversations.Add(convo);
         }
-        else
+        // A new message brings back a conversation you removed.
+        if (_settings.HiddenConversations.Remove(convo.Id)) _settings.Save();
+
+        if (n.History.Count > 1)
         {
-            Conversations.Move(Conversations.IndexOf(convo), 0);
+            // The app sent the recent thread: show exactly that.
+            convo.Messages.Clear();
+            foreach (var b in n.History) convo.Messages.Add(b);
         }
-        if (convo.Messages.LastOrDefault()?.Text != n.Text) convo.Messages.Add(new ChatBubble(n.Text, false, n.TimeText));
+        else if (convo.Messages.LastOrDefault()?.Text != n.Text)
+        {
+            convo.Messages.Add(new ChatBubble(n.Text, false, n.TimeText));
+        }
         convo.Preview = n.Text;
         convo.Time = n.TimeText;
+        convo.LatestKey = n.Key;
+        convo.LatestActions = n.Actions;
         if (n.CanReply) convo.ReplyKey = n.Key;
+        SortConversations(convo);
     }
+
+    /// <summary>Pinned conversations stay at the top; the rest follow newest first.</summary>
+    private void SortConversations(Conversation? justUpdated = null)
+    {
+        if (justUpdated is not null)
+        {
+            var target = justUpdated.IsPinned ? 0 : Conversations.Count(c => c.IsPinned && c != justUpdated);
+            var from = Conversations.IndexOf(justUpdated);
+            if (from >= 0 && from != target) Conversations.Move(from, Math.Min(target, Conversations.Count - 1));
+        }
+    }
+
+    public void SetPinned(Conversation convo, bool pinned)
+    {
+        convo.IsPinned = pinned;
+        if (pinned) _settings.PinnedConversations.Add(convo.Id); else _settings.PinnedConversations.Remove(convo.Id);
+        _settings.Save();
+        SortConversations(convo);
+    }
+
+    /// <summary>Removes a conversation from the list (it comes back if a new message arrives).</summary>
+    public void RemoveConversation(Conversation convo)
+    {
+        _settings.HiddenConversations.Add(convo.Id);
+        _settings.PinnedConversations.Remove(convo.Id);
+        _settings.Save();
+        Conversations.Remove(convo);
+    }
+
+    /// <summary>Presses one of the app's buttons (Mark as read…) on the phone.</summary>
+    public Task ActionAsync(NotifAction a) =>
+        SendAsync(Envelope.Of("notif.action", new { key = a.Key, actionIndex = a.Index }));
+
+    public Task ActionAsync(string key, int index) =>
+        SendAsync(Envelope.Of("notif.action", new { key, actionIndex = index }));
 
     public async Task ReplyAsync(Conversation convo, string text)
     {
@@ -330,8 +409,22 @@ public partial class PhoneSession : ObservableObject
         convo.Preview = $"You: {text}";
     }
 
+    /// <summary>Reply from an expanded notification card.</summary>
+    public async Task ReplyAsync(PhoneNotification n)
+    {
+        var text = n.ReplyDraft.Trim();
+        if (text.Length == 0 || !n.CanReply) return;
+        n.ReplyDraft = "";
+        await ReplyToKeyAsync(n.Key, text);
+        if (n.History.Count == 0) n.History.Add(new ChatBubble(n.Text, false, n.TimeText, n.Title)); // keep their message above yours
+        n.History.Add(new ChatBubble(text, true, DateTime.Now.ToString("t")));
+        var convo = Conversations.FirstOrDefault(c => c.Name == n.ThreadName && c.App == n.App);
+        if (convo is not null) { convo.Messages.Add(new ChatBubble(text, true, DateTime.Now.ToString("t"))); convo.Preview = $"You: {text}"; }
+    }
+
     public Task ReplyToKeyAsync(string key, string text) => SendAsync(Envelope.Of("notif.reply", new { key, text }));
     public Task DismissAsync(PhoneNotification n) => SendAsync(Envelope.Of("notif.dismiss", new { key = n.Key }));
+    public Task DismissAsync(string key) => SendAsync(Envelope.Of("notif.dismiss", new { key }));
     public Task DismissAllAsync() => Task.WhenAll(Notifications.ToList().Select(DismissAsync));
 
     private void OnAppIcon(Envelope m)
@@ -446,7 +539,9 @@ public partial class PhoneSession : ObservableObject
         if (!switched)
         {
             // The phone opened its hotspot setting; give the user time to flip it, then try to join.
-            progress?.Report("Turn on the hotspot on your phone. Pixlink will connect when it appears…");
+            progress?.Report(reply.Bool("openedSettings") == true
+                ? "On your phone, tap the Pixlink notification \"Your PC wants to use your hotspot\" and switch Hotspot on. This PC connects as soon as it appears…"
+                : "Turn on the hotspot on your phone. This PC connects as soon as it appears…");
         }
         else
         {

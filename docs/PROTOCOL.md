@@ -10,6 +10,10 @@ The Windows app is the **server**; the Pixel is the **client**.
 
 Discovery after pairing: the PC broadcasts `{"pixlink":1,"pcId":"…","port":47100}` over UDP to port **47102** on every local network every 3 seconds. The phone remembers the last IP; if the paired PC shows up at a new address (new Wi-Fi, or the PC joined the phone's hotspot) it switches to it and reconnects.
 
+## Several PCs
+
+A phone can be paired with any number of PCs. It keeps one control connection per PC and remembers each PC's host, port, fingerprint and name. Notifications, battery, media and other phone → PC events go to every connected PC; replies to a request go only to the PC that asked. Screen mirroring streams to the PC that asked for it.
+
 ## Pairing
 
 1. PC generates (once) a self-signed RSA-2048 certificate and stores it in the user profile.
@@ -57,11 +61,11 @@ code, so the 100,000 possibilities can't practically be guessed within its 5-min
 ### Notifications & messages
 | Type | Direction | Payload |
 | --- | --- | --- |
-| `notif.posted` | phone → PC | `{key, app, appName, title, text, time, canReply, isMessage, conversation?}` |
+| `notif.posted` | phone → PC | `{key, app, appName, title, text, time, canReply, isMessage, conversation?, actions:[{title, semantic}], history:[{sender, text, time, fromMe}]}`. `actions` are the app's buttons without a text box (phone + Wear OS actions); `semantic` is one of `markAsRead, delete, archive, mute, like, call` or empty. `history` holds the last 8 messages of a MessagingStyle conversation. |
 | `notif.removed` | phone → PC | `{key}` |
 | `notif.dismiss` | PC → phone | `{key}` |
 | `notif.reply` | PC → phone | `{key, text}` |
-| `notif.action` | PC → phone | `{key, actionIndex}` |
+| `notif.action` | PC → phone | `{key, actionIndex}` (index into `actions`) |
 | `app.icon` | phone → PC | `{app, pngBase64}` (sent once per app) |
 
 ### Mirroring & control

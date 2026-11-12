@@ -5,8 +5,12 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 
-/** The one PC this phone is paired with. */
+/** A PC this phone is paired with. A phone can be paired with several (e.g. work and home). */
+@Serializable
 data class PairedPc(
     val host: String,
     val port: Int,
@@ -20,37 +24,50 @@ class PairedStore(context: Context) {
     private val prefs = context.getSharedPreferences("pixlink", Context.MODE_PRIVATE)
 
     init {
-        if (!loaded) { loaded = true; _paired.value = pc }
+        if (!loaded) { loaded = true; migrateSinglePc(); _paired.value = pcs }
     }
 
-    var pc: PairedPc?
-        get() {
-            val host = prefs.getString("host", null) ?: return null
-            return PairedPc(
-                host = host,
-                port = prefs.getInt("port", 47100),
-                fingerprint = prefs.getString("fp", null) ?: return null,
-                name = prefs.getString("pcName", "PC")!!,
-                id = prefs.getString("pcId", "")!!,
-            )
+    /** Every paired PC. Stored as JSON; written with commit() so pairing survives a sudden kill. */
+    var pcs: List<PairedPc>
+        get() = prefs.getString("pcs", null)
+            ?.let { runCatching { json.decodeFromString(ListSerializer(PairedPc.serializer()), it) }.getOrNull() }
+            ?: emptyList()
+        private set(value) {
+            prefs.edit(commit = true) { putString("pcs", json.encodeToString(ListSerializer(PairedPc.serializer()), value)) }
+            _paired.value = value
         }
-        // commit = true: write to disk now, so pairing survives even if the app is killed right after.
-        set(value) = prefs.edit(commit = true) {
-            if (value == null) {
-                remove("host"); remove("port"); remove("fp"); remove("pcName"); remove("pcId")
-            } else {
-                putString("host", value.host)
-                putInt("port", value.port)
-                putString("fp", value.fingerprint)
-                putString("pcName", value.name)
-                putString("pcId", value.id)
-            }
-        }.also { _paired.value = value }
 
-    /** Updates the remembered IP when the PC's address changes (found via mDNS). */
-    fun updateHost(host: String) {
-        prefs.edit(commit = true) { putString("host", host) }
-        _paired.value = pc
+    fun pc(id: String): PairedPc? = pcs.firstOrNull { it.id == id }
+
+    /** Adds a PC, or replaces it if it was paired before. */
+    fun add(pc: PairedPc) {
+        pcs = pcs.filterNot { it.id == pc.id || it.fingerprint == pc.fingerprint } + pc
+    }
+
+    fun remove(id: String) {
+        pcs = pcs.filterNot { it.id == id }
+    }
+
+    /** Updates a PC's remembered IP when it shows up at a new address. */
+    fun updateHost(id: String, host: String) {
+        pcs = pcs.map { if (it.id == id) it.copy(host = host) else it }
+    }
+
+    /** Earlier versions stored one PC in separate keys; move it into the list. */
+    private fun migrateSinglePc() {
+        val host = prefs.getString("host", null) ?: return
+        val fp = prefs.getString("fp", null) ?: return
+        val old = PairedPc(
+            host = host,
+            port = prefs.getInt("port", 47100),
+            fingerprint = fp,
+            name = prefs.getString("pcName", "PC") ?: "PC",
+            id = prefs.getString("pcId", null)?.takeIf { it.isNotEmpty() } ?: fp,
+        )
+        if (pcs.none { it.id == old.id }) {
+            prefs.edit(commit = true) { putString("pcs", json.encodeToString(ListSerializer(PairedPc.serializer()), pcs + old)) }
+        }
+        prefs.edit(commit = true) { remove("host"); remove("port"); remove("fp"); remove("pcName"); remove("pcId") }
     }
 
     /** Whether the welcome / onboarding flow has been finished. */
@@ -112,10 +129,11 @@ class PairedStore(context: Context) {
         set(v) = prefs.edit { putString("hotspotPassword", v) }
 
     companion object {
-        private val _paired = MutableStateFlow<PairedPc?>(null)
+        private val json = Json { ignoreUnknownKeys = true }
+        private val _paired = MutableStateFlow<List<PairedPc>>(emptyList())
         @Volatile private var loaded = false
 
-        /** The paired PC, live — the UI collects this so it updates the moment pairing changes. */
-        val paired: StateFlow<PairedPc?> = _paired.asStateFlow()
+        /** The paired PCs, live — the UI collects this so it updates the moment pairing changes. */
+        val paired: StateFlow<List<PairedPc>> = _paired.asStateFlow()
     }
 }

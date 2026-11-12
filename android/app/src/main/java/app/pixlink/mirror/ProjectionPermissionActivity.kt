@@ -33,19 +33,20 @@ class ProjectionPermissionActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST && resultCode == RESULT_OK && data != null) {
             MirrorService.start(
-                this, resultCode, data,
+                this, resultCode, data, intent.getStringExtra(EXTRA_PC) ?: "",
                 intent.getIntExtra(EXTRA_MAX, 1280),
                 intent.getIntExtra(EXTRA_BITRATE, 6_000_000),
                 intent.getIntExtra(EXTRA_FPS, 60),
             )
         } else {
-            LinkHub.send(msg("mirror.stop") { put("reason", "denied") })
+            intent.getStringExtra(EXTRA_PC)?.let { LinkHub.sendTo(it, msg("mirror.stop") { put("reason", "denied") }) }
         }
         finish()
     }
 
     companion object {
         private const val REQUEST = 7
+        private const val EXTRA_PC = "pc"
         private const val EXTRA_MAX = "max"
         private const val EXTRA_BITRATE = "bitrate"
         private const val EXTRA_FPS = "fps"
@@ -54,14 +55,15 @@ class ProjectionPermissionActivity : Activity() {
          * Android blocks apps from opening screens while in the background. With Power mode
          * we open the prompt via the shell; otherwise we post a "Tap to share" notification.
          */
-        suspend fun launch(context: Context, maxSize: Int, bitrate: Int, fps: Int) {
+        suspend fun launch(context: Context, pcId: String, maxSize: Int, bitrate: Int, fps: Int) {
             if (PowerMode.isReady) {
                 val cmp = "${context.packageName}/${ProjectionPermissionActivity::class.java.name}"
-                PowerMode.exec("am start -n $cmp --ei $EXTRA_MAX $maxSize --ei $EXTRA_BITRATE $bitrate --ei $EXTRA_FPS $fps")
+                PowerMode.exec("am start -n $cmp --es $EXTRA_PC ${PowerMode.quote(pcId)} --ei $EXTRA_MAX $maxSize --ei $EXTRA_BITRATE $bitrate --ei $EXTRA_FPS $fps")
                 return
             }
             val intent = Intent(context, ProjectionPermissionActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra(EXTRA_PC, pcId)
                 .putExtra(EXTRA_MAX, maxSize)
                 .putExtra(EXTRA_BITRATE, bitrate)
                 .putExtra(EXTRA_FPS, fps)

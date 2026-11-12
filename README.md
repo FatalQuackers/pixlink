@@ -10,9 +10,9 @@ Website: https://fatalquackers.github.io/pixlink/
 
 | Feature | Works for everyone | Power mode adds |
 | --- | --- | --- |
-| Notifications & texts | Mirror notifications, reply to SMS / RCS / chat apps, Windows pop-ups with quick reply | — |
+| Notifications & texts | Mirror notifications; expand a card to see the chat, reply, or press the app's own buttons (Mark as read, Like…); Windows pop-ups with Reply, app buttons and Dismiss; pin or remove chats in Messages; full text history via Google Messages for Web | — |
 | Screen mirroring | See your phone screen live, choose quality | Click, long-press, swipe, scroll and type |
-| Hotspot | One button: phone opens its hotspot switch, PC joins automatically | Phone switches the hotspot on by itself |
+| Hotspot | One button: your phone shows a notification that opens its hotspot switch, PC joins automatically | Phone switches the hotspot on by itself |
 | Calls | Dialer, contacts, calls through your PC's Bluetooth | Call history |
 | Photos & files | Full gallery, drag files both ways, shared folders | Browse all phone storage |
 | Now playing | See what's playing on your phone; play, pause, skip | — |
@@ -22,7 +22,7 @@ Website: https://fatalquackers.github.io/pixlink/
 | Send to PC | Share text, links, photos and files from any app to your PC | — |
 | Battery | Low battery alert on your PC | — |
 
-**Linking** takes seconds: scan the QR code or type the 5-digit code shown on your PC.
+**Linking** takes seconds: scan the QR code or type the 5-digit code shown on your PC. One phone can link to **several PCs** (say, a work laptop and a home PC); it stays connected to all of them at once. Tap **Link another PC** on the phone's home screen.
 
 **Power mode** uses [Shizuku](https://shizuku.rikka.app/) and a one-time Wireless Debugging pairing. It's optional. See [docs/POWER_MODE.md](docs/POWER_MODE.md).
 
@@ -72,7 +72,7 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 ### Optional extras
 
 - **Calls through your PC:** pair your phone with your PC in **Windows Settings → Bluetooth & devices → Add device**.
-- **Hotspot:** click **Hotspot** in the PC app. The first time, it asks for your phone's hotspot name and password. With Power mode on, your phone's hotspot switches on by itself and your PC joins it; without Power mode, your phone opens its hotspot setting for you to flip.
+- **Hotspot:** click **Hotspot** in the PC app. The first time, it asks for your phone's hotspot name and password. With Power mode on, your phone's hotspot switches on by itself and your PC joins it; without Power mode, your phone shows a notification. Tap it and flip the hotspot switch, and your PC joins by itself.
 - **Power mode** (screen control, hotspot toggle, call history, all files): follow [docs/POWER_MODE.md](docs/POWER_MODE.md).
 
 ### Troubleshooting

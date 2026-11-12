@@ -3,6 +3,8 @@ package app.pixlink.link
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import java.util.concurrent.ConcurrentHashMap
 
 sealed interface LinkState {
     data object NotPaired : LinkState
@@ -13,24 +15,42 @@ sealed interface LinkState {
 }
 
 /**
- * App-wide access point for the live connection, so features (notifications,
- * mirroring, calls…) can send messages without knowing about sockets.
+ * App-wide access point for the live connections. A phone can be linked to several PCs
+ * at once (work and home): events such as notifications go to every connected PC, while
+ * replies go back to the PC that asked.
  */
 object LinkHub {
-    private val _state = MutableStateFlow<LinkState>(LinkState.Disconnected)
-    val state: StateFlow<LinkState> = _state.asStateFlow()
+    private val clients = ConcurrentHashMap<String, LinkClient>()
 
-    @Volatile internal var client: LinkClient? = null
+    private val _states = MutableStateFlow<Map<String, LinkState>>(emptyMap())
+    /** Connection state per PC id. */
+    val states: StateFlow<Map<String, LinkState>> = _states.asStateFlow()
 
-    /** Why the last connection ended, shown on the home screen to help troubleshoot. */
-    @Volatile var lastDisconnectReason: String? = null
+    private val _pairing = MutableStateFlow<LinkState?>(null)
+    /** The pairing in progress (null when not pairing). */
+    val pairing: StateFlow<LinkState?> = _pairing.asStateFlow()
 
-    internal fun setState(s: LinkState) { _state.value = s }
+    /** Why each PC's last connection ended, shown on the home screen to help troubleshoot. */
+    val lastDisconnectReason = ConcurrentHashMap<String, String>()
 
-    val isConnected get() = _state.value is LinkState.Connected
+    internal fun setState(pcId: String, s: LinkState) = _states.update { it + (pcId to s) }
+    internal fun clearState(pcId: String) = _states.update { it - pcId }
+    internal fun setPairing(s: LinkState?) { _pairing.value = s }
 
-    /** Sends a message if connected; silently drops it otherwise. */
+    internal fun attach(pcId: String, client: LinkClient) { clients[pcId] = client }
+    internal fun detach(pcId: String, client: LinkClient) { clients.remove(pcId, client) }
+    internal fun client(pcId: String): LinkClient? = clients[pcId]
+
+    val isConnected get() = _states.value.values.any { it is LinkState.Connected }
+    val connectedPcIds: List<String> get() = _states.value.filterValues { it is LinkState.Connected }.keys.toList()
+
+    /** Sends to every connected PC (notifications, battery, media…). */
     fun send(env: Envelope) {
-        client?.send(env)
+        for ((id, c) in clients) if (_states.value[id] is LinkState.Connected) c.send(env)
+    }
+
+    /** Sends to one PC (replies, file transfers, mirroring). */
+    fun sendTo(pcId: String, env: Envelope) {
+        clients[pcId]?.send(env)
     }
 }

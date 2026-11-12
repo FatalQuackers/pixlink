@@ -17,6 +17,12 @@ public sealed class AppSettings
     public bool ToastSound { get; set; } = true;
     public HashSet<string> MutedApps { get; set; } = new();
 
+    // Messages tab
+    public HashSet<string> PinnedConversations { get; set; } = new();
+    public HashSet<string> HiddenConversations { get; set; } = new();
+    /// <summary>"pixlink" (conversations from notifications) or "google" (Google Messages for Web).</summary>
+    public string MessagesView { get; set; } = "pixlink";
+
     // Phone battery
     public bool LowBatteryAlert { get; set; } = true;
     public int LowBatteryLevel { get; set; } = 15;

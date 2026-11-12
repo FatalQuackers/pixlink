@@ -34,11 +34,13 @@ import kotlinx.coroutines.delay
 /** Shown while pairing: searching → animated check, or a clear error with Try again. */
 @Composable
 fun LinkingScreen(pcName: String, onDone: () -> Unit, onRetry: () -> Unit) {
-    val link by LinkHub.state.collectAsState()
+    val link by LinkHub.pairing.collectAsState()
+    val finish = { LinkHub.setPairing(null); onDone() }
+    val retry = { LinkHub.setPairing(null); onRetry() }
 
     // Move on by itself shortly after the success animation.
     LaunchedEffect(link) {
-        if (link is LinkState.Connected) { delay(2600); onDone() }
+        if (link is LinkState.Connected) { delay(2600); finish() }
     }
 
     Surface(Modifier.fillMaxSize()) {
@@ -66,7 +68,7 @@ fun LinkingScreen(pcName: String, onDone: () -> Unit, onRetry: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                         )
-                        Button(onClick = onDone, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Continue") }
+                        Button(onClick = finish, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Continue") }
                     }
                     "error" -> {
                         Text("Couldn't link", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
@@ -76,8 +78,8 @@ fun LinkingScreen(pcName: String, onDone: () -> Unit, onRetry: () -> Unit) {
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center,
                         )
-                        Button(onClick = onRetry, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Try again") }
-                        OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Not now") }
+                        Button(onClick = retry, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Try again") }
+                        OutlinedButton(onClick = finish, modifier = Modifier.fillMaxWidth()) { Text("Not now") }
                     }
                     else -> {
                         SearchingPulse()

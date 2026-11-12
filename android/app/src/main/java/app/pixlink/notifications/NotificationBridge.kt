@@ -8,24 +8,25 @@ import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Base64
+import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
+import app.pixlink.link.Envelope
 import app.pixlink.link.LinkHub
 import app.pixlink.link.msg
 import app.pixlink.pairing.PairedStore
-import kotlinx.serialization.json.add
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import java.io.ByteArrayOutputStream
 
 /**
- * Mirrors notifications to the PC and lets the PC reply, dismiss or tap actions.
- * Replies use the notification's own reply action, so texting works for SMS, RCS
- * (Google Messages) and chat apps — without the restricted SMS permission.
+ * Mirrors notifications to the PCs and lets a PC reply, dismiss or press the app's own buttons
+ * (Mark as read, Like…). Replies use the notification's own reply action, so texting works for
+ * SMS, RCS (Google Messages) and chat apps — without the restricted SMS permission.
  */
 class NotificationBridge : NotificationListenerService() {
 
     private val iconsSent = mutableSetOf<String>()
-
     private val store by lazy { PairedStore(this) }
 
     override fun onListenerConnected() {
@@ -44,7 +45,7 @@ class NotificationBridge : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (!shouldMirror(sbn)) return
-        sendIconOnce(sbn.packageName)
+        sendIconOnce(sbn.packageName, LinkHub::send)
         LinkHub.send(toMessage(sbn))
     }
 
@@ -68,11 +69,11 @@ class NotificationBridge : NotificationListenerService() {
         val appName = runCatching {
             packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString()
         }.getOrDefault(sbn.packageName)
+        val hide = store.hideContent && n.visibility != Notification.VISIBILITY_PUBLIC
 
         put("key", sbn.key)
         put("app", sbn.packageName)
         put("appName", appName)
-        val hide = store.hideContent && n.visibility != Notification.VISIBILITY_PUBLIC
         put("title", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "")
         put(
             "text",
@@ -81,22 +82,43 @@ class NotificationBridge : NotificationListenerService() {
         )
         put("time", sbn.postTime)
         put("canReply", findReplyAction(n) != null)
-        put("isMessage", n.category == Notification.CATEGORY_MESSAGE)
+        put("isMessage", n.category == Notification.CATEGORY_MESSAGE || NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n) != null)
         extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.let { put("conversation", it.toString()) }
+
+        // The app's own buttons (Mark as read, Like, Archive…), in the order the PC will show them.
         putJsonArray("actions") {
-            n.actions?.filter { it.remoteInputs.isNullOrEmpty() }?.forEach { add(it.title.toString()) }
+            buttonActions(n).forEach { a ->
+                addJsonObject {
+                    put("title", a.title?.toString() ?: "")
+                    put("semantic", semanticName(a.semanticAction))
+                }
+            }
+        }
+
+        // Recent messages in the conversation, so the PC can show the thread when expanded.
+        if (!hide) NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n)?.let { style ->
+            putJsonArray("history") {
+                style.messages.takeLast(8).forEach { m ->
+                    addJsonObject {
+                        put("sender", m.person?.name?.toString() ?: "")
+                        put("text", m.text?.toString() ?: "")
+                        put("time", m.timestamp)
+                        put("fromMe", m.person == null || m.person?.key == style.user.key && m.person?.name == style.user.name)
+                    }
+                }
+            }
         }
     }
 
-    private fun sendIconOnce(pkg: String) {
+    private fun sendIconOnce(pkg: String, out: (Envelope) -> Unit) {
         if (!iconsSent.add(pkg)) return
         val icon = runCatching { packageManager.getApplicationIcon(pkg) }.getOrNull() ?: return
         val bmp = icon.toBitmap(96, 96, Bitmap.Config.ARGB_8888)
-        val out = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
-        LinkHub.send(msg("app.icon") {
+        val bytes = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, bytes)
+        out(msg("app.icon") {
             put("app", pkg)
-            put("pngBase64", Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP))
+            put("pngBase64", Base64.encodeToString(bytes.toByteArray(), Base64.NO_WRAP))
         })
     }
 
@@ -105,17 +127,45 @@ class NotificationBridge : NotificationListenerService() {
 
         val isEnabled get() = instance != null
 
+        /**
+         * Phone buttons plus the ones apps only offer to smartwatches (that's where many chat apps
+         * put Reply and Mark as read), without duplicates.
+         */
+        private fun allActions(n: Notification): List<Notification.Action> {
+            val phone = n.actions?.toList().orEmpty()
+            @Suppress("DEPRECATION")
+            val watch = Notification.WearableExtender(n).actions.orEmpty()
+            val seen = phone.mapNotNull { it.title?.toString()?.lowercase() }.toMutableSet()
+            return phone + watch.filter { a -> a.title?.toString()?.lowercase()?.let(seen::add) ?: false }
+        }
+
         private fun findReplyAction(n: Notification): Notification.Action? =
-            n.actions?.firstOrNull { a -> a.remoteInputs?.any { it.allowFreeFormInput } == true }
+            allActions(n).firstOrNull { a -> a.remoteInputs?.any { it.allowFreeFormInput } == true }
+
+        /** Buttons without a text box, i.e. ones you just press. */
+        private fun buttonActions(n: Notification): List<Notification.Action> =
+            allActions(n).filter { it.remoteInputs.isNullOrEmpty() }
+
+        private fun semanticName(s: Int) = when (s) {
+            Notification.Action.SEMANTIC_ACTION_MARK_AS_READ -> "markAsRead"
+            Notification.Action.SEMANTIC_ACTION_MARK_AS_UNREAD -> "markAsUnread"
+            Notification.Action.SEMANTIC_ACTION_DELETE -> "delete"
+            Notification.Action.SEMANTIC_ACTION_ARCHIVE -> "archive"
+            Notification.Action.SEMANTIC_ACTION_MUTE -> "mute"
+            Notification.Action.SEMANTIC_ACTION_THUMBS_UP -> "like"
+            Notification.Action.SEMANTIC_ACTION_CALL -> "call"
+            else -> ""
+        }
 
         private fun find(key: String): StatusBarNotification? =
             instance?.activeNotifications?.firstOrNull { it.key == key }
 
-        fun syncAll() {
+        /** Sends every current notification to the PC that asked (when it connects). */
+        fun syncAll(out: (Envelope) -> Unit) {
             val svc = instance ?: return
             svc.activeNotifications?.filter(svc::shouldMirror)?.forEach {
-                svc.sendIconOnce(it.packageName)
-                LinkHub.send(svc.toMessage(it))
+                svc.sendIconOnce(it.packageName, out)
+                out(svc.toMessage(it))
             }
         }
 
@@ -140,12 +190,11 @@ class NotificationBridge : NotificationListenerService() {
             action.actionIntent.send(svc, 0, intent)
         }
 
-        /** Taps the notification's Nth non-reply action button. */
+        /** Presses the notification's Nth button (same order as the "actions" list sent to the PC). */
         fun action(key: String, index: Int) {
             val svc = instance ?: return
             val sbn = find(key) ?: return
-            val actions = sbn.notification.actions?.filter { it.remoteInputs.isNullOrEmpty() } ?: return
-            actions.getOrNull(index)?.actionIntent?.send(svc, 0, null)
+            buttonActions(sbn.notification).getOrNull(index)?.actionIntent?.send(svc, 0, null)
         }
     }
 }

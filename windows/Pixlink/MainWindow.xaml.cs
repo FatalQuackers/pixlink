@@ -202,7 +202,7 @@ public sealed partial class MainWindow : Window
                     ShowHotspot(InfoBarSeverity.Warning, $"The hotspot is on, but this PC couldn't join \"{Session.HotspotSsid}\". Check the name and password in Settings.");
                     break;
                 case PhoneSession.HotspotOutcome.TurnOnOnPhone:
-                    ShowHotspot(InfoBarSeverity.Warning, "Turn on the hotspot on your phone, then click Hotspot again. Turn on Power mode to skip this step.");
+                    ShowHotspot(InfoBarSeverity.Warning, "Couldn't find the hotspot. Switch it on from the Pixlink notification on your phone, then click Hotspot again. Turn on Power mode on the phone to skip this step.");
                     HotspotButton.IsChecked = false;
                     break;
                 default:
@@ -300,5 +300,42 @@ public sealed partial class MainWindow : Window
             _ = Session.DismissAsync(n);
             Session.Notifications.Remove(n);
         }
+    }
+
+    private void OnToggleExpand(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is PhoneNotification n) n.IsExpanded = !n.IsExpanded;
+    }
+
+    private void OnCardTapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is PhoneNotification n && n.HasMore) n.IsExpanded = !n.IsExpanded;
+    }
+
+    /// <summary>An app button (Mark as read, Like…) — pressed on the phone.</summary>
+    private void OnNotifAction(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is NotifAction a) _ = Session.ActionAsync(a);
+    }
+
+    private void OnNotifReply(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is PhoneNotification n) _ = Session.ReplyAsync(n);
+    }
+
+    private void OnNotifReplyKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key != Windows.System.VirtualKey.Enter || (sender as FrameworkElement)?.Tag is not PhoneNotification n) return;
+        if (sender is TextBox box) n.ReplyDraft = box.Text; // Enter can arrive before the binding updates
+        _ = Session.ReplyAsync(n);
+        e.Handled = true;
+    }
+
+    /// <summary>Opens Pixlink with one notification expanded (clicking a Windows pop-up).</summary>
+    public void ShowNotification(string key)
+    {
+        BringToFront();
+        var n = Session.Notifications.FirstOrDefault(x => x.Key == key);
+        if (n is not null && n.HasMore) n.IsExpanded = true;
     }
 }

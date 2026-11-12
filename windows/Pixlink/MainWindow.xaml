@@ -187,16 +187,81 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Image Source="{x:Bind Icon, Mode=OneWay}" Width="20" Height="20" VerticalAlignment="Top" />
-                                    <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                    <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center">
                                         <Run Text="{x:Bind AppName}" /> · <Run Text="{x:Bind TimeText}" />
                                     </TextBlock>
-                                    <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" Padding="4" Click="OnDismiss" Tag="{Binding}">
-                                        <FontIcon Glyph="&#xE711;" FontSize="10" />
-                                    </Button>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{x:Bind Text}" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                                        <Button Style="{StaticResource SubtleButtonStyle}" Padding="4" Click="OnToggleExpand" Tag="{x:Bind}"
+                                                Visibility="{x:Bind HasMore}" ToolTipService.ToolTip="Show more">
+                                            <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="10" />
+                                        </Button>
+                                        <Button Style="{StaticResource SubtleButtonStyle}" Padding="4" Click="OnDismiss" Tag="{x:Bind}"
+                                                ToolTipService.ToolTip="Dismiss on phone">
+                                            <FontIcon Glyph="&#xE711;" FontSize="10" />
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!-- Tapping the title or text expands the card -->
+                                    <StackPanel Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Background="Transparent"
+                                                Tapped="OnCardTapped" Tag="{x:Bind}">
+                                        <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" MaxLines="{x:Bind TextLines, Mode=OneWay}" TextTrimming="CharacterEllipsis"
+                                                   Visibility="{x:Bind ShowSingleText, Mode=OneWay}" />
+                                    </StackPanel>
+
+                                    <!-- Expanded: conversation, buttons, reply -->
+                                    <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Spacing="8" Margin="0,6,0,0"
+                                                Visibility="{x:Bind IsExpanded, Mode=OneWay}">
+                                        <ItemsRepeater ItemsSource="{x:Bind History}" Visibility="{x:Bind HasHistory, Mode=OneWay}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Spacing="4" />
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:ChatBubble">
+                                                    <Border HorizontalAlignment="{x:Bind Align}" MaxWidth="300" CornerRadius="12" Padding="10,6"
+                                                            Background="{x:Bind BubbleBrush}">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{x:Bind Sender}" Style="{StaticResource CaptionTextBlockStyle}"
+                                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="{x:Bind ShowSender}" />
+                                                            <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+
+                                        <ItemsRepeater ItemsSource="{x:Bind Actions}" Visibility="{x:Bind HasActions}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Orientation="Horizontal" Spacing="6" />
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="models:NotifAction">
+                                                    <Button Click="OnNotifAction" Tag="{x:Bind}" Padding="10,4">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="12" />
+                                                            <TextBlock Text="{x:Bind Title}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+
+                                        <Grid ColumnSpacing="6" Visibility="{x:Bind CanReply}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox PlaceholderText="Reply" Text="{x:Bind ReplyDraft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     KeyDown="OnNotifReplyKeyDown" Tag="{x:Bind}" />
+                                            <Button Grid.Column="1" Style="{StaticResource AccentButtonStyle}" Click="OnNotifReply" Tag="{x:Bind}"
+                                                    ToolTipService.ToolTip="Send">
+                                                <FontIcon Glyph="&#xE724;" FontSize="14" />
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </DataTemplate>

@@ -39,6 +39,8 @@ class MirrorService : Service() {
     private var codec: MediaCodec? = null
     private var socket: SSLSocket? = null
     @Volatile private var running = false
+    /** The PC watching; mirroring goes to one PC at a time. */
+    @Volatile private var pcId = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -59,6 +61,7 @@ class MirrorService : Service() {
         val maxSize = intent.getIntExtra(EXTRA_MAX, 1280)
         val bitrate = intent.getIntExtra(EXTRA_BITRATE, 6_000_000)
         val fps = intent.getIntExtra(EXTRA_FPS, 60)
+        pcId = intent.getStringExtra(EXTRA_PC) ?: ""
 
         val mpm = getSystemService(MediaProjectionManager::class.java)
         projection = mpm.getMediaProjection(resultCode, data).apply {
@@ -72,7 +75,7 @@ class MirrorService : Service() {
     }
 
     private fun stream(maxSize: Int, bitrate: Int, fps: Int) {
-        val pc = PairedStore(this).pc ?: run { stopSelf(); return }
+        val pc = PairedStore(this).pc(pcId) ?: run { stopSelf(); return }
         try {
             // Work out the encode size: keep aspect ratio, longest side <= maxSize, multiples of 16.
             val bounds = getSystemService(WindowManager::class.java).maximumWindowMetrics.bounds
@@ -107,7 +110,7 @@ class MirrorService : Service() {
                 "pixlink", w, h, dpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, surface, null, null,
             )
 
-            LinkHub.send(msg("mirror.started") { put("width", w); put("height", h) })
+            LinkHub.sendTo(pcId, msg("mirror.started") { put("width", w); put("height", h) })
 
             running = true
             val info = MediaCodec.BufferInfo()
@@ -130,7 +133,7 @@ class MirrorService : Service() {
         } catch (e: Exception) {
             Log.w(TAG, "Mirroring stopped: ${e.message}")
         } finally {
-            LinkHub.send(msg("mirror.stop"))
+            LinkHub.sendTo(pcId, msg("mirror.stop"))
             stopSelf()
         }
     }
@@ -149,16 +152,17 @@ class MirrorService : Service() {
         private const val NOTIF_ID = 2
         const val MIRROR_PORT = 47101
         private const val ACTION_STOP = "stop"
+        private const val EXTRA_PC = "pc"
         private const val EXTRA_CODE = "code"
         private const val EXTRA_DATA = "data"
         private const val EXTRA_MAX = "max"
         private const val EXTRA_BITRATE = "bitrate"
         private const val EXTRA_FPS = "fps"
 
-        fun start(context: Context, code: Int, data: Intent, maxSize: Int, bitrate: Int, fps: Int) {
+        fun start(context: Context, code: Int, data: Intent, pcId: String, maxSize: Int, bitrate: Int, fps: Int) {
             context.startForegroundService(
                 Intent(context, MirrorService::class.java)
-                    .putExtra(EXTRA_CODE, code).putExtra(EXTRA_DATA, data)
+                    .putExtra(EXTRA_CODE, code).putExtra(EXTRA_DATA, data).putExtra(EXTRA_PC, pcId)
                     .putExtra(EXTRA_MAX, maxSize).putExtra(EXTRA_BITRATE, bitrate).putExtra(EXTRA_FPS, fps)
             )
         }
