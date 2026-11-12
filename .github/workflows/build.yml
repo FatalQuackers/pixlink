@@ -19,7 +19,7 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-android-debug
@@ -35,7 +35,7 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - name: Build
         # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
-        run: msbuild windows/Pixlink/Pixlink.csproj /restore /p:Configuration=Release /p:Platform=x64 /v:minimal
+        run: msbuild windows/Pixlink/Pixlink.csproj /restore /p:Configuration=Release /p:Platform=x64 /p:Version=0.1.${{ github.run_number }} /v:minimal
       - name: Find the app folder
         shell: pwsh
         run: |

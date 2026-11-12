@@ -36,10 +36,19 @@ object InputInjector {
                     "up" -> enqueue("input motionevent UP $x $y")
                 }
             }
+            // Taps and swipes are sent whole by the PC: one shell command each, which is reliable.
+            "input.tap" -> enqueue("input tap ${px("x", w)} ${px("y", h)}")
+            "input.swipe" -> {
+                val ms = (m.int("ms") ?: 300).coerceIn(50, 3000)
+                enqueue("input swipe ${px("x1", w)} ${px("y1", h)} ${px("x2", w)} ${px("y2", h)} $ms")
+            }
             "input.scroll" -> {
                 val x = px("x", w); val y = px("y", h)
                 val dy = m.double("dy") ?: 0.0
-                enqueue("input mouse scroll $x $y --axis VSCROLL,${"%.2f".format(dy)}")
+                // A short swipe scrolls on every Android version (mouse-scroll injection varies by release).
+                val dist = (dy * h * 0.15).roundToInt().coerceIn(-h / 2, h / 2)
+                val y2 = (y + dist).coerceIn(1, h - 1)
+                enqueue("input swipe $x $y $x $y2 120")
             }
             "input.key" -> {
                 m.int("keycode")?.let { enqueue("input keyevent $it") }

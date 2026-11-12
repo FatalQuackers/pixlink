@@ -14,7 +14,8 @@ public partial class App : Application
     public App()
     {
         // Any crash is written to a log and shown in a message box instead of vanishing silently.
-        UnhandledException += (_, e) => { e.Handled = true; Crash.Report(e.Exception, fatal: false); };
+        // Non-fatal UI errors: keep running and log them (WinRT errors carry their text in e.Message).
+        UnhandledException += (_, e) => { e.Handled = true; Crash.Log(e.Exception, $"UI error: {e.Message}"); };
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Crash.Report(e.ExceptionObject as Exception, fatal: true);
         TaskScheduler.UnobservedTaskException += (_, e) => { Crash.Log(e.Exception); e.SetObserved(); };
 
@@ -43,12 +44,14 @@ internal static class Crash
 {
     public static string LogPath => Path.Combine(AppSettings.Folder, "crash.log");
 
-    public static void Log(Exception? ex)
+    public static void Log(Exception? ex, string? context = null)
     {
         try
         {
             Directory.CreateDirectory(AppSettings.Folder);
-            File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n\n");
+            var hr = ex is null ? "" : $" (HRESULT 0x{ex.HResult:X8})";
+            File.AppendAllText(LogPath,
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] v{Services.Updater.Current} {context}{hr}\n{ex}\n{ex?.StackTrace}\n\n");
         }
         catch { /* nowhere left to report */ }
     }

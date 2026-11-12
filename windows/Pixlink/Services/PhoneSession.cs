@@ -75,6 +75,7 @@ public partial class PhoneSession : ObservableObject
         var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => _pairToken is not null && DateTimeOffset.Now < _pairExpires);
         server.Connected += OnConnected;
         _ = Mirror.RunAsync(_cts.Token);
+        _ = Beacon.RunAsync(_settings.PcId, _cts.Token);
         try { await server.RunAsync(_cts.Token); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Server stopped: {ex}"); }
     }
@@ -123,11 +124,9 @@ public partial class PhoneSession : ObservableObject
         // Until a connection says "hello" as the paired phone, it may only pair.
         if (conn != _conn && m.T is not ("pair.request" or "hello")) return;
 
-        if (m.Id is not null && _pending.TryRemove(m.Id, out var tcs) && m.T != "file.chunk")
-        {
+        // Complete a waiting request, then still handle the message normally (it may update state).
+        if (m.Id is not null && m.T != "file.chunk" && _pending.TryRemove(m.Id, out var tcs))
             tcs.TrySetResult(m);
-            return;
-        }
 
         switch (m.T)
         {
@@ -161,6 +160,7 @@ public partial class PhoneSession : ObservableObject
                 HotspotToggleSupported = m.Bool("toggleSupported") ?? false;
                 break;
             case "call.state": CallState = m.Str("state") ?? "ended"; break;
+            case "power.state": PowerMode = m.Bool("enabled") ?? false; break;
         }
         Message?.Invoke(m);
     }
@@ -319,14 +319,41 @@ public partial class PhoneSession : ObservableObject
 
     // ---------- Hotspot ----------
 
-    public async Task SetHotspotAsync(bool enabled)
+    public enum HotspotOutcome { Joined, PhoneSwitchedOnJoinFailed, TurnOnOnPhone, NoReply, TurnedOff }
+
+    /// <summary>The PC asks once for the hotspot name and password; the phone keeps them.</summary>
+    public async Task SaveHotspotConfigAsync(string ssid, string password)
     {
-        await SendAsync(Envelope.Of("hotspot.set", new { enabled }));
-        if (enabled && _settings.AutoJoinHotspot && HotspotSsid is not null)
+        HotspotSsid = ssid;
+        HotspotPassword = password;
+        await SendAsync(Envelope.Of("hotspot.config", new { ssid, password }));
+    }
+
+    /// <summary>
+    /// One button: ask the phone to turn the hotspot on (it switches it itself in Power mode,
+    /// otherwise it opens the hotspot setting), then join it from Windows.
+    /// </summary>
+    public async Task<HotspotOutcome> SetHotspotAsync(bool enabled, IProgress<string>? progress = null)
+    {
+        progress?.Report(enabled ? "Turning on your phone's hotspot…" : "Turning off hotspot…");
+        var reply = await RequestAsync("hotspot.set", new { enabled }, TimeSpan.FromSeconds(20));
+        if (!enabled) return HotspotOutcome.TurnedOff;
+        if (reply is null) return HotspotOutcome.NoReply;
+
+        var switched = reply.Bool("switched") == true;
+        if (!switched)
         {
-            // Give the phone a few seconds to bring the hotspot up, then join.
-            await Task.Delay(TimeSpan.FromSeconds(6));
-            await HotspotJoiner.JoinAsync(HotspotSsid, HotspotPassword);
+            // The phone opened its hotspot setting; give the user time to flip it, then try to join.
+            progress?.Report("Turn on the hotspot on your phone. Pixlink will connect when it appears…");
         }
+        else
+        {
+            progress?.Report($"Hotspot is on. Connecting to {HotspotSsid}…");
+        }
+
+        if (HotspotSsid is null) return switched ? HotspotOutcome.PhoneSwitchedOnJoinFailed : HotspotOutcome.TurnOnOnPhone;
+        var joined = await HotspotJoiner.JoinAsync(HotspotSsid, HotspotPassword, attempts: switched ? 8 : 20);
+        if (joined) return HotspotOutcome.Joined;
+        return switched ? HotspotOutcome.PhoneSwitchedOnJoinFailed : HotspotOutcome.TurnOnOnPhone;
     }
 }

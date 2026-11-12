@@ -60,7 +60,7 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 ### Optional extras
 
 - **Calls through your PC:** pair your phone with your PC in **Windows Settings → Bluetooth & devices → Add device**.
-- **Hotspot auto-join:** in the Pixlink phone app, open **Settings** and enter your hotspot name and password.
+- **Hotspot:** click **Hotspot** in the PC app. The first time, it asks for your phone's hotspot name and password. With Power mode on, your phone's hotspot switches on by itself and your PC joins it; without Power mode, your phone opens its hotspot setting for you to flip.
 - **Power mode** (screen control, hotspot toggle, call history, all files): follow [docs/POWER_MODE.md](docs/POWER_MODE.md).
 
 ### Troubleshooting
@@ -70,6 +70,10 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 - **The phone can't find the PC:** check both are on the same Wi-Fi (not a guest network), and that Pixlink is allowed in Windows Firewall on private networks.
 - **The QR code expired:** click **Get a new code** on your PC.
 - **Notifications stopped:** on your phone, check Pixlink still has notification access, and that battery saver isn't stopping it.
+
+### Updates
+
+Both apps check for new versions by themselves. On the PC, click **Update now** in the banner and Pixlink updates and restarts. On the phone, tap **Download** on the home screen and install the new APK over the old one. You can also check manually in **Settings** on either app.
 
 ### Uninstall
 

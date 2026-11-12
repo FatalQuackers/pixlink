@@ -43,6 +43,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -103,14 +104,17 @@
                     </Button>
                 </Grid>
 
+                <!-- Hotspot progress / result -->
+                <InfoBar x:Name="HotspotBar" Grid.Row="2" IsOpen="False" IsClosable="True" Margin="0" />
+
                 <!-- Notifications header -->
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="3">
                     <TextBlock Text="Notifications" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     <HyperlinkButton Content="Clear all" HorizontalAlignment="Right" Click="OnClearAll" />
                 </Grid>
 
                 <!-- Notifications list -->
-                <ListView Grid.Row="3" ItemsSource="{x:Bind Session.Notifications}" SelectionMode="None" Padding="0">
+                <ListView Grid.Row="4" ItemsSource="{x:Bind Session.Notifications}" SelectionMode="None" Padding="0">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
                             <Setter Property="Padding" Value="0,0,0,8" />
@@ -151,9 +155,15 @@
             <Grid Grid.Column="1" Margin="8,0,16,16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <SelectorBar x:Name="Tabs" SelectionChanged="OnTabChanged">
+                <InfoBar x:Name="UpdateBar" IsOpen="False" Severity="Informational" Title="Update available" Margin="0,0,0,8">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="UpdateNowButton" Content="Update now" Click="OnUpdateNow" Style="{StaticResource AccentButtonStyle}" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+                <SelectorBar x:Name="Tabs" Grid.Row="1" SelectionChanged="OnTabChanged">
                     <SelectorBarItem Text="Messages" Tag="Messages" IsSelected="True">
                         <SelectorBarItem.Icon><FontIcon Glyph="&#xE8BD;" /></SelectorBarItem.Icon>
                     </SelectorBarItem>
@@ -170,7 +180,7 @@
                         <SelectorBarItem.Icon><FontIcon Glyph="&#xE7F4;" /></SelectorBarItem.Icon>
                     </SelectorBarItem>
                 </SelectorBar>
-                <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" Padding="0" Margin="0,8,0,0">
+                <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Padding="0" Margin="0,8,0,0">
                     <Frame x:Name="ContentFrame" />
                 </Border>
             </Grid>

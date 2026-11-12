@@ -1,4 +1,4 @@
-using Microsoft.UI.Input;
+using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -9,13 +9,19 @@ using Windows.Media.Playback;
 
 namespace Pixlink.Pages;
 
-/// <summary>Screen mirroring with mouse/keyboard control (control needs Power mode on the phone).</summary>
+/// <summary>
+/// Screen mirroring with mouse/keyboard control (control needs Power mode on the phone).
+/// Mouse input becomes whole gestures sent on release: click = tap, hold = long press,
+/// drag = swipe. One shell command per gesture is far more reliable than streaming moves.
+/// </summary>
 public sealed partial class ScreenPage : Page
 {
     private PhoneSession Session => App.Session;
     private MediaPlayer? _player;
     private uint _width, _height;
-    private bool _pointerDown;
+
+    private (double x, double y)? _downAt;
+    private DateTimeOffset _downTime;
 
     public ScreenPage()
     {
@@ -25,6 +31,7 @@ public sealed partial class ScreenPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         Session.Message += OnMessage;
+        Session.PropertyChanged += OnSessionChanged;
         Session.Mirror.StreamEnded += OnStreamEnded;
         StartButton.IsEnabled = Session.IsConnected;
     }
@@ -32,15 +39,26 @@ public sealed partial class ScreenPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         Session.Message -= OnMessage;
+        Session.PropertyChanged -= OnSessionChanged;
         Session.Mirror.StreamEnded -= OnStreamEnded;
         Stop();
     }
+
+    private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PhoneSession.PowerMode)) UpdateControlNote();
+    }
+
+    private void UpdateControlNote() =>
+        ControlNote.Visibility = Session.PowerMode ? Visibility.Collapsed : Visibility.Visible;
 
     private async void OnStart(object sender, RoutedEventArgs e)
     {
         StartButton.IsEnabled = false;
         Waiting.IsActive = true;
-        StartHint.Text = "Check your phone and tap Start (or the notification) to share your screen.";
+        StartHint.Text = Session.PowerMode
+            ? "Check your phone and tap Start now to share your screen."
+            : "Check your phone: tap the Pixlink notification, then Start now.";
         await Session.SendAsync(Envelope.Of("mirror.start", new { maxSize = 1600, bitrate = 8_000_000, fps = 60 }));
     }
 
@@ -73,8 +91,8 @@ public sealed partial class ScreenPage : Page
         StartPanel.Visibility = Visibility.Collapsed;
         PhoneFrame.Visibility = Visibility.Visible;
         Controls.Visibility = Visibility.Visible;
-        ControlNote.Visibility = Session.PowerMode ? Visibility.Collapsed : Visibility.Visible;
-        Player.Focus(FocusState.Programmatic);
+        UpdateControlNote();
+        Focus(FocusState.Programmatic);
     }
 
     private void OnStreamEnded() => DispatcherQueue.TryEnqueue(Stop);
@@ -97,62 +115,67 @@ public sealed partial class ScreenPage : Page
         Stop();
     }
 
-    // ----- Input: positions are sent normalized (0..1) so the phone maps them to its real resolution.
+    // ----- Mouse: positions are sent normalized (0..1) so the phone maps them to its real resolution.
 
     /// <summary>Maps a pointer position to 0..1 within the video's letterboxed area.</summary>
     private (double x, double y)? Normalize(PointerRoutedEventArgs e)
     {
-        if (_width == 0 || !Session.PowerMode) return null;
-        var p = e.GetCurrentPoint(Player).Position;
-        double w = Player.ActualWidth, h = Player.ActualHeight;
+        if (_width == 0) return null;
+        var p = e.GetCurrentPoint(TouchLayer).Position;
+        double w = TouchLayer.ActualWidth, h = TouchLayer.ActualHeight;
         var scale = Math.Min(w / _width, h / _height);
         double vw = _width * scale, vh = _height * scale;
         double ox = (w - vw) / 2, oy = (h - vh) / 2;
-        var x = (p.X - ox) / vw;
-        var y = (p.Y - oy) / vh;
-        if (x < 0 || x > 1 || y < 0 || y > 1) return null;
+        var x = Math.Clamp((p.X - ox) / vw, 0, 1);
+        var y = Math.Clamp((p.Y - oy) / vh, 0, 1);
         return (x, y);
-    }
-
-    private void SendTouch(string action, PointerRoutedEventArgs e)
-    {
-        if (Normalize(e) is not { } pt) return;
-        _ = Session.SendAsync(Envelope.Of("input.touch", new { action, x = pt.x, y = pt.y }));
     }
 
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        Player.Focus(FocusState.Pointer);
-        if (e.GetCurrentPoint(Player).Properties.IsRightButtonPressed) { OnBack(sender, e); return; }
-        _pointerDown = true;
-        Player.CapturePointer(e.Pointer);
-        SendTouch("down", e);
-    }
+        Focus(FocusState.Pointer);
+        if (!Session.PowerMode) return;
+        var props = e.GetCurrentPoint(TouchLayer).Properties;
+        if (props.IsRightButtonPressed) { Nav("back"); return; } // right-click = Back, like Phone Link
+        if (props.IsMiddleButtonPressed) { Nav("home"); return; }
 
-    private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (_pointerDown) SendTouch("move", e);
+        _downAt = Normalize(e);
+        _downTime = DateTimeOffset.Now;
+        TouchLayer.CapturePointer(e.Pointer);
     }
 
     private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (!_pointerDown) return;
-        _pointerDown = false;
-        Player.ReleasePointerCapture(e.Pointer);
-        SendTouch("up", e);
+        if (_downAt is not { } start || Normalize(e) is not { } end) { _downAt = null; return; }
+        _downAt = null;
+        TouchLayer.ReleasePointerCapture(e.Pointer);
+
+        var ms = (int)(DateTimeOffset.Now - _downTime).TotalMilliseconds;
+        var moved = Math.Abs(end.x - start.x) > 0.01 || Math.Abs(end.y - start.y) > 0.01;
+
+        if (!moved && ms < 450)
+            _ = Session.SendAsync(Envelope.Of("input.tap", new { x = start.x, y = start.y }));
+        else if (!moved)
+            _ = Session.SendAsync(Envelope.Of("input.swipe", new { x1 = start.x, y1 = start.y, x2 = start.x, y2 = start.y, ms = Math.Max(ms, 600) }));
+        else
+            _ = Session.SendAsync(Envelope.Of("input.swipe", new { x1 = start.x, y1 = start.y, x2 = end.x, y2 = end.y, ms = Math.Clamp(ms, 80, 1500) }));
     }
+
+    private void OnPointerCanceled(object sender, PointerRoutedEventArgs e) => _downAt = null;
 
     private void OnWheel(object sender, PointerRoutedEventArgs e)
     {
-        if (Normalize(e) is not { } pt) return;
-        var delta = e.GetCurrentPoint(Player).Properties.MouseWheelDelta / 120.0;
+        if (!Session.PowerMode || Normalize(e) is not { } pt) return;
+        var delta = e.GetCurrentPoint(TouchLayer).Properties.MouseWheelDelta / 120.0;
         _ = Session.SendAsync(Envelope.Of("input.scroll", new { x = pt.x, y = pt.y, dy = delta }));
+        e.Handled = true;
     }
+
+    // ----- Keyboard (handled on the whole page so it works wherever focus lands)
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!Session.PowerMode) return;
-        // Special keys map to Android keycodes; normal characters arrive via CharacterReceived.
+        if (!Session.PowerMode || PhoneFrame.Visibility != Visibility.Visible) return;
         int? keycode = e.Key switch
         {
             Windows.System.VirtualKey.Back => 67,     // KEYCODE_DEL
@@ -163,6 +186,7 @@ public sealed partial class ScreenPage : Page
             Windows.System.VirtualKey.Up => 19,
             Windows.System.VirtualKey.Down => 20,
             Windows.System.VirtualKey.Delete => 112,  // KEYCODE_FORWARD_DEL
+            Windows.System.VirtualKey.Tab => 61,
             _ => null,
         };
         if (keycode is { } k)
@@ -174,8 +198,9 @@ public sealed partial class ScreenPage : Page
 
     private void OnChar(UIElement sender, CharacterReceivedRoutedEventArgs e)
     {
-        if (!Session.PowerMode || char.IsControl(e.Character)) return;
+        if (!Session.PowerMode || PhoneFrame.Visibility != Visibility.Visible || char.IsControl(e.Character)) return;
         _ = Session.SendAsync(Envelope.Of("input.key", new { text = e.Character.ToString() }));
+        e.Handled = true;
     }
 
     private void Nav(string button) => _ = Session.SendAsync(Envelope.Of("input.nav", new { button }));

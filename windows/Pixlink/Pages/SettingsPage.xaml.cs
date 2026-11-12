@@ -15,7 +15,40 @@ public sealed partial class SettingsPage : Page
         HotspotSwitch.IsOn = s.AutoJoinHotspot;
         FingerprintText.Text = $"This PC's certificate: {App.Session.PcFingerprint}";
         PhoneText.Text = $"Linked to {App.Session.PhoneName}";
+        VersionText.Text = $"Pixlink {Services.Updater.Current}";
+        UpdateHotspotText();
         _loading = false;
+    }
+
+    private void UpdateHotspotText() =>
+        HotspotText.Text = string.IsNullOrEmpty(App.Session.HotspotSsid)
+            ? "Not set. You'll be asked the first time you use Hotspot."
+            : $"Joins \"{App.Session.HotspotSsid}\" when you turn on Hotspot";
+
+    private async void OnChangeHotspot(object sender, RoutedEventArgs e)
+    {
+        if (App.Window is { } w && await w.AskHotspotDetailsAsync()) UpdateHotspotText();
+    }
+
+    private async void OnCheckUpdates(object sender, RoutedEventArgs e)
+    {
+        CheckButton.IsEnabled = false;
+        UpdateStatus.Text = "Checking…";
+        try
+        {
+            var update = await Services.Updater.CheckAsync();
+            if (update is null) UpdateStatus.Text = "You're on the latest version.";
+            else
+            {
+                UpdateStatus.Text = $"Pixlink {update.Version} is available. Click Update now at the top of the window.";
+                App.Window?.ShowUpdate(update);
+            }
+        }
+        catch (Exception)
+        {
+            UpdateStatus.Text = "Couldn't check for updates. Are you online?";
+        }
+        CheckButton.IsEnabled = true;
     }
 
     private void OnToggle(object sender, RoutedEventArgs e)

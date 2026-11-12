@@ -29,6 +29,26 @@
             </Border>
 
             <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <Grid>
+                    <StackPanel Margin="0,0,110,0">
+                        <TextBlock Text="Hotspot details" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="HotspotText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <Button Content="Change" HorizontalAlignment="Right" Click="OnChangeHotspot" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+                <Grid>
+                    <StackPanel Margin="0,0,170,0">
+                        <TextBlock x:Name="VersionText" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="UpdateStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Pixlink checks for updates when it starts." TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button x:Name="CheckButton" Content="Check for updates" HorizontalAlignment="Right" Click="OnCheckUpdates" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Security" Style="{StaticResource BodyStrongTextBlockStyle}" />
                     <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -48,7 +68,7 @@
             </Border>
 
             <TextBlock Margin="0,16,0,0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextWrapping="Wrap"
-                       Text="Pixlink 0.1.0 · Open source (MIT) · Not affiliated with Google or Microsoft." />
+                       Text="Open source (MIT). Not affiliated with Google or Microsoft." />
         </StackPanel>
     </ScrollViewer>
 </Page>

@@ -74,8 +74,9 @@ class MessageRouter(
             "mirror.stop" -> MirrorService.stop(context)
 
             // Hotspot
-            "hotspot.set" -> hotspot.set(m.bool("enabled") ?: true)
+            "hotspot.set" -> LinkHub.send(hotspot.set(m, m.bool("enabled") ?: true))
             "hotspot.get" -> hotspot.reportState()
+            "hotspot.config" -> { hotspot.saveConfig(m); hotspot.reportState() }
 
             // Calls
             "call.dial" -> calls.dial(m.str("number")!!)

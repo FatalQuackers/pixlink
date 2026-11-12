@@ -25,7 +25,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -39,12 +43,24 @@ class LinkService : LifecycleService() {
     private var pending: PairingInfo? = null
     private lateinit var router: MessageRouter
     private lateinit var status: StatusReporter
+    /** Wakes the reconnect loop early, e.g. when the PC announces a new address. */
+    private val wake = Channel<Unit>(Channel.CONFLATED)
+    @Volatile private var beaconSocket: java.net.DatagramSocket? = null
 
     override fun onCreate() {
         super.onCreate()
         store = PairedStore(this)
         router = MessageRouter(this, store, onPaired = ::onPaired, onRejected = ::onRejected)
         status = StatusReporter(this)
+
+        lifecycleScope.launch(Dispatchers.IO) { listenForPc() }
+
+        // Tell the PC whenever Power mode turns on or off, so screen control follows along.
+        lifecycleScope.launch {
+            PowerMode.state.collect { st ->
+                LinkHub.send(msg("power.state") { put("enabled", st == PowerMode.State.Ready) })
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -127,8 +143,44 @@ class LinkService : LifecycleService() {
             if (!currentCoroutineContext().isActive) return
             if (LinkHub.state.value !is LinkState.Error) LinkHub.setState(LinkState.Disconnected)
             updateNotification("Waiting for ${name}…")
-            delay(backoffMs)
+            withTimeoutOrNull(backoffMs) { wake.receive() }
             backoffMs = (backoffMs * 2).coerceAtMost(30_000)
+        }
+    }
+
+    /**
+     * The PC broadcasts "I'm here" on UDP 47102 every few seconds. If the paired PC shows up
+     * at a new address (new Wi-Fi, or it joined this phone's hotspot), switch to it and reconnect.
+     */
+    private suspend fun listenForPc() {
+        val wifi = applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)
+        val lock = wifi.createMulticastLock("pixlink-beacon").apply { setReferenceCounted(false) }
+        try {
+            lock.acquire()
+            java.net.DatagramSocket(null).use { sock ->
+                beaconSocket = sock
+                sock.reuseAddress = true
+                sock.bind(java.net.InetSocketAddress(BEACON_PORT))
+                val buf = ByteArray(512)
+                while (currentCoroutineContext().isActive) {
+                    val packet = java.net.DatagramPacket(buf, buf.size)
+                    sock.receive(packet)
+                    val text = String(packet.data, 0, packet.length, Charsets.UTF_8)
+                    val obj = runCatching { Codec.parseToJsonElement(text).jsonObject }.getOrNull() ?: continue
+                    val pc = store.pc ?: continue
+                    if (obj["pcId"]?.jsonPrimitive?.content != pc.id || pc.id.isEmpty()) continue
+                    val host = packet.address.hostAddress ?: continue
+                    if (host != pc.host && !LinkHub.isConnected) {
+                        Log.i(TAG, "PC moved to $host")
+                        store.updateHost(host)
+                        wake.trySend(Unit)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Beacon listener stopped: ${e.message}")
+        } finally {
+            runCatching { lock.release() }
         }
     }
 
@@ -159,6 +211,7 @@ class LinkService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        runCatching { beaconSocket?.close() } // unblocks the beacon listener
         loop?.cancel()
         LinkHub.client?.close()
         LinkHub.client = null
@@ -188,6 +241,7 @@ class LinkService : LifecycleService() {
     companion object {
         private const val TAG = "LinkService"
         private const val NOTIF_ID = 1
+        private const val BEACON_PORT = 47102
         private const val ACTION_PAIR = "app.pixlink.PAIR"
         private const val ACTION_STOP = "app.pixlink.STOP"
         private const val EXTRA_PAIR_URI = "uri"

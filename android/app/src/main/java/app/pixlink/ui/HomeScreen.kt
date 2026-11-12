@@ -1,6 +1,7 @@
 package app.pixlink.ui
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,8 +35,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,6 +50,7 @@ import app.pixlink.link.LinkState
 import app.pixlink.notifications.NotificationBridge
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
+import app.pixlink.update.UpdateChecker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +63,8 @@ fun HomeScreen(
     val ctx = LocalContext.current
     val link by LinkHub.state.collectAsState()
     val power by PowerMode.state.collectAsState()
-    val paired = PairedStore(ctx).pc
+    remember { PairedStore(ctx) } // loads the saved pairing into PairedStore.paired
+    val paired by PairedStore.paired.collectAsState()
 
     Scaffold(topBar = {
         TopAppBar(
@@ -87,7 +92,7 @@ fun HomeScreen(
                                     is LinkState.Connecting -> "Connecting to ${s.pcName}…"
                                     is LinkState.Error -> "Something went wrong"
                                     LinkState.NotPaired -> "Not paired"
-                                    LinkState.Disconnected -> if (paired != null) "${paired.name} is offline" else "Not paired"
+                                    LinkState.Disconnected -> paired?.let { "${it.name} is offline" } ?: "Not paired"
                                 },
                                 style = MaterialTheme.typography.titleLarge,
                             )
@@ -104,11 +109,36 @@ fun HomeScreen(
                         Button(onClick = onPair) {
                             Icon(Icons.Outlined.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("Scan QR code")
                         }
+                    } else if (link is LinkState.Error) {
+                        // Usually means the PC unlinked this phone: offer a fresh pairing.
+                        Button(onClick = {
+                            PairedStore(ctx).pc = null
+                            LinkService.stop(ctx)
+                            onPair()
+                        }) { Text("Pair again") }
                     } else {
                         OutlinedButton(onClick = {
                             PairedStore(ctx).pc = null
                             LinkService.stop(ctx)
                         }) { Text("Forget this PC") }
+                    }
+                }
+            }
+
+            // Update banner
+            val update by UpdateChecker.available.collectAsState()
+            LaunchedEffect(Unit) { UpdateChecker.checkQuietly() }
+            update?.let { u ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Update available", style = MaterialTheme.typography.titleMedium)
+                            Text("Pixlink ${u.version} (you have ${UpdateChecker.currentVersion})", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Button(onClick = { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u.apkUrl))) }) { Text("Download") }
                     }
                 }
             }

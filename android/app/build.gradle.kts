@@ -13,8 +13,9 @@ android {
         applicationId = "app.pixlink"
         minSdk = 33          // Android 13 — every supported Pixel runs 14+
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI passes -PversionCode=<build number> -PversionName=0.1.<build number> to match the GitHub release.
+        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
+        versionName = (project.findProperty("versionName") as String?) ?: "0.1.0-dev"
     }
 
     buildTypes {

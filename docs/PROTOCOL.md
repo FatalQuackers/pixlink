@@ -8,7 +8,7 @@ The Windows app is the **server**; the Pixel is the **client**.
 | Mirror | 47101 | TLS 1.3 over TCP | Length-prefixed H.264 Annex-B frames |
 | Files | 47100 | Control channel | Base64 chunks of 256 KiB (see `file.*`) |
 
-Discovery after pairing: the PC advertises mDNS `_pixlink._tcp.local`, TXT `id=<pcId>`. The phone remembers the last IP and falls back to mDNS.
+Discovery after pairing: the PC broadcasts `{"pixlink":1,"pcId":"…","port":47100}` over UDP to port **47102** on every local network every 3 seconds. The phone remembers the last IP; if the paired PC shows up at a new address (new Wi-Fi, or the PC joined the phone's hotspot) it switches to it and reconnects.
 
 ## Pairing
 
@@ -45,6 +45,7 @@ pixlink://pair?v=1&host=192.168.1.20&port=47100&token=K3J9...&fp=SHA256:AB:CD:..
 | `hello` | phone → PC | `{phoneName, model, appVersion, powerMode}` |
 | `status` | phone → PC | `{battery, charging, signal, wifiSsid, dnd}` |
 | `ping` / `pong` | both | `{}` (every 15 s) |
+| `power.state` | phone → PC | `{enabled}` — sent whenever Power mode turns on or off |
 
 ### Notifications & messages
 | Type | Direction | Payload |
@@ -62,7 +63,9 @@ pixlink://pair?v=1&host=192.168.1.20&port=47100&token=K3J9...&fp=SHA256:AB:CD:..
 | `mirror.start` | PC → phone | `{maxSize, bitrate, fps}` |
 | `mirror.started` | phone → PC | `{width, height}` — phone then opens port 47101 |
 | `mirror.stop` | either | `{}` |
-| `input.touch` | PC → phone | `{action: down|move|up, x, y}` normalized 0..1 (Power mode) |
+| `input.tap` | PC → phone | `{x, y}` normalized 0..1 (Power mode) |
+| `input.swipe` | PC → phone | `{x1, y1, x2, y2, ms}`; same start and end = long press (Power mode) |
+| `input.touch` | PC → phone | `{action: down|move|up, x, y}` low-level, kept for compatibility |
 | `input.scroll` | PC → phone | `{x, y, dy}` (Power mode) |
 | `input.key` | PC → phone | `{keycode}` or `{text}` (Power mode) |
 | `input.nav` | PC → phone | `{button: back|home|recents}` (Power mode) |
@@ -72,8 +75,10 @@ Mirror channel framing: `[uint32 big-endian length][uint64 pts microseconds][NAL
 ### Hotspot
 | Type | Direction | Payload |
 | --- | --- | --- |
-| `hotspot.state` | phone → PC | `{enabled, ssid?, password?}` |
-| `hotspot.set` | PC → phone | `{enabled}` — Power mode toggles directly; otherwise phone opens settings |
+| `hotspot.state` | phone → PC | `{enabled?, switched?, openedSettings?, toggleSupported, ssid?, password?}` |
+| `hotspot.set` | PC → phone | `{enabled}` request; reply `hotspot.state` with the same id. Power mode switches it directly; otherwise the phone opens hotspot settings |
+| `hotspot.get` | PC → phone | `{}` → `hotspot.state` |
+| `hotspot.config` | PC → phone | `{ssid, password}` — the PC asks the user once; the phone stores them |
 
 ### Calls
 | Type | Direction | Payload |
