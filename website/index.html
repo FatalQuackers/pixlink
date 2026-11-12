@@ -139,6 +139,7 @@
   /* Features table: real information, so it's a table. */
   .features { background: var(--paper); }
   .trailer { padding-top: 0; }
+  .more-videos { margin: 18px 0 0; font: 600 18px/1.4 var(--display); }
   .setup-video { display: block; width: 100%; height: auto; border-radius: 20px; margin: 8px 0 40px; background: var(--sky); box-shadow: 0 30px 60px -30px rgba(22,33,58,.35); }
   .trailer video { display: block; width: 100%; height: auto; border-radius: 20px; background: var(--sky); box-shadow: 0 30px 60px -30px rgba(22,33,58,.35); }
   table { width: 100%; border-collapse: collapse; font-size: 17px; }
@@ -190,7 +191,7 @@
     .hero .wrap, .privacy .wrap, .power .wrap { grid-template-columns: 1fr; }
     .scene { height: 470px; max-width: 560px; }
     .steps { grid-template-columns: 1fr; gap: 32px; }
-    nav a:not(.gh) { display: none; }
+    nav a:not(.gh):not(.vid) { display: none; }
   }
   @media (max-width: 560px) {
     body { font-size: 17px; }
@@ -220,6 +221,7 @@
       <a href="#setup">Set up</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
+      <a class="vid" href="videos.html">Videos</a>
       <a class="gh repo-link" href="https://github.com/">GitHub</a>
     </nav>
   </div>
@@ -295,10 +297,11 @@
   <section class="trailer" id="trailer" aria-labelledby="trailer-title">
     <div class="wrap">
       <h2 id="trailer-title">See it in a minute.</h2>
-      <video controls preload="none" playsinline poster="trailer-poster.jpg" width="1920" height="1080">
-        <source src="trailer.mp4" type="video/mp4">
-        <a href="trailer.mp4">Download the Pixlink trailer (MP4)</a>
+      <video controls preload="none" playsinline poster="videos/trailer-16x9.jpg" width="1920" height="1080">
+        <source src="videos/trailer-16x9.mp4" type="video/mp4">
+        <a href="videos/trailer-16x9.mp4">Download the Pixlink trailer (MP4)</a>
       </video>
+      <p class="more-videos"><a href="videos.html">All videos: hype cut, setup guide and vertical versions</a></p>
     </div>
   </section>
 
@@ -348,9 +351,9 @@
     <div class="wrap">
       <h2 id="setup-title">Linked in about a minute.</h2>
       <p class="intro">No account to create. Your phone and PC just need to be on the same Wi-Fi.</p>
-      <video class="setup-video" controls preload="none" playsinline poster="setup-poster.jpg" width="1920" height="1080">
-        <source src="setup.mp4" type="video/mp4">
-        <a href="setup.mp4">Download the setup video (MP4)</a>
+      <video class="setup-video" controls preload="none" playsinline poster="videos/setup-16x9.jpg" width="1920" height="1080">
+        <source src="videos/setup-16x9.mp4" type="video/mp4">
+        <a href="videos/setup-16x9.mp4">Download the setup video (MP4)</a>
       </video>
       <ol class="steps">
         <li>

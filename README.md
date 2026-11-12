@@ -6,9 +6,9 @@ Website: https://fatalquackers.github.io/pixlink/
 
 > Pixlink is an independent open-source project. It is not made by, affiliated with, or endorsed by Google or Microsoft. "Pixel" is a trademark of Google LLC.
 
-[![Watch the Pixlink trailer](website/trailer-poster.jpg)](https://fatalquackers.github.io/pixlink/#trailer)
+[![Watch the Pixlink trailer](website/videos/trailer-16x9.jpg)](https://fatalquackers.github.io/pixlink/#trailer)
 
-**[Watch the 1-minute trailer](https://fatalquackers.github.io/pixlink/#trailer)**
+**[Watch the trailer](https://fatalquackers.github.io/pixlink/videos.html)**: the launch trailer, a 29-second hype cut and a setup guide, each in widescreen and vertical.
 
 ## Features
 
@@ -39,7 +39,7 @@ Website: https://fatalquackers.github.io/pixlink/
 
 Pixlink isn't on Google Play yet, so for now you install it from this page. It takes about 5 minutes.
 
-**Prefer to watch?** [See the 1-minute setup video](https://fatalquackers.github.io/pixlink/#setup).
+**Prefer to watch?** [Watch the setup guide](https://fatalquackers.github.io/pixlink/videos.html#setup).
 
 **You need:** a Google Pixel on Android 13 or newer, a Windows 10 or 11 PC, and both on the same Wi-Fi.
 
