@@ -144,7 +144,7 @@ Every push to `main` is built automatically by GitHub Actions and published as a
 
 ## Releases
 
-- **Early access:** publish a release with **Set as a pre-release** ticked. Apps with "Get early updates" on install it straight away; the `Promote early releases` workflow makes it a normal release 24 hours later, and everyone else updates then.
+- **Early access (automatic):** every newly published release starts as a pre-release. Apps with "Get early updates" on install it straight away; the `Promote early releases` workflow makes it a normal release 24 hours later, and everyone else updates then. Put `[stable]` in the release title to release to everyone at once.
 - **Rebuild a version:** Actions → Build → **Run workflow**, enter an existing tag (for example `v1.0.3`). It moves that version to the latest code and replaces its files, without a new version number.
 
 

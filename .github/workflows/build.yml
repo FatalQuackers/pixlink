@@ -3,8 +3,9 @@ name: Build
 # Every push to main is built and checked. A GitHub Release gets the apps attached only when
 # a version is released: push a tag like v1.0.1, or publish a release named v1.0.1 on GitHub.
 #
-# Early access: publish the release with "Set as a pre-release" ticked. People with
-# "Get early updates" on get it straight away; promote.yml makes it a normal release 24 hours later.
+# Early access: every newly published version starts as a pre-release. People with "Get early
+# updates" on get it straight away; promote.yml makes it a normal release 24 hours later.
+# Put [stable] in the release title to release to everyone at once.
 #
 # Rebuild: Actions → Build → Run workflow → enter an existing tag (e.g. v1.0.3) to move that
 # version to the latest code and replace its files, without making a new version number.
@@ -144,9 +145,10 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: Pixlink ${{ github.ref_name }}
-          # Keep "Set as a pre-release" if it was ticked (early access); promote.yml lifts it after a day.
-          prerelease: ${{ github.event.release.prerelease || false }}
-          make_latest: ${{ github.event.release.prerelease != true }}
+          # Every new version starts as early access (a pre-release); promote.yml makes it a normal
+          # release for everyone 24 hours later. Put [stable] in the release title to skip early access.
+          prerelease: ${{ !contains(github.event.release.name || '', '[stable]') }}
+          make_latest: ${{ contains(github.event.release.name || '', '[stable]') }}
           overwrite_files: true
           append_body: true
           body: |
