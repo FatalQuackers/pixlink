@@ -13,15 +13,15 @@ android {
         applicationId = "app.pixlink"
         minSdk = 33          // Android 13 — every supported Pixel runs 14+
         targetSdk = 35
-        // CI passes -PversionCode=<build number> -PversionName=0.1.<build number> to match the GitHub release.
+        // CI passes the version from the release tag (v1.2.3 → 1.2.3) and the build number as versionCode.
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
-        versionName = (project.findProperty("versionName") as String?) ?: "0.1.0-dev"
+        versionName = (project.findProperty("versionName") as String?) ?: "0.0.0-dev"
     }
 
-    // CI signs with the permanent Pixlink key (from GitHub secrets) so updates install over
-    // the old version. Local builds keep Android's normal debug key.
+    // Release builds are signed with the permanent Pixlink key from GitHub secrets, so updates
+    // install over the previous version. Without the key (local builds), the debug key is used.
     signingConfigs {
-        getByName("debug") {
+        create("pixlink") {
             val keystore = project.findProperty("pixlinkKeystore") as String?
             if (keystore != null) {
                 storeFile = file(keystore)
@@ -34,8 +34,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // R8 shrinking stays off: Shizuku and the hidden-API calls rely on reflection.
+            isMinifyEnabled = false
+            signingConfig = if (project.hasProperty("pixlinkKeystore")) signingConfigs.getByName("pixlink")
+                            else signingConfigs.getByName("debug")
         }
     }
 

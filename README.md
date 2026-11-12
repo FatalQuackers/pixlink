@@ -117,9 +117,11 @@ Full details: [docs/PROTOCOL.md](docs/PROTOCOL.md).
 
 Every push to `main` is built automatically by GitHub Actions and published as a release.
 
-## Status
+## Releases
 
-Early development — the code is scaffolded and the core flow (pairing → notifications → mirroring) is the first thing to get working on real hardware. See open issues and the project tracker.
+Download the latest version from [Releases](https://github.com/FatalQuackers/pixlink/releases/latest). Both apps check for updates by themselves.
+
+To publish a new version: create a release on GitHub with a tag like `v1.0.1` (or push that tag). GitHub Actions builds both apps and attaches them to the release.
 
 ## Contributing
 

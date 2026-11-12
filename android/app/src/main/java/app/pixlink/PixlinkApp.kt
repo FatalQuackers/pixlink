@@ -32,9 +32,13 @@ class PixlinkApp : Application() {
         lateinit var instance: PixlinkApp
             private set
 
-        /** Pixlink is Pixel-only. Debug builds skip the check so emulators work. */
+        /** Pixlink is Pixel-only. The Android emulator is allowed too, for testing. */
         val isSupportedDevice: Boolean
-            get() = BuildConfig.DEBUG ||
+            get() = BuildConfig.DEBUG || isEmulator ||
                 (Build.MANUFACTURER.equals("Google", ignoreCase = true) && Build.MODEL.contains("Pixel", ignoreCase = true))
+
+        private val isEmulator: Boolean
+            get() = Build.FINGERPRINT.startsWith("generic") || Build.FINGERPRINT.contains("emulator") ||
+                Build.MODEL.startsWith("sdk_gphone") || Build.HARDWARE in setOf("ranchu", "goldfish")
     }
 }
