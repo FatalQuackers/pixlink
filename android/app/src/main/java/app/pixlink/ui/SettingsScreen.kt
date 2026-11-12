@@ -224,14 +224,17 @@ private fun ConnectViaRow(store: app.pixlink.pairing.PairedStore) {
             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        androidx.compose.material3.SingleChoiceSegmentedButtonRow(androidx.compose.ui.Modifier.fillMaxWidth().padding(top = 10.dp)) {
-            val options = listOf("auto" to "Both", "wifi" to "Wi-Fi", "bluetooth" to "Bluetooth")
-            options.forEachIndexed { i, (key, label) ->
-                androidx.compose.material3.SegmentedButton(
+        val options = listOf("auto" to "Both (Wi-Fi first, then Bluetooth)", "wifi" to "Wi-Fi only", "bluetooth" to "Bluetooth only")
+        options.forEach { (key, label) ->
+            androidx.compose.foundation.layout.Row(
+                androidx.compose.ui.Modifier.fillMaxWidth().padding(top = 4.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                androidx.compose.material3.RadioButton(
                     selected = via == key,
                     onClick = { via = key; store.connectVia = key; app.pixlink.link.LinkService.start(ctx) },
-                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(i, options.size),
-                ) { androidx.compose.material3.Text(label) }
+                )
+                androidx.compose.material3.Text(label)
             }
         }
     }
