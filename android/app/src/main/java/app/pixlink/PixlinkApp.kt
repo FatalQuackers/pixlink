@@ -13,6 +13,7 @@ class PixlinkApp : Application() {
         instance = this
         createChannels()
         PowerMode.init(this)
+        app.pixlink.update.UpdateChecker.early = app.pixlink.pairing.PairedStore(this).earlyUpdates
     }
 
     private fun createChannels() {

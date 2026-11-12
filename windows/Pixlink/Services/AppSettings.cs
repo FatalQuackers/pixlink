@@ -40,6 +40,10 @@ public sealed class AppSettings
     public bool SetupDone { get; set; }
     public List<string> PinnedNotificationApps { get; set; } = new();
 
+    // Updates
+    /// <summary>Get each update a day early (GitHub pre-releases).</summary>
+    public bool EarlyUpdates { get; set; }
+
     // Connections
     public bool AllowBluetooth { get; set; } = true;
 

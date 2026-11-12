@@ -60,6 +60,14 @@ class PairedStore(context: Context) {
         pcs = pcs.map { if (it.id == id) it.copy(bt = address) else it }
     }
 
+    /** Get each update a day early (pre-releases). */
+    var earlyUpdates: Boolean
+        get() = prefs.getBoolean("earlyUpdates", false)
+        set(v) {
+            prefs.edit { putBoolean("earlyUpdates", v) }
+            app.pixlink.update.UpdateChecker.early = v
+        }
+
     /** How to reach the PCs: "auto" (Wi-Fi, then Bluetooth), "wifi" or "bluetooth". */
     var connectVia: String
         get() = prefs.getString("connectVia", "auto") ?: "auto"

@@ -16,6 +16,19 @@ public sealed partial class UpdatesPage : Page
     {
         InitializeComponent();
         AutoSwitch.IsOn = App.Session.Settings.AutoCheckUpdates;
+        EarlySwitch.IsOn = App.Session.Settings.EarlyUpdates;
+        _ready = true;
+    }
+
+    private bool _ready;
+
+    private void OnEarlyToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_ready) return;
+        App.Session.Settings.EarlyUpdates = EarlySwitch.IsOn;
+        App.Session.Settings.Save();
+        _ = CheckAsync();
+        _ = LoadNotesAsync();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -77,7 +90,7 @@ public sealed partial class UpdatesPage : Page
     private void ShowAvailable(Updater.Update u)
     {
         SetLook(Look.Available);
-        StatusTitle.Text = $"Pixlink {u.Version} is available";
+        StatusTitle.Text = u.IsEarly ? $"Pixlink {u.Version} is available early" : $"Pixlink {u.Version} is available";
         StatusDetail.Text = $"You have {Updater.Current}." + (u.Published is { } p ? $" Released {p.LocalDateTime:d MMMM}." : "");
         InstallLabel.Text = $"Install {u.Version}";
         InstallButton.Visibility = Visibility.Visible;

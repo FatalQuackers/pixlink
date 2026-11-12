@@ -1,0 +1,32 @@
+name: Promote early releases
+
+# Early access: a release published as a pre-release goes to people with "Get early updates" on.
+# 24 hours later this makes it a normal release, so everyone else's apps update too.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Promote pre-releases older than 24 hours
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cutoff=$(date -u -d '24 hours ago' +%s)
+          gh api "repos/$REPO/releases?per_page=20" \
+            --jq '.[] | select(.prerelease and (.draft | not)) | "\(.id) \(.tag_name) \(.published_at)"' |
+          while read -r id tag published; do
+            if [ "$(date -u -d "$published" +%s)" -le "$cutoff" ]; then
+              echo "Promoting $tag to everyone"
+              gh api -X PATCH "repos/$REPO/releases/$id" -F prerelease=false -f make_latest=true >/dev/null
+            else
+              echo "$tag is still early access"
+            fi
+          done

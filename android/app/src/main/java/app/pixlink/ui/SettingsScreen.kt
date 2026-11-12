@@ -153,6 +153,12 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                 "New versions download and install by themselves. With Power mode, completely silently.",
                 autoUpdate,
             ) { autoUpdate = it; store.autoUpdate = it }
+            var early by remember { mutableStateOf(store.earlyUpdates) }
+            SwitchRow(
+                "Get early updates",
+                "New versions arrive a day before everyone else. They're tested less, so there may be bugs.",
+                early,
+            ) { early = it; store.earlyUpdates = it }
             ListItem(
                 headlineContent = { Text("Pixlink ${UpdateChecker.currentVersion}") },
                 supportingContent = { Text(updateStatus ?: "Pixlink checks for updates when you open it.") },

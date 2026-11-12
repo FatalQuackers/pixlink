@@ -106,6 +106,8 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 
 Both apps update themselves. You don't need to download anything again.
 
+- **Early updates:** turn on **Get early updates** (PC: Settings → Updates; phone: Settings → Updates) to get each new version a day before everyone else. Early versions are tested less.
+
 - **PC:** Pixlink checks when it starts and every 6 hours, installs the new version and restarts. It never updates during a call or while mirroring your screen. (Settings → Install updates automatically.)
 - **Phone:** new versions download and install by themselves. With Power mode on, it's completely silent. Without it, Android asks you to allow Pixlink to install updates once, and shows one confirmation the first time; after that, updates install silently. Pixlink reconnects to your PC afterwards.
 
@@ -141,6 +143,10 @@ Full details: [docs/PROTOCOL.md](docs/PROTOCOL.md).
 Every push to `main` is built automatically by GitHub Actions and published as a release.
 
 ## Releases
+
+- **Early access:** publish a release with **Set as a pre-release** ticked. Apps with "Get early updates" on install it straight away; the `Promote early releases` workflow makes it a normal release 24 hours later, and everyone else updates then.
+- **Rebuild a version:** Actions → Build → **Run workflow**, enter an existing tag (for example `v1.0.3`). It moves that version to the latest code and replaces its files, without a new version number.
+
 
 Download the latest version from [Releases](https://github.com/FatalQuackers/pixlink/releases/latest). Both apps check for updates by themselves.
 

@@ -2,6 +2,12 @@ name: Build
 
 # Every push to main is built and checked. A GitHub Release gets the apps attached only when
 # a version is released: push a tag like v1.0.1, or publish a release named v1.0.1 on GitHub.
+#
+# Early access: publish the release with "Set as a pre-release" ticked. People with
+# "Get early updates" on get it straight away; promote.yml makes it a normal release 24 hours later.
+#
+# Rebuild: Actions → Build → Run workflow → enter an existing tag (e.g. v1.0.3) to move that
+# version to the latest code and replace its files, without making a new version number.
 on:
   push:
     branches: [main]
@@ -9,10 +15,15 @@ on:
   release:
     types: [published]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version to rebuild from the latest code (for example v1.0.3)"
+        required: true
 
 env:
-  # v1.2.3 tag → 1.2.3; anything else is a dev build that never becomes a release.
-  VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('0.0.{0}', github.run_number) }}
+  # v1.2.3 tag (or a rebuild of it) → 1.2.3; anything else is a dev build that never becomes a release.
+  VERSION: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/v') && github.ref_name) || format('0.0.{0}', github.run_number) }}
 
 jobs:
   android:
@@ -37,7 +48,7 @@ jobs:
           echo "SIGN_ARGS=-PpixlinkKeystore=$RUNNER_TEMP/pixlink.jks -PpixlinkKeystorePassword=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
       - name: Releases must use the permanent signing key
         # Phones only auto-update to an APK signed with the same key, so never release without it.
-        if: startsWith(github.ref, 'refs/tags/v') && env.SIGN_ARGS == ''
+        if: (startsWith(github.ref, 'refs/tags/v') || inputs.tag) && env.SIGN_ARGS == ''
         run: |
           echo "::error::Add the ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD secrets (Settings → Secrets and variables → Actions), then re-run this release."
           exit 1
@@ -90,13 +101,20 @@ jobs:
           path: windows/installer/Pixlink-Setup-x64.exe
 
   release:
-    # Only version tags become releases.
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Only version tags (or a rebuild of one) become releases.
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag
     needs: [android, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Move the tag to this build (rebuilds only)
+        if: inputs.tag
+        uses: actions/checkout@v4
+      - if: inputs.tag
+        run: |
+          git tag -f "${{ inputs.tag }}"
+          git push -f origin "refs/tags/${{ inputs.tag }}"
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -108,12 +126,29 @@ jobs:
           # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
           printf 'Pixlink portable\r\n\r\nPixlink keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
-      - uses: softprops/action-gh-release@v2
+      # Rebuild of an existing version: replace its files, leave its notes alone.
+      - if: inputs.tag
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          overwrite_files: true
+          files: |
+            Pixlink-android.apk
+            Pixlink-Setup-x64.exe
+            Pixlink-windows-x64-portable.zip
+            Pixlink-windows-x64.zip
+
+
+      - if: ${{ !inputs.tag }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Pixlink ${{ github.ref_name }}
-          make_latest: true
-          prerelease: false
+          # Keep "Set as a pre-release" if it was ticked (early access); promote.yml lifts it after a day.
+          prerelease: ${{ github.event.release.prerelease || false }}
+          make_latest: ${{ github.event.release.prerelease != true }}
+          overwrite_files: true
+          append_body: true
           body: |
             ## Install
             - **Pixel:** download `Pixlink-android.apk` on your phone and open it.

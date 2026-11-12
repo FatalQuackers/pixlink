@@ -11,7 +11,7 @@ namespace Pixlink.Services;
 /// </summary>
 public static class Updater
 {
-    public sealed record Update(Version Version, string ZipUrl, string PageUrl, string Notes = "", DateTimeOffset? Published = null);
+    public sealed record Update(Version Version, string ZipUrl, string PageUrl, string Notes = "", DateTimeOffset? Published = null, bool IsEarly = false);
 
     /// <summary>The steps the updating screen shows.</summary>
     public enum Stage { Downloading, Installing, Restarting }
@@ -38,9 +38,26 @@ public static class Updater
     }
 
     /// <summary>Returns the newer release, or null if this is the latest. Throws if offline.</summary>
+    /// <summary>Early updates: also take pre-releases, which everyone else gets a day later.</summary>
+    public static bool Early => App.Session.Settings.EarlyUpdates;
+
     public static async Task<Update?> CheckAsync()
     {
-        var json = JsonNode.Parse(await Http.GetStringAsync(Latest))!.AsObject();
+        JsonObject json;
+        if (Early)
+        {
+            var all = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/pixlink/releases?per_page=10"))!.AsArray()
+                .Select(r => r!.AsObject())
+                .Where(r => r["draft"]?.GetValue<bool>() != true)
+                .Where(r => r["assets"]?.AsArray().Any(a => a!["name"]?.GetValue<string>().EndsWith("windows-x64.zip") == true) == true)
+                .Select(r => (r, v: Version.TryParse(r["tag_name"]!.GetValue<string>().TrimStart('v'), out var v) ? v : null))
+                .Where(x => x.v is not null)
+                .OrderByDescending(x => x.v)
+                .ToList();
+            if (all.Count == 0) return null;
+            json = all[0].r;
+        }
+        else json = JsonNode.Parse(await Http.GetStringAsync(Latest))!.AsObject();
         var tag = json["tag_name"]!.GetValue<string>().TrimStart('v');
         if (!Version.TryParse(tag, out var latest)) return null;
         latest = new Version(latest.Major, latest.Minor, Math.Max(latest.Build, 0));
@@ -50,7 +67,8 @@ public static class Updater
             .FirstOrDefault(a => a["name"]?.GetValue<string>().EndsWith("windows-x64.zip") == true)?["browser_download_url"]?.GetValue<string>();
         if (zip is null || latest <= Current) return null;
         return new Update(latest, zip, json["html_url"]!.GetValue<string>(), Clean(json["body"]?.GetValue<string>()),
-            json["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()) : null);
+            json["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()) : null,
+            json["prerelease"]?.GetValue<bool>() == true);
     }
 
     /// <summary>Recent releases with their notes, newest first.</summary>
@@ -64,7 +82,9 @@ public static class Updater
             var tag = r["tag_name"]!.GetValue<string>().TrimStart('v');
             var date = r["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()).LocalDateTime.ToString("d MMMM yyyy") : "";
             var isCurrent = Version.TryParse(tag, out var v) && new Version(v.Major, v.Minor, Math.Max(v.Build, 0)) == Current;
-            list.Add(new ReleaseInfo(tag, date, Clean(r["body"]?.GetValue<string>()), isCurrent));
+            var early = r["prerelease"]?.GetValue<bool>() == true;
+            if (early && !Early) continue; // early versions only show for people who opted in
+            list.Add(new ReleaseInfo(tag, date, Clean(r["body"]?.GetValue<string>()), isCurrent, early));
         }
         return list;
     }
@@ -134,8 +154,9 @@ public static class Updater
 }
 
 /// <summary>One release in the "What's new" history.</summary>
-public sealed class ReleaseInfo(string version, string date, string notes, bool isCurrent)
+public sealed class ReleaseInfo(string version, string date, string notes, bool isCurrent, bool isEarly = false)
 {
+    public bool IsEarly { get; } = isEarly;
     public string Version { get; } = version;
     public string Date { get; } = date;
     public string Notes { get; } = notes;
