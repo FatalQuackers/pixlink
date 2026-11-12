@@ -3,60 +3,87 @@ package app.pixlink.ui
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.pixlink.clipboard.ClipboardSync
 import app.pixlink.link.LinkHub
 import app.pixlink.link.LinkService
 import app.pixlink.link.LinkState
-import app.pixlink.notifications.NotificationBridge
 import app.pixlink.pairing.PairedPc
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
 import app.pixlink.update.AppUpdater
 import app.pixlink.update.UpdateChecker
 import kotlinx.coroutines.launch
+
+private val Green = Color(0xFF1E9E63)
+private val Amber = Color(0xFFE89B1A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,47 +92,41 @@ fun HomeScreen(
     onPowerMode: () -> Unit,
     onSettings: () -> Unit,
     onGrantPermissions: () -> Unit,
+    onGrantSms: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val states by LinkHub.states.collectAsState()
     val power by PowerMode.state.collectAsState()
     remember { PairedStore(ctx) } // loads the saved pairings into PairedStore.paired
     val pcs by PairedStore.paired.collectAsState()
+    val perms = rememberPermissionState(ctx)
+    var dialog by remember { mutableStateOf<SpecialAccess?>(null) }
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text("Pixlink") },
-            actions = { IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") } },
-        )
-    }) { pad ->
+    dialog?.let { SpecialAccessDialog(it, ctx) { dialog = null } }
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Pixlink", fontWeight = FontWeight.SemiBold) },
+                actions = { IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") } },
+                scrollBehavior = scroll,
+            )
+        },
+    ) { pad ->
         Column(
-            Modifier.fillMaxSize().padding(pad).padding(16.dp).verticalScroll(rememberScrollState()),
+            Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            if (pcs.isEmpty()) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.Computer, null, Modifier.size(32.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text("Not linked yet", style = MaterialTheme.typography.titleLarge)
-                                Text("Open Pixlink on your PC, then scan its QR code or enter its code.", style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                        Button(onClick = onPair) {
-                            Icon(Icons.Outlined.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("Link a PC")
-                        }
+            val connected = pcs.filter { states[it.id] is LinkState.Connected }
+            StatusHero(pcs, connected, onPair)
+
+            if (connected.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(onClick = { ctx.startActivity(Intent(ctx, app.pixlink.clipboard.ClipboardSendActivity::class.java)) }) {
+                        Icon(Icons.Outlined.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Send clipboard to PC")
                     }
-                }
-            } else {
-                // One card per linked PC (e.g. work laptop and home PC); all can be connected at once.
-                pcs.forEach { pc -> PcCard(pc, states[pc.id], onPair) }
-                OutlinedButton(onClick = onPair, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Add, null); Spacer(Modifier.width(8.dp)); Text("Link another PC")
                 }
             }
 
@@ -115,47 +136,94 @@ fun HomeScreen(
             LaunchedEffect(Unit) { AppUpdater.autoUpdate(ctx) }
             UpdateCard(updateStatus, available)
 
-            Text("Setup", style = MaterialTheme.typography.titleMedium)
+            if (pcs.isNotEmpty()) {
+                SectionTitle("Your PCs")
+                pcs.forEach { pc -> PcCard(pc, states[pc.id], onPair) }
+                OutlinedButton(onClick = onPair, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Add, null); Spacer(Modifier.width(8.dp)); Text("Link another PC")
+                }
+            }
 
-            SetupRow(
-                icon = Icons.Outlined.Notifications,
-                title = "Notification access",
-                subtitle = "Needed for notifications and replying to texts",
-                done = NotificationBridge.isEnabled,
-            ) { ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
-
-            SetupRow(
-                icon = Icons.Outlined.Call,
-                title = "Calls, contacts & photos",
-                subtitle = "Allow Pixlink to place calls and show your gallery",
-                done = false,
-                onClick = onGrantPermissions,
+            // Setup checklist: re-checked every time you come back to Pixlink.
+            val items = listOf(
+                Triple(perms.notifications, "Notification access", "See and reply to notifications on your PC"),
+                Triple(perms.callsContacts && perms.photos, "Calls, contacts & photos", "Call from your PC and browse your gallery"),
+                Triple(perms.messages, "Texts", "Your text history on your PC, no sign-in needed"),
+                Triple(perms.control, "Screen control", "Tap, swipe and type on your phone from your PC"),
             )
+            val done = items.count { it.first }
+            SectionTitle("Setup")
+            Card(Modifier.fillMaxWidth().animateContentSize()) {
+                Column(Modifier.padding(vertical = 8.dp)) {
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(if (done == items.size) "All set" else "$done of ${items.size} done", style = MaterialTheme.typography.titleMedium)
+                        LinearProgressIndicator(progress = { done / items.size.toFloat() }, modifier = Modifier.fillMaxWidth())
+                    }
+                    SetupRow(Icons.Outlined.Notifications, items[0].second, items[0].third, items[0].first) { dialog = SpecialAccess.Notifications }
+                    SetupRow(Icons.Outlined.Call, items[1].second, items[1].third, items[1].first, onGrantPermissions)
+                    SetupRow(Icons.Outlined.ChatBubbleOutline, items[2].second, items[2].third, items[2].first, onGrantSms)
+                    SetupRow(Icons.Outlined.TouchApp, items[3].second, items[3].third, items[3].first) { dialog = SpecialAccess.Control }
+                    SetupRow(
+                        Icons.Outlined.Bolt, "Power mode (optional)",
+                        if (power == PowerMode.State.Ready) "On: automatic hotspot, lock phone, screenshots and more" else "Automatic hotspot, lock phone, screenshots, all files",
+                        power == PowerMode.State.Ready, onPowerMode,
+                    )
+                }
+            }
+        }
+    }
+}
 
-            SetupRow(
-                icon = Icons.Outlined.Bolt,
-                title = "Power mode",
-                subtitle = when (power) {
-                    PowerMode.State.Ready -> "On — screen control, hotspot toggle, call history, all files"
-                    else -> "Optional — unlock screen control, hotspot toggle and more"
-                },
-                done = power == PowerMode.State.Ready,
-                onClick = onPowerMode,
-            )
+@Composable
+private fun SectionTitle(text: String) {
+    Text(text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp, start = 4.dp))
+}
+
+/** The big card at the top: connected, waiting, or not linked yet, readable at a glance. */
+@Composable
+private fun StatusHero(pcs: List<PairedPc>, connected: List<PairedPc>, onPair: () -> Unit) {
+    val (color, title, detail) = when {
+        pcs.isEmpty() -> Triple(MaterialTheme.colorScheme.outline, "Not linked yet", "Open Pixlink on your Windows PC, then scan its QR code or type its 5-digit code.")
+        connected.isNotEmpty() -> Triple(Green, "Connected", connected.joinToString { it.name })
+        else -> Triple(Amber, "Not connected", "Pixlink connects by itself when your PC is on the same Wi-Fi with Pixlink open.")
+    }
+    val tint by animateColorAsState(color, label = "hero")
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Box(Modifier.size(56.dp).clip(CircleShape).background(tint.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Computer, null, tint = tint, modifier = Modifier.size(28.dp))
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = tint)
+                    Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (pcs.isEmpty()) {
+                Button(onClick = onPair, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                    Icon(Icons.Outlined.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("Link a PC")
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun SetupRow(icon: ImageVector, title: String, subtitle: String, done: Boolean, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        ListItem(
-            leadingContent = { Icon(icon, null) },
-            headlineContent = { Text(title) },
-            supportingContent = { Text(subtitle) },
-            trailingContent = { if (done) Icon(Icons.Outlined.CheckCircle, "Done", tint = MaterialTheme.colorScheme.primary) },
-        )
-    }
+    ListItem(
+        modifier = Modifier.clip(MaterialTheme.shapes.medium).let { if (done) it else it },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        leadingContent = { Icon(icon, null) },
+        headlineContent = { Text(title) },
+        supportingContent = { Text(subtitle) },
+        trailingContent = {
+            if (done) Icon(Icons.Outlined.CheckCircle, "Done", tint = Green)
+            else TextButton(onClick = onClick) { Text("Turn on") }
+        },
+    )
 }
 
 @Composable
@@ -182,10 +250,7 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
             "Install" to { scope.launch { AppUpdater.install(ctx, available) }; Unit },
         ) else return
     }
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -205,39 +270,52 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
 private fun PcCard(pc: PairedPc, state: LinkState?, onPair: () -> Unit) {
     val ctx = LocalContext.current
     val connected = state is LinkState.Connected
+    var menu by remember { mutableStateOf(false) }
+    var confirmForget by remember { mutableStateOf(false) }
+    val (dot, label) = when (state) {
+        is LinkState.Connected -> Green to "Connected"
+        is LinkState.Connecting -> Amber to "Connecting…"
+        is LinkState.Error -> MaterialTheme.colorScheme.error to state.message
+        else -> MaterialTheme.colorScheme.outline to "Not connected"
+    }
+
+    if (confirmForget) {
+        AlertDialog(
+            onDismissRequest = { confirmForget = false },
+            title = { Text("Forget ${pc.name}?") },
+            text = { Text("This phone stops connecting to it. You can link it again anytime with its code.") },
+            confirmButton = { TextButton(onClick = { confirmForget = false; LinkService.forget(ctx, pc.id) }) { Text("Forget") } },
+            dismissButton = { TextButton(onClick = { confirmForget = false }) { Text("Cancel") } },
+        )
+    }
+
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = if (connected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = if (connected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
         ),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Computer, null, Modifier.size(28.dp))
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(pc.name, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        when (state) {
-                            is LinkState.Connected -> "Connected"
-                            is LinkState.Connecting -> "Connecting…"
-                            is LinkState.Error -> state.message
-                            else -> "Offline. Pixlink connects when it's on the same Wi-Fi."
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    val reason = LinkHub.lastDisconnectReason[pc.id]
-                    if (!connected && state !is LinkState.Error && reason != null) {
-                        Text("Last disconnect: $reason", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+        Row(Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Computer, null, Modifier.size(28.dp))
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(pc.name, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).clip(CircleShape).background(dot))
+                    Spacer(Modifier.width(6.dp))
+                    Text(label, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state is LinkState.Error) {
-                    // Usually means the PC unlinked this phone: offer a fresh pairing.
-                    Button(onClick = { LinkService.forget(ctx, pc.id); onPair() }) { Text("Pair again") }
+            if (state is LinkState.Error) {
+                // Usually means the PC unlinked this phone: offer a fresh pairing.
+                TextButton(onClick = { LinkService.forget(ctx, pc.id); onPair() }) { Text("Pair again") }
+            }
+            Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "More") }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Pair again") }, onClick = { menu = false; LinkService.forget(ctx, pc.id); onPair() })
+                    DropdownMenuItem(text = { Text("Forget this PC") }, onClick = { menu = false; confirmForget = true })
                 }
-                OutlinedButton(onClick = { LinkService.forget(ctx, pc.id) }) { Text("Forget") }
             }
         }
     }

@@ -68,6 +68,16 @@ class MainActivity : ComponentActivity() {
         PowerMode.refresh()
     }
 
+    /** Copied something on the phone? Opening Pixlink sends it to your PC (Android only allows this in front). */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && PairedStore(this).sendClipboardOnOpen) app.pixlink.clipboard.ClipboardSync.sendCurrent(this, quiet = true)
+    }
+
+    fun requestSmsPermissions() {
+        permissions.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS))
+    }
+
     /** A pixlink://pair link opened from any QR scanner app, or "stop ringing" from the notification. */
     private fun handleDeepLink(intent: Intent?) {
         if (intent?.action == PhoneRinger.ACTION_STOP) { PhoneRinger.stop(this); return }
@@ -118,6 +128,7 @@ class MainActivity : ComponentActivity() {
                     onPowerMode = { nav.navigate("power") },
                     onSettings = { nav.navigate("settings") },
                     onGrantPermissions = ::requestCorePermissions,
+                    onGrantSms = ::requestSmsPermissions,
                 )
             }
             composable("pair") {

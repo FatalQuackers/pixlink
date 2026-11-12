@@ -44,6 +44,8 @@ public partial class PhoneSession : ObservableObject
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(BatteryGlyph))] private bool _charging;
     [ObservableProperty] private bool _doNotDisturb;
     [ObservableProperty] private bool _powerMode;
+    /// <summary>The phone accepts taps and typing: Power mode, or Pixlink's accessibility service.</summary>
+    [ObservableProperty] private bool _canControl;
     [ObservableProperty] private string? _pairingUri;
     [ObservableProperty] private string? _pairingCode;
     [ObservableProperty] private string? _hotspotSsid;
@@ -62,9 +64,75 @@ public partial class PhoneSession : ObservableObject
     private bool _lowBatteryWarned;
 
     public ObservableCollection<PhoneNotification> Notifications { get; } = new();
+
+    /// <summary>Notifications grouped by app, for the "Group by app" setting.</summary>
+    public ObservableCollection<NotificationGroup> NotificationGroups { get; } = new();
+    private readonly Dictionary<string, bool> _groupOpen = new();
+    private bool _groupsHooked;
+
+    public void RebuildGroups()
+    {
+        if (!_groupsHooked) { _groupsHooked = true; Notifications.CollectionChanged += (_, _) => RebuildGroups(); }
+        NotificationGroups.Clear();
+        foreach (var g in Notifications.GroupBy(n => string.IsNullOrEmpty(n.AppName) ? n.App : n.AppName))
+        {
+            var group = new NotificationGroup(g.Key, g.First().Icon, g.ToList()) { IsExpanded = _groupOpen.GetValueOrDefault(g.Key, true) };
+            group.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(NotificationGroup.IsExpanded)) _groupOpen[group.AppName] = group.IsExpanded; };
+            NotificationGroups.Add(group);
+        }
+    }
     public ObservableCollection<Conversation> Conversations { get; } = new();
 
-    public string StatusText => !IsPaired ? "Not paired" : IsConnected ? "Connected" : "Not connected";
+    // ---------- Connection status, readable at a glance ----------
+    public enum LinkPhase { NotPaired, Connecting, Connected, Reconnecting, Disconnected }
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(StatusText), nameof(StatusBrush), nameof(StatusBusy))] private LinkPhase _phase = LinkPhase.Connecting;
+    public string StatusText => Phase switch
+    {
+        LinkPhase.NotPaired => "Not paired",
+        LinkPhase.Connecting => "Connecting…",
+        LinkPhase.Connected => "Connected",
+        LinkPhase.Reconnecting => "Reconnecting…",
+        _ => "Disconnected",
+    };
+    public Microsoft.UI.Xaml.Media.SolidColorBrush StatusBrush => new(Phase switch
+    {
+        LinkPhase.Connected => Windows.UI.Color.FromArgb(255, 0x1E, 0x9E, 0x63),
+        LinkPhase.Connecting or LinkPhase.Reconnecting => Windows.UI.Color.FromArgb(255, 0xE8, 0x9B, 0x1A),
+        _ => Windows.UI.Color.FromArgb(255, 0xD1, 0x3B, 0x40),
+    });
+    public bool StatusBusy => Phase is LinkPhase.Connecting or LinkPhase.Reconnecting;
+    /// <summary>Raised when the phone comes back after a drop (not on the first connection).</summary>
+    public event Action? Reconnected;
+    private bool _everConnected;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _phaseTimer;
+
+    partial void OnIsConnectedChanged(bool value) => UpdatePhase();
+    partial void OnIsPairedChanged(bool value) => UpdatePhase();
+
+    private void UpdatePhase()
+    {
+        _phaseTimer?.Stop();
+        if (!IsPaired) { Phase = LinkPhase.NotPaired; return; }
+        if (IsConnected)
+        {
+            if (_everConnected && Phase != LinkPhase.Connected) Reconnected?.Invoke();
+            _everConnected = true;
+            Phase = LinkPhase.Connected;
+            return;
+        }
+        // Give the phone a moment to find us before calling it disconnected.
+        Phase = _everConnected ? LinkPhase.Reconnecting : LinkPhase.Connecting;
+        if (_ui is null) return;
+        _phaseTimer = _ui.CreateTimer();
+        _phaseTimer.Interval = TimeSpan.FromSeconds(_everConnected ? 30 : 20);
+        _phaseTimer.IsRepeating = false;
+        _phaseTimer.Tick += (_, _) => { if (!IsConnected && IsPaired) Phase = LinkPhase.Disconnected; };
+        _phaseTimer.Start();
+    }
+
+    // Notifications already on the phone when it connects are listed, not popped up again.
+    private readonly HashSet<string> _seenKeys = new();
+    private DateTimeOffset _connectedAt;
     public string BatteryText => Battery < 0 ? "" : $"{Battery}%";
     public string BatteryGlyph => Charging ? "" : Battery switch
     {
@@ -82,6 +150,10 @@ public partial class PhoneSession : ObservableObject
         _ui = ui;
         IsPaired = _settings.PhoneFingerprint is not null;
         if (_settings.PhoneName is { } n) PhoneName = n;
+        UpdatePhase();
+        RebuildQuickActions();
+        StartClipboardSync();
+        Log.Info("Pixlink started" + (AppSettings.IsPortable ? " (portable)" : ""));
 
         var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => PairingOpen);
         server.Connected += OnConnected;
@@ -157,6 +229,7 @@ public partial class PhoneSession : ObservableObject
             _conn = null;
             IsConnected = false;
             _pingTimer?.Dispose();
+            Log.Info("Phone disconnected");
         });
     }
 
@@ -178,7 +251,10 @@ public partial class PhoneSession : ObservableObject
                 _conn = conn;
                 PhoneName = m.Str("phoneName") ?? PhoneName;
                 PowerMode = m.Bool("powerMode") ?? false;
+                CanControl = m.Bool("canControl") ?? PowerMode;
+                _connectedAt = DateTimeOffset.Now;
                 IsConnected = true;
+                Log.Info($"Connected to {PhoneName}");
                 StartPing();
                 _ = SendAsync(Envelope.Of("notif.sync"));
                 _ = SendAsync(Envelope.Of("hotspot.get"));
@@ -199,6 +275,8 @@ public partial class PhoneSession : ObservableObject
                 MediaApp = m.Str("app") ?? "";
                 break;
             case "share.text": OnSharedText(m.Str("text") ?? ""); break;
+            case "clipboard.text": OnSharedText(m.Str("text") ?? "", quiet: m.Bool("auto") ?? false); break;
+            case "clipboard.code": OnCode(m.Str("code") ?? "", m.Str("app") ?? "your phone"); break;
             case "notif.posted": OnNotification(m); break;
             case "notif.removed":
                 var key = m.Str("key");
@@ -212,7 +290,8 @@ public partial class PhoneSession : ObservableObject
                 HotspotToggleSupported = m.Bool("toggleSupported") ?? false;
                 break;
             case "call.state": CallState = m.Str("state") ?? "ended"; break;
-            case "power.state": PowerMode = m.Bool("enabled") ?? false; break;
+            case "power.state": PowerMode = m.Bool("enabled") ?? false; CanControl = m.Bool("canControl") ?? PowerMode; break;
+            case "control.state": CanControl = m.Bool("canControl") ?? CanControl; break;
         }
         Message?.Invoke(m);
     }
@@ -313,7 +392,10 @@ public partial class PhoneSession : ObservableObject
         Notifications.Insert(0, n);
 
         if (n.IsMessage) AddToConversation(n);
-        if (existing is null && _settings.ShowToasts) Toasts.Show(n);
+        // Pop up only what's new: not the backlog synced on (re)connect, and never the same one twice.
+        var isNew = _seenKeys.Add(n.Key) && existing is null && n.Time >= _connectedAt.AddSeconds(-10);
+        if (isNew && _settings.ShowToasts) Toasts.Show(n);
+
     }
 
     /// <summary>Accepts the new format ([{title, semantic}]) and the old one (["title"]).</summary>
@@ -341,7 +423,7 @@ public partial class PhoneSession : ObservableObject
         var convo = Conversations.FirstOrDefault(c => c.Name == n.ThreadName && c.App == n.App);
         if (convo is null)
         {
-            convo = new Conversation { Name = n.ThreadName, App = n.App, Icon = n.Icon };
+            convo = new Conversation { Name = n.ThreadName, App = n.App, AppName = n.AppName, Icon = n.Icon };
             convo.IsPinned = _settings.PinnedConversations.Contains(convo.Id);
             Conversations.Add(convo);
         }
@@ -401,8 +483,58 @@ public partial class PhoneSession : ObservableObject
     public Task ActionAsync(string key, int index) =>
         SendAsync(Envelope.Of("notif.action", new { key, actionIndex = index }));
 
+    // ---------- Texts (SMS history straight from the phone; no Google Messages sign-in) ----------
+    public ObservableCollection<Conversation> SmsThreads { get; } = new();
+    public string? SmsError { get; private set; }
+
+    public async Task LoadSmsThreadsAsync()
+    {
+        var r = await RequestAsync("sms.threads", new { limit = 80 }, TimeSpan.FromSeconds(15));
+        SmsError = r?.Str("error");
+        if (r is null || SmsError is not null) return;
+        SmsThreads.Clear();
+        foreach (var t in r.Arr("threads")?.OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
+        {
+            var date = DateTimeOffset.FromUnixTimeMilliseconds(t["date"]?.GetValue<long>() ?? 0).LocalDateTime;
+            SmsThreads.Add(new Conversation
+            {
+                Name = t["name"]?.GetValue<string>() ?? t["address"]?.GetValue<string>() ?? "Unknown",
+                App = "sms", AppName = "Texts",
+                ThreadId = t["threadId"]?.GetValue<long>(),
+                Address = t["address"]?.GetValue<string>(),
+                Preview = t["snippet"]?.GetValue<string>() ?? "",
+                Time = date.Date == DateTime.Today ? date.ToString("t") : date.ToString("d MMM"),
+            });
+        }
+    }
+
+    public async Task LoadSmsMessagesAsync(Conversation c)
+    {
+        if (c.ThreadId is null) return;
+        var r = await RequestAsync("sms.thread", new { threadId = c.ThreadId, limit = 150 }, TimeSpan.FromSeconds(15));
+        if (r is null) return;
+        c.Messages.Clear();
+        foreach (var m in (r.Arr("messages")?.OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>()).Reverse())
+        {
+            var date = DateTimeOffset.FromUnixTimeMilliseconds(m["date"]?.GetValue<long>() ?? 0).LocalDateTime;
+            c.Messages.Add(new ChatBubble(m["body"]?.GetValue<string>() ?? "", m["fromMe"]?.GetValue<bool>() ?? false,
+                date.Date == DateTime.Today ? date.ToString("t") : date.ToString("d MMM, t")));
+        }
+    }
+
+    public async Task<bool> SendSmsAsync(Conversation c, string text)
+    {
+        if (c.Address is null || string.IsNullOrWhiteSpace(text)) return false;
+        var r = await RequestAsync("sms.send", new { address = c.Address, text }, TimeSpan.FromSeconds(15));
+        if (r?.Bool("ok") != true) return false;
+        c.Messages.Add(new ChatBubble(text, true, DateTime.Now.ToString("t")));
+        c.Preview = $"You: {text}";
+        return true;
+    }
+
     public async Task ReplyAsync(Conversation convo, string text)
     {
+        if (convo.ThreadId is not null) { await SendSmsAsync(convo, text); return; }
         if (convo.ReplyKey is null || string.IsNullOrWhiteSpace(text)) return;
         await SendAsync(Envelope.Of("notif.reply", new { key = convo.ReplyKey, text }));
         convo.Messages.Add(new ChatBubble(text, true, DateTime.Now.ToString("t")));
@@ -460,19 +592,90 @@ public partial class PhoneSession : ObservableObject
         var content = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
         if (!content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)) return false;
         var text = await content.GetTextAsync();
+        _lastClipboard = text;
         await SendAsync(Envelope.Of("clipboard.set", new { text }));
         return true;
     }
 
-    /// <summary>Text shared from the phone ("Send to PC") goes on the clipboard.</summary>
-    private void OnSharedText(string text)
+    /// <summary>Text shared or copied on the phone goes on this PC's clipboard.</summary>
+    private void OnSharedText(string text, bool quiet = false)
     {
         if (string.IsNullOrEmpty(text)) return;
+        PutOnClipboard(text);
+        if (!quiet) Toasts.ShowSimple($"Copied from {PhoneName}", text.Length > 120 ? text[..120] + "…" : text);
+    }
+
+    /// <summary>A sign-in code arrived on the phone: it's ready to paste here.</summary>
+    private void OnCode(string code, string app)
+    {
+        if (!_settings.CopyCodes || string.IsNullOrEmpty(code)) return;
+        PutOnClipboard(code);
+        Toasts.ShowSimple($"Code {code} copied", $"From {app} on {PhoneName}. Press Ctrl+V to paste it.");
+    }
+
+    // ---------- Automatic clipboard sync ----------
+    private string? _lastClipboard;
+    private bool _clipboardHooked;
+
+    private void PutOnClipboard(string text)
+    {
+        _lastClipboard = text; // so our own change isn't sent straight back
         var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
         package.SetText(text);
         Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
-        Toasts.ShowSimple($"Copied from {PhoneName}", text.Length > 120 ? text[..120] + "…" : text);
     }
+
+    /// <summary>Copy on this PC, paste on the phone: sends new copied text when sync is on.</summary>
+    public void StartClipboardSync()
+    {
+        if (_clipboardHooked) return;
+        _clipboardHooked = true;
+        Windows.ApplicationModel.DataTransfer.Clipboard.ContentChanged += async (_, _) =>
+        {
+            if (!_settings.AutoClipboard || !IsConnected) return;
+            try
+            {
+                var content = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
+                if (!content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)) return;
+                var text = await content.GetTextAsync();
+                if (string.IsNullOrEmpty(text) || text == _lastClipboard || text.Length > 100_000) return;
+                _lastClipboard = text;
+                await SendAsync(Envelope.Of("clipboard.set", new { text, auto = true }));
+            }
+            catch (Exception) { /* clipboard busy: skip this change */ }
+        };
+    }
+
+    // ---------- Pinned to Home ----------
+    public ObservableCollection<PhoneNotification> PinnedNotifications { get; } = new();
+
+    public void TogglePin(PhoneNotification n)
+    {
+        var existing = PinnedNotifications.FirstOrDefault(x => x.Key == n.Key);
+        if (existing is not null) PinnedNotifications.Remove(existing); else PinnedNotifications.Insert(0, n);
+    }
+
+    /// <summary>Opens the notification's app on the phone (what tapping it on the phone would do).</summary>
+    public Task OpenNotificationAsync(string key) => SendAsync(Envelope.Of("notif.open", new { key }));
+
+    // ---------- Quick actions ----------
+    public ObservableCollection<QuickActionItem> QuickActions { get; } = new();
+
+    public void RebuildQuickActions()
+    {
+        QuickActions.Clear();
+        foreach (var id in _settings.QuickActions)
+        {
+            var c = QuickActionItem.Catalog.FirstOrDefault(x => x.Id == id);
+            if (c.Id is null) continue;
+            QuickActions.Add(new QuickActionItem { Id = c.Id, Glyph = c.Glyph, Name = c.Name, Tip = c.Tip, NeedsPower = c.NeedsPower, Label = c.Name,
+                IsActive = c.Id == "dnd" && DoNotDisturb });
+        }
+    }
+
+    public QuickActionItem? QuickAction(string id) => QuickActions.FirstOrDefault(q => q.Id == id);
+
+    partial void OnDoNotDisturbChanged(bool value) { if (QuickAction("dnd") is { } q) q.IsActive = value; }
 
     private void CheckLowBattery()
     {

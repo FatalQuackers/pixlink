@@ -41,7 +41,7 @@
             <AppBarSeparator />
             <Button Content="Stop" Click="OnStop" />
             <TextBlock x:Name="ControlNote" VerticalAlignment="Center" Margin="12,0,0,0" Style="{StaticResource CaptionTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="View only. Turn on Power mode in the phone app to control your phone." />
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="View only. To control your phone, open Pixlink on the phone and turn on Screen control (no Power mode needed)." />
         </StackPanel>
     </Grid>
 </Page>

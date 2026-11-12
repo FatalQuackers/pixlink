@@ -108,7 +108,11 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
 
             Section("Your PC can")
             SwitchRow("Ring this phone", "Find it at full volume, even on silent", ring) { ring = it; store.allowRing = it }
-            SwitchRow("Send text to my clipboard", null, clip) { clip = it; store.allowClipboard = it }
+            SwitchRow("Let my PC copy to this phone", "Copy on your PC, paste here", clip) { clip = it; store.allowClipboard = it }
+            var codes by remember { mutableStateOf(store.sendCodes) }
+            SwitchRow("Copy sign-in codes to my PC", "Verification codes from your texts and apps, ready to paste", codes) { codes = it; store.sendCodes = it }
+            var onOpen by remember { mutableStateOf(store.sendClipboardOnOpen) }
+            SwitchRow("Send my clipboard when I open Pixlink", "Android only lets apps read the clipboard while they're open", onOpen) { onOpen = it; store.sendClipboardOnOpen = it }
             SwitchRow("Control music and videos", "Play, pause and skip from your PC", media) { media = it; store.allowMediaControls = it }
             SwitchRow("Turn Do Not Disturb on and off", null, dnd) { dnd = it; store.allowDndControl = it }
 

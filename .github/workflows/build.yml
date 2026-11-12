@@ -69,10 +69,25 @@ jobs:
         run: |
           $exe = Get-ChildItem -Recurse windows/Pixlink/bin -Filter Pixlink.exe | Select-Object -First 1
           "APP_DIR=$($exe.DirectoryName)" >> $env:GITHUB_ENV
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = Get-Command iscc.exe -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" -ErrorAction SilentlyContinue
+            if (-not $iscc) { choco install innosetup -y --no-progress | Out-Null; $iscc = Get-Item "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" }
+          }
+          $env:PIXLINK_VERSION = "$env:VERSION".TrimStart('v')
+          & ($iscc.Source ?? $iscc.FullName) windows/installer/Pixlink.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-windows-x64
           path: ${{ env.APP_DIR }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pixlink-windows-setup
+          path: windows/installer/Pixlink-Setup-x64.exe
 
   release:
     # Only version tags become releases.
@@ -89,6 +104,10 @@ jobs:
         run: |
           cp dist/pixlink-android/*.apk Pixlink-android.apk
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64.zip .)
+          cp dist/pixlink-windows-setup/Pixlink-Setup-x64.exe Pixlink-Setup-x64.exe
+          # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
+          printf 'Pixlink portable\r\n\r\nPixlink keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
+          (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -98,13 +117,16 @@ jobs:
           body: |
             ## Install
             - **Pixel:** download `Pixlink-android.apk` on your phone and open it.
-            - **Windows:** download `Pixlink-windows-x64.zip`, extract it, and run `Pixlink.exe`.
+            - **Windows (installer):** download `Pixlink-Setup-x64.exe` and run it. No admin needed; it adds Start menu and desktop shortcuts and an uninstaller.
+            - **Windows (portable):** download `Pixlink-windows-x64-portable.zip`, extract it anywhere (even a USB stick) and run `Pixlink.exe`. Settings stay in its own folder.
 
             Full steps: https://github.com/FatalQuackers/pixlink#how-to-install
 
             Already have Pixlink? Both apps update themselves: look for the update banner.
           files: |
             Pixlink-android.apk
+            Pixlink-Setup-x64.exe
+            Pixlink-windows-x64-portable.zip
             Pixlink-windows-x64.zip
 
   pages:

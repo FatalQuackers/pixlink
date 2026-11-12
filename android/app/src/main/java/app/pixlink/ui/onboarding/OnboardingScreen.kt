@@ -216,18 +216,13 @@ private fun FeaturesPage(visible: Boolean) {
 @Composable
 private fun PermissionsPage(onGrantPermissions: () -> Unit) {
     val ctx = LocalContext.current
-    // Re-check whenever the user comes back from a settings screen.
-    var tick by remember { mutableIntStateOf(0) }
-    val lifecycle = LocalLifecycleOwner.current
-    DisposableEffect(lifecycle) {
-        val observer = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) tick++ }
-        lifecycle.lifecycle.addObserver(observer)
-        onDispose { lifecycle.lifecycle.removeObserver(observer) }
-    }
-    fun granted(p: String) = ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
-    val notifAccess = remember(tick) { NotificationBridge.isEnabled }
-    val core = remember(tick) { granted(Manifest.permission.READ_CONTACTS) && granted(Manifest.permission.CALL_PHONE) }
-    val photos = remember(tick) { granted(Manifest.permission.READ_MEDIA_IMAGES) }
+    // Re-checked whenever the user comes back from a settings screen.
+    val perms = app.pixlink.ui.rememberPermissionState(ctx)
+    val notifAccess = perms.notifications
+    val core = perms.callsContacts
+    val photos = perms.photos
+    var dialog by remember { mutableStateOf(false) }
+    if (dialog) app.pixlink.ui.SpecialAccessDialog(app.pixlink.ui.SpecialAccess.Notifications, ctx) { dialog = false }
 
     Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("A few permissions", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
@@ -236,8 +231,8 @@ private fun PermissionsPage(onGrantPermissions: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(4.dp))
-        PermissionRow(Icons.Outlined.Notifications, "Notification access", "To show notifications and reply to texts", notifAccess) {
-            ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        PermissionRow(Icons.Outlined.Notifications, "Notification access", "To show notifications and reply to texts. You'll find Pixlink in the list.", notifAccess) {
+            dialog = true
         }
         PermissionRow(Icons.Outlined.Call, "Calls and contacts", "To call from your PC", core, onGrantPermissions)
         PermissionRow(Icons.Outlined.Photo, "Photos", "To browse your gallery on your PC", photos, onGrantPermissions)

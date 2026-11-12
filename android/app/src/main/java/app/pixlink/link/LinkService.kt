@@ -68,7 +68,10 @@ class LinkService : LifecycleService() {
         // Tell the PCs whenever Power mode turns on or off, so screen control follows along.
         lifecycleScope.launch {
             PowerMode.state.collect { st ->
-                LinkHub.send(msg("power.state") { put("enabled", st == PowerMode.State.Ready) })
+                LinkHub.send(msg("power.state") {
+                    put("enabled", st == PowerMode.State.Ready)
+                    put("canControl", st == PowerMode.State.Ready || app.pixlink.mirror.ControlService.isEnabled(this@LinkService))
+                })
             }
         }
 
@@ -159,6 +162,7 @@ class LinkService : LifecycleService() {
             put("model", Build.MODEL)
             put("appVersion", BuildConfig.VERSION_NAME)
             put("powerMode", PowerMode.isReady)
+            put("canControl", PowerMode.isReady || app.pixlink.mirror.ControlService.isEnabled(this@LinkService))
         })
         LinkHub.setState(pcId, LinkState.Connected(pcName))
         status.start()
@@ -280,24 +284,29 @@ class LinkService : LifecycleService() {
 
     private fun refreshNotification() {
         val connected = LinkHub.states.value.values.filterIsInstance<LinkState.Connected>().map { it.pcName }
-        val text = when {
-            connected.isNotEmpty() -> "Connected to ${connected.joinToString()}"
-            store.pcs.isEmpty() -> "Linking…"
-            else -> "Waiting for ${store.pcs.joinToString { it.name }}…"
-        }
-        getSystemService(android.app.NotificationManager::class.java).notify(NOTIF_ID, buildNotification(text))
+        // No "searching…" noise: while nothing is connected the notification just says Pixlink is ready.
+        val text = if (connected.isNotEmpty()) "Connected to ${connected.joinToString()}" else "Ready. Connects when your PC is nearby."
+        getSystemService(android.app.NotificationManager::class.java).notify(NOTIF_ID, buildNotification(text, connected.isNotEmpty()))
     }
 
-    private fun buildNotification(text: String): Notification {
+    private fun buildNotification(text: String, connected: Boolean = false): Notification {
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        return NotificationCompat.Builder(this, PixlinkApp.CHANNEL_LINK)
+        val b = NotificationCompat.Builder(this, PixlinkApp.CHANNEL_LINK)
             .setSmallIcon(R.drawable.ic_stat_link)
-            .setContentTitle("Pixlink")
+            .setContentTitle(if (connected) "Pixlink" else "Pixlink is ready")
             .setContentText(text)
             .setContentIntent(open)
             .setOngoing(true)
             .setSilent(true)
-            .build()
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setShowWhen(false)
+        if (connected) {
+            val send = PendingIntent.getActivity(this, 3,
+                Intent(this, app.pixlink.clipboard.ClipboardSendActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE)
+            b.addAction(0, "Send clipboard", send)
+        }
+        return b.build()
     }
 
     companion object {

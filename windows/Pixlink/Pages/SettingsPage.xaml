@@ -21,6 +21,84 @@
         <StackPanel Padding="24" Spacing="6" MaxWidth="760" HorizontalAlignment="Left">
             <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" />
 
+            <!-- Layout -->
+            <TextBlock Text="Layout" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Quick actions" />
+                        <TextBlock x:Name="QuickActionsHint" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Choose…" Click="OnChooseQuickActions" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Group notifications by app" />
+                        <TextBlock Text="Shows each app's notifications together, like a folder" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="GroupSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Keep running in the tray when closed" />
+                        <TextBlock Text="Closing the window hides Pixlink by the clock so notifications keep coming. Right-click the tray icon to quit." Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="TraySwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
+                </Grid>
+            </Border>
+
+            <!-- Clipboard -->
+            <TextBlock Text="Clipboard" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Sync clipboard automatically" />
+                        <TextBlock Text="Copy on this PC, paste on your phone. To send from the phone, tap &quot;Send clipboard&quot; in Pixlink's notification or its quick settings tile." Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="AutoClipSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Copy sign-in codes from my phone" />
+                        <TextBlock Text="When a verification code arrives on your phone, it's copied here, ready to paste" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="CodesSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
+                </Grid>
+            </Border>
+
+            <!-- Screen -->
+            <TextBlock Text="Screen sharing" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Stop sharing when Pixlink is minimized" />
+                        <TextBlock Text="Saves your phone's battery when you're not looking" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="StopHiddenSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
+                </Grid>
+            </Border>
+
+            <!-- Help -->
+            <TextBlock Text="Help" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="View logs" Click="OnViewLogs" />
+                    <Button Content="Run setup again" Click="OnRunSetup" />
+                </StackPanel>
+            </Border>
+
             <!-- General -->
             <TextBlock Text="General" Style="{StaticResource Section}" />
             <Border Style="{StaticResource Row}">

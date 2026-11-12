@@ -33,7 +33,8 @@ public sealed partial class SettingsPage : Page
         BitrateSlider.Value = S.MirrorBitrateMbps;
 
         DownloadText.Text = $"Saved in {FileTransfers.DownloadFolder}";
-        VersionText.Text = $"Pixlink {Updater.Current}";
+        LoadLayout();
+        VersionText.Text = $"Pixlink {Updater.Current}" + (AppSettings.IsPortable ? " · Portable (settings are saved in the Data folder next to Pixlink.exe)" : "");
         AutoUpdateSwitch.IsOn = S.AutoCheckUpdates;
         FingerprintText.Text = $"This PC's certificate: {App.Session.PcFingerprint}";
         PhoneText.Text = $"Linked to {App.Session.PhoneName}";
@@ -171,5 +172,75 @@ public sealed partial class SettingsPage : Page
             DefaultButton = ContentDialogButton.Close,
         }.ShowAsync();
         if (result == ContentDialogResult.Primary) App.Session.Unpair();
+    }
+
+    // ---------- Layout, clipboard, screen, help ----------
+    private bool _loadingLayout;
+
+    private void LoadLayout()
+    {
+        _loadingLayout = true;
+        var st = App.Session.Settings;
+        GroupSwitch.IsOn = st.GroupNotificationsByApp;
+        TraySwitch.IsOn = st.CloseToTray;
+        AutoClipSwitch.IsOn = st.AutoClipboard;
+        CodesSwitch.IsOn = st.CopyCodes;
+        StopHiddenSwitch.IsOn = st.StopMirrorWhenHidden;
+        QuickActionsHint.Text = string.Join(", ", st.QuickActions
+            .Select(id => Pixlink.Models.QuickActionItem.Catalog.FirstOrDefault(c => c.Id == id).Name)
+            .Where(n => n is not null));
+        _loadingLayout = false;
+    }
+
+    private void OnLayoutToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loadingLayout) return;
+        var st = App.Session.Settings;
+        st.GroupNotificationsByApp = GroupSwitch.IsOn;
+        st.CloseToTray = TraySwitch.IsOn;
+        st.AutoClipboard = AutoClipSwitch.IsOn;
+        st.CopyCodes = CodesSwitch.IsOn;
+        st.StopMirrorWhenHidden = StopHiddenSwitch.IsOn;
+        st.Save();
+        App.Window?.RefreshLayout();
+    }
+
+    private async void OnChooseQuickActions(object sender, RoutedEventArgs e)
+    {
+        var st = App.Session.Settings;
+        var panel = new StackPanel { Spacing = 4, Width = 360 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Pick up to 9. The ones marked Power mode need Power mode on your phone.",
+            TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8),
+        });
+        var boxes = new List<(string Id, CheckBox Box)>();
+        foreach (var c in Pixlink.Models.QuickActionItem.Catalog)
+        {
+            var box = new CheckBox { Content = c.NeedsPower ? $"{c.Name} (Power mode)" : c.Name, IsChecked = st.QuickActions.Contains(c.Id) };
+            boxes.Add((c.Id, box));
+            panel.Children.Add(box);
+        }
+        var result = await new ContentDialog
+        {
+            XamlRoot = XamlRoot, Title = "Quick actions", Content = new ScrollViewer { Content = panel, MaxHeight = 460 },
+            PrimaryButtonText = "Save", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary,
+        }.ShowAsync();
+        if (result != ContentDialogResult.Primary) return;
+        // Keep the existing order, then add newly ticked ones at the end.
+        var chosen = boxes.Where(b => b.Box.IsChecked == true).Select(b => b.Id).ToList();
+        st.QuickActions = st.QuickActions.Where(chosen.Contains).Concat(chosen.Where(id => !st.QuickActions.Contains(id))).Take(9).ToList();
+        st.Save();
+        App.Session.RebuildQuickActions();
+        LoadLayout();
+    }
+
+    private void OnViewLogs(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(LogsPage));
+
+    private void OnRunSetup(object sender, RoutedEventArgs e)
+    {
+        App.Session.Settings.SetupDone = false;
+        App.Session.Settings.Save();
+        App.Window?.RunSetup();
     }
 }

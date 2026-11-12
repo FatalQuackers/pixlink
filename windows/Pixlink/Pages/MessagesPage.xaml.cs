@@ -19,26 +19,53 @@ public sealed partial class MessagesPage : Page
         Session.Conversations.CollectionChanged += OnConversationsChanged;
         Unloaded += (_, _) => Session.Conversations.CollectionChanged -= OnConversationsChanged;
         UpdateEmptyList();
-        ViewPicker.SelectedItem = Session.Settings.MessagesView == "google" ? GoogleItem : PixlinkItem;
+        ViewPicker.SelectedItem = Session.Settings.MessagesView switch { "google" => GoogleItem, "texts" => TextsItem, _ => PixlinkItem };
     }
+
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        // Opened from a pinned chat on Home.
+        if (e.Parameter is Conversation c)
+        {
+            ViewPicker.SelectedItem = c.ThreadId is null ? PixlinkItem : TextsItem;
+            ConversationList.SelectedItem = c;
+        }
+    }
+
+    private bool _texts;
 
     private void OnConversationsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         UpdateEmptyList();
-        if (_current is not null && !Session.Conversations.Contains(_current)) ShowNothingSelected();
+        if (!_texts && _current is not null && !Session.Conversations.Contains(_current)) ShowNothingSelected();
     }
 
     private void UpdateEmptyList() =>
-        NoChats.Visibility = Session.Conversations.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        NoChats.Visibility = (_texts ? Session.SmsThreads.Count : Session.Conversations.Count) == 0 ? Visibility.Visible : Visibility.Collapsed;
 
     // ---------- Recent chats / All texts ----------
 
     private async void OnViewChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         var google = sender.SelectedItem == GoogleItem;
+        _texts = sender.SelectedItem == TextsItem;
         PixlinkView.Visibility = google ? Visibility.Collapsed : Visibility.Visible;
         GoogleView.Visibility = google ? Visibility.Visible : Visibility.Collapsed;
-        var view = google ? "google" : "pixlink";
+        var view = google ? "google" : _texts ? "texts" : "pixlink";
+        ShowNothingSelected();
+        ConversationList.ItemsSource = _texts ? Session.SmsThreads : Session.Conversations;
+        UpdateEmptyList();
+        if (_texts)
+        {
+            NoChatsTitle.Text = "Loading your texts…";
+            NoChatsText.Text = "";
+            await Session.LoadSmsThreadsAsync();
+            NoChatsTitle.Text = Session.SmsError is null ? "No texts" : "Allow Pixlink to read texts";
+            NoChatsText.Text = Session.SmsError is null ? "Texts on your phone appear here." :
+                "On your phone, open Pixlink and allow SMS in Setup. If Android says \"Restricted setting\", open App info → ⋮ → Allow restricted settings first.";
+            UpdateEmptyList();
+        }
+        else { NoChatsTitle.Text = "No chats yet"; NoChatsText.Text = "Messages from any app appear here when they arrive on your phone. For your full text history, open Texts."; }
         if (Session.Settings.MessagesView != view) { Session.Settings.MessagesView = view; Session.Settings.Save(); }
         if (google) await OpenGoogleMessagesAsync();
     }
@@ -53,7 +80,7 @@ public sealed partial class MessagesPage : Page
         {
             if (MessagesWeb.CoreWebView2 is null)
             {
-                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pixlink", "WebView2");
+                var folder = Path.Combine(AppSettings.Folder, "WebView2");
                 Directory.CreateDirectory(folder);
                 Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", folder);
                 await MessagesWeb.EnsureCoreWebView2Async();
@@ -85,7 +112,14 @@ public sealed partial class MessagesPage : Page
         EmptyView.Visibility = Visibility.Collapsed;
         ThreadView.Visibility = Visibility.Visible;
         UpdateThreadState();
-        if (c.Messages.Count > 0) Bubbles.ScrollIntoView(c.Messages[^1]);
+        if (c.ThreadId is not null) _ = LoadThreadAsync(c);
+        else if (c.Messages.Count > 0) Bubbles.ScrollIntoView(c.Messages[^1]);
+    }
+
+    private async Task LoadThreadAsync(Conversation c)
+    {
+        await Session.LoadSmsMessagesAsync(c);
+        if (_current == c && c.Messages.Count > 0) Bubbles.ScrollIntoView(c.Messages[^1]);
     }
 
     private void ShowNothingSelected()
@@ -99,7 +133,7 @@ public sealed partial class MessagesPage : Page
     private void UpdateThreadState()
     {
         if (_current is null) return;
-        var canReply = _current.ReplyKey is not null;
+        var canReply = _current.ReplyKey is not null || _current.ThreadId is not null;
         ReplyRow.Visibility = canReply ? Visibility.Visible : Visibility.Collapsed;
         NoReplyNote.Visibility = canReply ? Visibility.Collapsed : Visibility.Visible;
         ThreadMarkRead.Visibility = MarkReadAction(_current) is null ? Visibility.Collapsed : Visibility.Visible;

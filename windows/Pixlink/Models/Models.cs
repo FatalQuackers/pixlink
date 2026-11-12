@@ -31,14 +31,17 @@ public partial class PhoneNotification : ObservableObject
     }
 
     [ObservableProperty] private BitmapImage? _icon;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(TextLines), nameof(ExpandGlyph), nameof(ShowSingleText))] private bool _isExpanded;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(TextLines), nameof(TitleLines), nameof(ExpandGlyph), nameof(ShowSingleText))] private bool _isExpanded;
     [ObservableProperty] private string _replyDraft = "";
 
     public bool HasActions => Actions.Count > 0;
     public bool HasHistory => History.Count > 1;
-    public bool HasMore => HasActions || CanReply || HasHistory || Text.Length > 90;
+    public bool HasMore => true; // every card can open its app on the phone
     /// <summary>Collapsed cards show 3 lines; expanded shows everything.</summary>
     public int TextLines => IsExpanded ? 0 : 3;
+    public int TitleLines => IsExpanded ? 0 : 1;
+    /// <summary>The app's own buttons, plus "Open on phone" (opens the app there and shows your phone screen).</summary>
+    public List<NotifAction> AllButtons => [new NotifAction(Key, -1, "Open on phone", "open"), .. Actions];
     /// <summary>When expanded with a chat history, the bubbles replace the single preview line.</summary>
     public bool ShowSingleText => !(IsExpanded && HasHistory);
     public string ExpandGlyph => IsExpanded ? "\uE70E" : "\uE70D";
@@ -57,7 +60,7 @@ public sealed record NotifAction(string Key, int Index, string Title, string Sem
     public string Glyph => Semantic switch
     {
         "markAsRead" => "\uE8C3", "delete" => "\uE74D", "archive" => "\uE7B8", "mute" => "\uE74F",
-        "like" => "\uE8E1", "call" => "\uE717", _ => "\uE8FB",
+        "like" => "\uE8E1", "call" => "\uE717", "open" => "\uE8A7", _ => "\uE8FB",
     };
 }
 
@@ -66,6 +69,10 @@ public partial class Conversation : ObservableObject
 {
     public required string Name { get; init; }
     public required string App { get; init; }
+    public string AppName { get; init; } = "";
+    /// <summary>Set for SMS threads read from the phone ("Texts"); replies go out as SMS.</summary>
+    public long? ThreadId { get; init; }
+    public string? Address { get; init; }
 
     /// <summary>Remembered key for pinning/removing ("app|name").</summary>
     public string Id => $"{App}|{Name}";
@@ -127,4 +134,51 @@ public sealed record FileEntry(string Name, string Path, bool IsDir, long Size, 
         _ => $"{Size / 1024.0 / 1024 / 1024:0.##} GB",
     };
     public string ModifiedText => Modified.LocalDateTime.ToString("g");
+}
+
+
+/// <summary>All of one app's notifications, shown together when "Group by app" is on.</summary>
+public sealed partial class NotificationGroup(string appName, Microsoft.UI.Xaml.Media.ImageSource? icon, List<PhoneNotification> items)
+    : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+{
+    public string AppName { get; } = appName;
+    public Microsoft.UI.Xaml.Media.ImageSource? Icon { get; } = icon;
+    public List<PhoneNotification> Items { get; } = items;
+    public string CountText => Items.Count == 1 ? "1 notification" : $"{Items.Count} notifications";
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    [CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedFor(nameof(ChevronGlyph))]
+    private bool _isExpanded = true;
+    public string ChevronGlyph => IsExpanded ? "\uE70E" : "\uE70D";
+}
+
+/// <summary>A button in the quick actions grid. Which ones show is chosen in Settings.</summary>
+public sealed partial class QuickActionItem : ObservableObject
+{
+    public required string Id { get; init; }
+    public required string Glyph { get; init; }
+    public required string Name { get; init; }
+    public string Tip { get; init; } = "";
+    public bool NeedsPower { get; init; }
+    [ObservableProperty] private string _label = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(Background), nameof(Foreground))] private bool _isActive;
+    public Microsoft.UI.Xaml.Media.Brush Background => (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources[
+        IsActive ? "AccentFillColorDefaultBrush" : "ControlFillColorDefaultBrush"];
+    public Microsoft.UI.Xaml.Media.Brush Foreground => (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources[
+        IsActive ? "TextOnAccentFillColorPrimaryBrush" : "TextFillColorPrimaryBrush"];
+
+    public static readonly (string Id, string Glyph, string Name, string Tip, bool NeedsPower)[] Catalog =
+    [
+        ("hotspot", "", "Hotspot", "Use your phone's internet", false),
+        ("screen", "", "Screen", "Show your phone screen", false),
+        ("sendfile", "", "Send file", "Send a file to your phone", false),
+        ("ring", "", "Find phone", "Ring your phone at full volume, even on silent", false),
+        ("clipboard", "", "Clipboard", "Send this PC's copied text to your phone", false),
+        ("dnd", "", "Do not disturb", "Turn Do Not Disturb on or off on your phone", false),
+        ("photos", "", "Photos", "Open your phone's photos", false),
+        ("messages", "", "Messages", "Open your texts", false),
+        ("lock", "", "Lock phone", "Lock your phone's screen", true),
+        ("screenshot", "", "Screenshot", "Take a screenshot on your phone and send it here", true),
+    ];
+
+    public static readonly string[] Defaults = ["hotspot", "screen", "sendfile", "ring", "clipboard", "dnd"];
 }

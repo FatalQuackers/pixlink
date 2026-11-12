@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Pixlink.Pages.SetupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Page.Resources>
+        <Style x:Key="Row" TargetType="Border" BasedOn="{StaticResource PanelCardStyle}">
+            <Setter Property="Padding" Value="16,12" />
+        </Style>
+    </Page.Resources>
+    <ScrollViewer>
+        <StackPanel MaxWidth="640" Padding="24,40" Spacing="8" HorizontalAlignment="Center">
+            <Image Source="/Assets/icon-512.png" Width="64" Height="64" HorizontalAlignment="Left" />
+            <TextBlock Text="Make Pixlink yours" Style="{StaticResource TitleLargeTextBlockStyle}" Margin="0,12,0,0" />
+            <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,0,16"
+                       Text="A few choices to finish setting up. You can change any of these later in Settings." />
+
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Startup" Header="Start Pixlink when I sign in to Windows" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Tray" Header="Keep running in the tray when I close the window" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Toasts" Header="Show my phone's notifications as Windows pop-ups" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Sound" Header="Play a sound with pop-ups" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Clip" Header="Sync my clipboard (copy here, paste on the phone)" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Codes" Header="Copy sign-in codes from my phone automatically" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Group" Header="Group notifications by app" /></Border>
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Theme" />
+                    <RadioButtons x:Name="Theme" MaxColumns="3">
+                        <x:String>System</x:String>
+                        <x:String>Light</x:String>
+                        <x:String>Dark</x:String>
+                    </RadioButtons>
+                </StackPanel>
+            </Border>
+
+            <TextBlock TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Text="Tip: on your phone, open Pixlink and turn on Screen control to click and type on your phone from here." />
+            <Button Content="Done" Style="{StaticResource AccentButtonStyle}" Click="OnDone" HorizontalAlignment="Right" MinWidth="140" Margin="0,12,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

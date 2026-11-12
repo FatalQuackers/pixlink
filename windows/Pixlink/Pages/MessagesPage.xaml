@@ -16,8 +16,9 @@
         <Grid Padding="16,12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
             <TextBlock Text="Messages" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
             <SelectorBar x:Name="ViewPicker" HorizontalAlignment="Right" SelectionChanged="OnViewChanged">
-                <SelectorBarItem x:Name="PixlinkItem" Text="Recent chats" Tag="pixlink" />
-                <SelectorBarItem x:Name="GoogleItem" Text="All texts (Google Messages)" Tag="google" />
+                <SelectorBarItem x:Name="PixlinkItem" Text="Chats" Tag="pixlink" ToolTipService.ToolTip="Messages from every app: texts, WhatsApp, Discord, Outlook and more, as they arrive" />
+                <SelectorBarItem x:Name="TextsItem" Text="Texts" Tag="texts" ToolTipService.ToolTip="Your SMS history, read straight from your phone. No sign-in needed." />
+                <SelectorBarItem x:Name="GoogleItem" Text="Google Messages" Tag="google" ToolTipService.ToolTip="Optional: Google Messages for Web, for RCS history" />
             </SelectorBar>
         </Grid>
 
@@ -56,7 +57,13 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <PersonPicture DisplayName="{x:Bind Name}" Width="40" Height="40" />
+                                <Grid>
+                                    <PersonPicture DisplayName="{x:Bind Name}" Width="40" Height="40" />
+                                    <Border Width="18" Height="18" CornerRadius="9" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3"
+                                            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" Padding="1">
+                                        <Image Source="{x:Bind Icon, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind AppName}" />
+                                    </Border>
+                                </Grid>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
@@ -81,9 +88,9 @@
                 <!-- No chats yet -->
                 <StackPanel x:Name="NoChats" VerticalAlignment="Center" Spacing="6" Padding="24">
                     <FontIcon Glyph="&#xE8BD;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    <TextBlock Text="No chats yet" HorizontalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBlock TextAlignment="Center" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Text="Texts and chat messages appear here when they arrive on your phone. For your full text history, open All texts." />
+                    <TextBlock x:Name="NoChatsTitle" Text="No chats yet" HorizontalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Name="NoChatsText" TextAlignment="Center" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Text="Messages from any app appear here when they arrive on your phone. For your full text history, open Texts." />
                 </StackPanel>
             </Grid>
 
@@ -129,7 +136,7 @@
                                 <TextBlock Text="{x:Bind Sender}" Style="{StaticResource CaptionTextBlockStyle}" Margin="8,0,8,2"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="{x:Bind ShowSender}" />
                                 <Border CornerRadius="16" Padding="14,10" Background="{x:Bind BubbleBrush}">
-                                    <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    <local:LinkTextBlock Text="{x:Bind Text}" />
                                 </Border>
                                 <TextBlock Text="{x:Bind Time}" Style="{StaticResource CaptionTextBlockStyle}" Margin="8,2"
                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="{x:Bind Align}" />

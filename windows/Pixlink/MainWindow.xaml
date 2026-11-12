@@ -11,29 +11,132 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
+    <Grid x:Name="Root">
+        <Grid.Resources>
+            <!-- One phone notification. Expanded cards show the whole message, the chat, the app's buttons and a reply box. -->
+            <DataTemplate x:Key="NotifTemplate" x:DataType="models:PhoneNotification">
+                <Border Style="{StaticResource PanelCardStyle}" Margin="0,0,0,8">
+                    <Grid ColumnSpacing="10" RowSpacing="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Image Source="{x:Bind Icon, Mode=OneWay}" Width="20" Height="20" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                            <Run Text="{x:Bind AppName}" /> · <Run Text="{x:Bind TimeText}" />
+                        </TextBlock>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                            <Button Style="{StaticResource SubtleButtonStyle}" Padding="6,4" Click="OnPinNotification" Tag="{x:Bind}" ToolTipService.ToolTip="Pin to Home">
+                                <FontIcon Glyph="&#xE718;" FontSize="11" />
+                            </Button>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Padding="6,4" Click="OnToggleExpand" Tag="{x:Bind}"
+                                    Visibility="{x:Bind HasMore}" ToolTipService.ToolTip="Show more">
+                                <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="11" />
+                            </Button>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Padding="6,4" Click="OnDismiss" Tag="{x:Bind}" ToolTipService.ToolTip="Dismiss on phone">
+                                <FontIcon Glyph="&#xE711;" FontSize="11" />
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Tapping the title or text expands the card -->
+                        <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Background="Transparent" Tapped="OnCardTapped" Tag="{x:Bind}" Margin="0,4,0,0">
+                            <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" MaxLines="{x:Bind TitleLines, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                            <local:LinkTextBlock Text="{x:Bind Text}" MaxLines="{x:Bind TextLines, Mode=OneWay}" Visibility="{x:Bind ShowSingleText, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <!-- Expanded: conversation, buttons, reply -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Spacing="8" Margin="0,8,0,0" Visibility="{x:Bind IsExpanded, Mode=OneWay}">
+                            <ItemsRepeater ItemsSource="{x:Bind History}" Visibility="{x:Bind HasHistory, Mode=OneWay}">
+                                <ItemsRepeater.Layout><StackLayout Spacing="4" /></ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ChatBubble">
+                                        <Border HorizontalAlignment="{x:Bind Align}" MaxWidth="280" CornerRadius="12" Padding="10,6" Background="{x:Bind BubbleBrush}">
+                                            <StackPanel>
+                                                <TextBlock Text="{x:Bind Sender}" Style="{StaticResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="{x:Bind ShowSender}" />
+                                                <local:LinkTextBlock Text="{x:Bind Text}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <!-- App buttons wrap onto new lines instead of running off the card -->
+                            <ItemsRepeater ItemsSource="{x:Bind AllButtons}">
+                                <ItemsRepeater.Layout>
+                                    <UniformGridLayout MinItemWidth="120" MinItemHeight="32" MinColumnSpacing="6" MinRowSpacing="6" ItemsStretch="Fill" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:NotifAction">
+                                        <Button Click="OnNotifAction" Tag="{x:Bind}" Padding="10,4" HorizontalAlignment="Stretch" ToolTipService.ToolTip="{x:Bind Title}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="{x:Bind Glyph}" FontSize="12" />
+                                                <TextBlock Text="{x:Bind Title}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <Grid ColumnSpacing="6" Visibility="{x:Bind CanReply}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox PlaceholderText="Reply" TextWrapping="Wrap" AcceptsReturn="False" Text="{x:Bind ReplyDraft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         KeyDown="OnNotifReplyKeyDown" Tag="{x:Bind}" />
+                                <Button Grid.Column="1" Style="{StaticResource AccentButtonStyle}" Click="OnNotifReply" Tag="{x:Bind}" ToolTipService.ToolTip="Send">
+                                    <FontIcon Glyph="&#xE724;" FontSize="14" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </Grid.Resources>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar -->
-        <Grid x:Name="AppTitleBar" Padding="16,0,140,0">
+        <!-- Title bar with the connection status, readable at a glance -->
+        <Grid x:Name="AppTitleBar" Padding="16,0,150,0" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <Image Source="Assets/Pixlink.png" Width="18" Height="18" />
                 <TextBlock Text="Pixlink" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
-        <Button Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,148,0" Style="{StaticResource SubtleButtonStyle}"
-                Click="OnSettings" ToolTipService.ToolTip="Settings"
+        <Border x:Name="StatusPill" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="110,0,0,0"
+                CornerRadius="12" Padding="10,4" Background="{ThemeResource ControlFillColorDefaultBrush}"
                 Visibility="{x:Bind local:Ui.Visible(Session.IsPaired), Mode=OneWay}">
-            <FontIcon Glyph="&#xE713;" FontSize="16" />
-        </Button>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Grid Width="12" Height="12" VerticalAlignment="Center">
+                    <Ellipse Fill="{x:Bind Session.StatusBrush, Mode=OneWay}" Width="10" Height="10" />
+                    <ProgressRing IsActive="{x:Bind Session.StatusBusy, Mode=OneWay}" Width="12" Height="12" MinWidth="12" MinHeight="12" Foreground="{x:Bind Session.StatusBrush, Mode=OneWay}" />
+                </Grid>
+                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center">
+                    <Run Text="{x:Bind Session.StatusText, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{x:Bind Session.PhoneName, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
 
         <!-- Paired layout: phone panel + tabs -->
         <Grid Grid.Row="1" Visibility="{x:Bind local:Ui.Visible(Session.IsPaired), Mode=OneWay}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="340" />
+                <ColumnDefinition Width="370" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -44,234 +147,141 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Phone header -->
-                <Border Style="{StaticResource PanelCardStyle}" Padding="16">
-                    <Grid ColumnSpacing="14">
+                <!-- Phone header: a coloured edge shows the connection state from across the room -->
+                <Border Style="{StaticResource PanelCardStyle}" Padding="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{x:Bind Session.StatusBrush, Mode=OneWay}" CornerRadius="8,0,0,8" />
+                        <Grid Grid.Column="1" Padding="14" ColumnSpacing="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="44" Height="72" CornerRadius="8" BorderThickness="2" BorderBrush="{ThemeResource TextFillColorSecondaryBrush}">
+                                <FontIcon Glyph="&#xE8EA;" FontSize="18" Foreground="{StaticResource PixlinkBlueBrush}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                <TextBlock Text="{x:Bind Session.PhoneName, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                <StackPanel Orientation="Horizontal" Spacing="14">
+                                    <TextBlock Text="{x:Bind Session.StatusText, Mode=OneWay}" Foreground="{x:Bind Session.StatusBrush, Mode=OneWay}" FontWeight="SemiBold" Style="{StaticResource CaptionTextBlockStyle}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4" Visibility="{x:Bind local:Ui.VisibleIfText(Session.BatteryText), Mode=OneWay}">
+                                        <FontIcon Glyph="{x:Bind Session.BatteryGlyph, Mode=OneWay}" FontSize="14" />
+                                        <TextBlock Text="{x:Bind Session.BatteryText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Quick actions (choose which in Settings → Quick actions) -->
+                <ItemsRepeater Grid.Row="1" ItemsSource="{x:Bind Session.QuickActions}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout MaximumRowsOrColumns="3" MinItemWidth="100" MinItemHeight="64" MinColumnSpacing="8" MinRowSpacing="8" ItemsStretch="Fill" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="models:QuickActionItem">
+                            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="OnQuickAction" Tag="{x:Bind}"
+                                    Background="{x:Bind Background, Mode=OneWay}" Foreground="{x:Bind Foreground, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind Tip}">
+                                <StackPanel Spacing="4">
+                                    <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" />
+                                    <TextBlock Text="{x:Bind Label, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <!-- Now playing on the phone -->
+                <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Visibility="{x:Bind Session.MediaActive, Mode=OneWay}">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="44" Height="72" CornerRadius="8" BorderThickness="2"
-                                BorderBrush="{ThemeResource TextFillColorSecondaryBrush}">
-                            <FontIcon Glyph="&#xE8EA;" FontSize="18" Foreground="{StaticResource PixlinkBlueBrush}" />
+                        <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource PixlinkBlueBrush}">
+                            <FontIcon Glyph="&#xE8D6;" FontSize="18" Foreground="White" />
                         </Border>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                            <TextBlock Text="{x:Bind Session.PhoneName, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" TextTrimming="CharacterEllipsis" />
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <FontIcon Glyph="{x:Bind local:Ui.ConnectedDot(Session.IsConnected), Mode=OneWay}" FontSize="12" />
-                                    <TextBlock Text="{x:Bind Session.StatusText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="4" Visibility="{x:Bind local:Ui.VisibleIfText(Session.BatteryText), Mode=OneWay}">
-                                    <FontIcon Glyph="{x:Bind Session.BatteryGlyph, Mode=OneWay}" FontSize="14" />
-                                    <TextBlock Text="{x:Bind Session.BatteryText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" />
-                                </StackPanel>
-                            </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Session.MediaTitle, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis">
+                                <Run Text="{x:Bind Session.MediaArtist, Mode=OneWay}" /><Run Text="  " /><Run Text="{x:Bind Session.MediaApp, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                            <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaPrevious" ToolTipService.ToolTip="Previous"><FontIcon Glyph="&#xE892;" FontSize="14" /></Button>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaToggle" ToolTipService.ToolTip="Play or pause"><FontIcon Glyph="{x:Bind Session.PlayPauseGlyph, Mode=OneWay}" FontSize="16" /></Button>
+                            <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaNext" ToolTipService.ToolTip="Next"><FontIcon Glyph="&#xE893;" FontSize="14" /></Button>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- Quick actions -->
-                <StackPanel Grid.Row="1" Spacing="10">
-                    <Grid ColumnSpacing="8" RowSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-                        <ToggleButton x:Name="HotspotButton" HorizontalAlignment="Stretch" Click="OnHotspot"
-                                      IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Use your phone's internet">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xE704;" FontSize="18" />
-                                <TextBlock Text="Hotspot" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <Button Grid.Column="1" HorizontalAlignment="Stretch" Click="OnScreen"
-                                IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Show your phone screen">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xE7F4;" FontSize="18" />
-                                <TextBlock Text="Screen" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Column="2" HorizontalAlignment="Stretch" Click="OnSendFile"
-                                IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Send a file to your phone">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xE898;" FontSize="18" />
-                                <TextBlock Text="Send file" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Row="1" HorizontalAlignment="Stretch" Click="OnRing"
-                                IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Ring your phone at full volume, even on silent">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xEA8F;" FontSize="18" />
-                                <TextBlock x:Name="RingLabel" Text="Find phone" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Click="OnSendClipboard"
-                                IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Send this PC's copied text to your phone's clipboard">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xE77F;" FontSize="18" />
-                                <TextBlock x:Name="ClipboardLabel" Text="Clipboard" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <ToggleButton Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" Click="OnDnd"
-                                      IsChecked="{x:Bind Session.DoNotDisturb, Mode=OneWay}"
-                                      IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" ToolTipService.ToolTip="Do Not Disturb on your phone">
-                            <StackPanel Spacing="4">
-                                <FontIcon Glyph="&#xE708;" FontSize="18" />
-                                <TextBlock Text="Silence" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </ToggleButton>
-                    </Grid>
-
-                    <!-- Now playing on the phone -->
-                    <Border Style="{StaticResource PanelCardStyle}" Visibility="{x:Bind Session.MediaActive, Mode=OneWay}">
-                        <Grid ColumnSpacing="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource PixlinkBlueBrush}">
-                                <FontIcon Glyph="&#xE8D6;" FontSize="18" Foreground="White" />
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{x:Bind Session.MediaTitle, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis">
-                                    <Run Text="{x:Bind Session.MediaArtist, Mode=OneWay}" /><Run Text="  " /><Run Text="{x:Bind Session.MediaApp, Mode=OneWay}" />
-                                </TextBlock>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                                <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaPrevious" ToolTipService.ToolTip="Previous"><FontIcon Glyph="&#xE892;" FontSize="14" /></Button>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaToggle" ToolTipService.ToolTip="Play or pause"><FontIcon Glyph="{x:Bind Session.PlayPauseGlyph, Mode=OneWay}" FontSize="16" /></Button>
-                                <Button Style="{StaticResource SubtleButtonStyle}" Click="OnMediaNext" ToolTipService.ToolTip="Next"><FontIcon Glyph="&#xE893;" FontSize="14" /></Button>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-
-                <!-- Hotspot progress / result -->
-                <InfoBar x:Name="HotspotBar" Grid.Row="2" IsOpen="False" IsClosable="True" Margin="0" />
+                <!-- Hotspot / quick action messages -->
+                <InfoBar x:Name="HotspotBar" Grid.Row="3" IsOpen="False" IsClosable="True" Margin="0" />
 
                 <!-- Notifications header -->
-                <Grid Grid.Row="3">
+                <Grid Grid.Row="4" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="Notifications" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                    <HyperlinkButton Content="Clear all" HorizontalAlignment="Right" Click="OnClearAll" />
+                    <ToggleButton x:Name="GroupToggle" Grid.Column="1" Style="{StaticResource SubtleToggleStyle}" Click="OnGroupToggle" ToolTipService.ToolTip="Group by app">
+                        <FontIcon Glyph="&#xF168;" FontSize="14" />
+                    </ToggleButton>
+                    <HyperlinkButton Grid.Column="2" Content="Clear all" Click="OnClearAll" />
                 </Grid>
 
-                <!-- Notifications list -->
-                <ListView Grid.Row="4" ItemsSource="{x:Bind Session.Notifications}" SelectionMode="None" Padding="0">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-                            <Setter Property="Padding" Value="0,0,0,8" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="models:PhoneNotification">
-                            <Border Style="{StaticResource PanelCardStyle}">
-                                <Grid ColumnSpacing="10" RowSpacing="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Image Source="{x:Bind Icon, Mode=OneWay}" Width="20" Height="20" VerticalAlignment="Top" />
-                                    <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center">
-                                        <Run Text="{x:Bind AppName}" /> · <Run Text="{x:Bind TimeText}" />
-                                    </TextBlock>
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                                        <Button Style="{StaticResource SubtleButtonStyle}" Padding="4" Click="OnToggleExpand" Tag="{x:Bind}"
-                                                Visibility="{x:Bind HasMore}" ToolTipService.ToolTip="Show more">
-                                            <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="10" />
+                <!-- Notifications: a ScrollViewer + ItemsRepeater re-measures cards when they expand, so nothing gets cut off -->
+                <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                    <Grid>
+                        <ItemsRepeater x:Name="FlatList" ItemsSource="{x:Bind Session.Notifications}" ItemTemplate="{StaticResource NotifTemplate}" />
+                        <ItemsRepeater x:Name="GroupedList" ItemsSource="{x:Bind Session.NotificationGroups}" Visibility="Collapsed">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="models:NotificationGroup">
+                                    <StackPanel Margin="0,0,0,8">
+                                        <Button Style="{StaticResource SubtleButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                                Click="OnToggleGroup" Tag="{x:Bind}" Padding="8,6" Margin="0,0,0,6">
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Image Source="{x:Bind Icon}" Width="20" Height="20" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center">
+                                                    <Run Text="{x:Bind AppName}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{x:Bind CountText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </TextBlock>
+                                                <FontIcon Grid.Column="2" Glyph="{x:Bind ChevronGlyph, Mode=OneWay}" FontSize="11" />
+                                            </Grid>
                                         </Button>
-                                        <Button Style="{StaticResource SubtleButtonStyle}" Padding="4" Click="OnDismiss" Tag="{x:Bind}"
-                                                ToolTipService.ToolTip="Dismiss on phone">
-                                            <FontIcon Glyph="&#xE711;" FontSize="10" />
-                                        </Button>
+                                        <ItemsRepeater ItemsSource="{x:Bind Items}" ItemTemplate="{StaticResource NotifTemplate}" Visibility="{x:Bind IsExpanded, Mode=OneWay}" />
                                     </StackPanel>
-
-                                    <!-- Tapping the title or text expands the card -->
-                                    <StackPanel Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Background="Transparent"
-                                                Tapped="OnCardTapped" Tag="{x:Bind}">
-                                        <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" MaxLines="{x:Bind TextLines, Mode=OneWay}" TextTrimming="CharacterEllipsis"
-                                                   Visibility="{x:Bind ShowSingleText, Mode=OneWay}" />
-                                    </StackPanel>
-
-                                    <!-- Expanded: conversation, buttons, reply -->
-                                    <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Spacing="8" Margin="0,6,0,0"
-                                                Visibility="{x:Bind IsExpanded, Mode=OneWay}">
-                                        <ItemsRepeater ItemsSource="{x:Bind History}" Visibility="{x:Bind HasHistory, Mode=OneWay}">
-                                            <ItemsRepeater.Layout>
-                                                <StackLayout Spacing="4" />
-                                            </ItemsRepeater.Layout>
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="models:ChatBubble">
-                                                    <Border HorizontalAlignment="{x:Bind Align}" MaxWidth="300" CornerRadius="12" Padding="10,6"
-                                                            Background="{x:Bind BubbleBrush}">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{x:Bind Sender}" Style="{StaticResource CaptionTextBlockStyle}"
-                                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="{x:Bind ShowSender}" />
-                                                            <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
-                                                        </StackPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
-
-                                        <ItemsRepeater ItemsSource="{x:Bind Actions}" Visibility="{x:Bind HasActions}">
-                                            <ItemsRepeater.Layout>
-                                                <StackLayout Orientation="Horizontal" Spacing="6" />
-                                            </ItemsRepeater.Layout>
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="models:NotifAction">
-                                                    <Button Click="OnNotifAction" Tag="{x:Bind}" Padding="10,4">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="12" />
-                                                            <TextBlock Text="{x:Bind Title}" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                        </ItemsRepeater>
-
-                                        <Grid ColumnSpacing="6" Visibility="{x:Bind CanReply}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox PlaceholderText="Reply" Text="{x:Bind ReplyDraft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     KeyDown="OnNotifReplyKeyDown" Tag="{x:Bind}" />
-                                            <Button Grid.Column="1" Style="{StaticResource AccentButtonStyle}" Click="OnNotifReply" Tag="{x:Bind}"
-                                                    ToolTipService.ToolTip="Send">
-                                                <FontIcon Glyph="&#xE724;" FontSize="14" />
-                                            </Button>
-                                        </Grid>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <StackPanel x:Name="NoNotifications" Spacing="6" Margin="0,24,0,0" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xEA8F;" FontSize="28" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock Text="You're all caught up" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
             </Grid>
 
             <!-- Right: tabs -->
             <Grid Grid.Column="1" Margin="8,0,16,16">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -281,28 +291,40 @@
                         <Button x:Name="UpdateNowButton" Content="Update now" Click="OnUpdateNow" Style="{StaticResource AccentButtonStyle}" />
                     </InfoBar.ActionButton>
                 </InfoBar>
-                <SelectorBar x:Name="Tabs" Grid.Row="1" SelectionChanged="OnTabChanged">
-                    <SelectorBarItem Text="Messages" Tag="Messages" IsSelected="True">
-                        <SelectorBarItem.Icon><FontIcon Glyph="&#xE8BD;" /></SelectorBarItem.Icon>
-                    </SelectorBarItem>
-                    <SelectorBarItem Text="Calls" Tag="Calls">
-                        <SelectorBarItem.Icon><FontIcon Glyph="&#xE717;" /></SelectorBarItem.Icon>
-                    </SelectorBarItem>
-                    <SelectorBarItem Text="Photos" Tag="Photos">
-                        <SelectorBarItem.Icon><FontIcon Glyph="&#xEB9F;" /></SelectorBarItem.Icon>
-                    </SelectorBarItem>
-                    <SelectorBarItem Text="Files" Tag="Files">
-                        <SelectorBarItem.Icon><FontIcon Glyph="&#xE8B7;" /></SelectorBarItem.Icon>
-                    </SelectorBarItem>
-                    <SelectorBarItem Text="Screen" Tag="Screen">
-                        <SelectorBarItem.Icon><FontIcon Glyph="&#xE7F4;" /></SelectorBarItem.Icon>
-                    </SelectorBarItem>
-                </SelectorBar>
-                <Border Grid.Row="2" Style="{StaticResource PanelCardStyle}" Padding="0" Margin="0,8,0,0">
+                <InfoBar x:Name="ConnectionBar" Grid.Row="1" IsOpen="False" IsClosable="True" Margin="0,0,0,8" />
+                <Grid Grid.Row="2">
+                    <SelectorBar x:Name="Tabs" SelectionChanged="OnTabChanged">
+                        <SelectorBarItem Text="Home" Tag="Home" IsSelected="True">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE80F;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Messages" Tag="Messages">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE8BD;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Calls" Tag="Calls">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE717;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Photos" Tag="Photos">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xEB9F;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Files" Tag="Files">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE8B7;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Screen" Tag="Screen">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE7F4;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem Text="Settings" Tag="Settings">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE713;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                    </SelectorBar>
+                </Grid>
+                <Border Grid.Row="3" Style="{StaticResource PanelCardStyle}" Padding="0" Margin="0,8,0,0">
                     <Frame x:Name="ContentFrame" />
                 </Border>
             </Grid>
         </Grid>
+
+        <!-- First-run setup after linking -->
+        <Frame x:Name="SetupFrame" Grid.Row="1" Visibility="Collapsed" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
 
         <!-- "You're linked!" moment right after pairing -->
         <Grid x:Name="SuccessOverlay" Grid.Row="1" Visibility="Collapsed" Background="{ThemeResource SmokeFillColorDefaultBrush}">
@@ -336,5 +358,32 @@
 
         <!-- Not paired: pairing screen fills the window -->
         <Frame x:Name="PairingFrame" Grid.Row="1" Visibility="{x:Bind local:Ui.Collapsed(Session.IsPaired), Mode=OneWay}" />
+
+        <!-- Splash on start-up -->
+        <Grid x:Name="Splash" Grid.RowSpan="2" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Grid.Resources>
+                <Storyboard x:Key="SplashIn">
+                    <DoubleAnimation Storyboard.TargetName="SplashLogoScale" Storyboard.TargetProperty="ScaleX" From="0.7" To="1" Duration="0:0:0.6">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.5" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="SplashLogoScale" Storyboard.TargetProperty="ScaleY" From="0.7" To="1" Duration="0:0:0.6">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.5" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="SplashName" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:0.25" Duration="0:0:0.4" />
+                </Storyboard>
+                <Storyboard x:Key="SplashOut">
+                    <DoubleAnimation Storyboard.TargetName="Splash" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.35" />
+                </Storyboard>
+            </Grid.Resources>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="18">
+                <Image Source="Assets/icon-512.png" Width="112" Height="112" RenderTransformOrigin="0.5,0.5">
+                    <Image.RenderTransform><ScaleTransform x:Name="SplashLogoScale" /></Image.RenderTransform>
+                </Image>
+                <StackPanel x:Name="SplashName" Spacing="10">
+                    <TextBlock Text="Pixlink" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                    <ProgressRing IsActive="True" Width="22" Height="22" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

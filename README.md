@@ -14,15 +14,17 @@ Website: https://fatalquackers.github.io/pixlink/
 
 | Feature | Works for everyone | Power mode adds |
 | --- | --- | --- |
-| Notifications & texts | Mirror notifications; expand a card to see the chat, reply, or press the app's own buttons (Mark as read, Like…); Windows pop-ups with Reply, app buttons and Dismiss; pin or remove chats in Messages; full text history via Google Messages for Web | — |
-| Screen mirroring | See your phone screen live, choose quality | Click, long-press, swipe, scroll and type |
+| Notifications | Expand a card to read the whole message and chat, reply, press the app's own buttons (Mark as read, Like…) or **Open on phone** (opens the app and shows your phone screen); group by app; pin to Home; Windows pop-ups with Reply, app buttons and Dismiss | — |
+| Messages | **Chats** from every app (texts, WhatsApp, Discord, Outlook…) with app icons and clickable links; **Texts**: your SMS history read straight from your phone, no Google sign-in; pin, mark as read, remove | — |
+| Screen mirroring | See your phone screen live, choose quality; with **Screen control** on (no Power mode needed) click, swipe, scroll, type and use Back/Home/Recents. Sharing stops when Pixlink is minimized. | Faster input |
 | Hotspot | One button: your phone shows a notification that opens its hotspot switch, PC joins automatically | Phone switches the hotspot on by itself |
 | Calls | Dialer, contacts, calls through your PC's Bluetooth | Call history |
 | Photos & files | Full gallery, drag files both ways, shared folders | Browse all phone storage |
 | Now playing | See what's playing on your phone; play, pause, skip | — |
 | Find my phone | Ring it at full volume, even on silent | — |
-| Do Not Disturb | Silence your phone from your PC | — |
-| Clipboard | Send copied text from your PC to your phone | — |
+| Do Not Disturb | Turn Do Not Disturb on or off from your PC | — |
+| Clipboard | Copy on your PC, paste on your phone (automatic). From the phone: "Send clipboard" in Pixlink's notification or quick settings tile. **Sign-in codes** from your phone are copied on your PC automatically | — |
+| Quick actions | Choose which buttons show (Hotspot, Screen, Send file, Find phone, Clipboard, Do not disturb, Photos, Messages…) | Lock phone, Screenshot |
 | Send to PC | Share text, links, photos and files from any app to your PC | — |
 | Battery | Low battery alert on your PC | — |
 
@@ -48,14 +50,22 @@ Pixlink isn't on Google Play yet, so for now you install it from this page. It t
 1. On your phone, open the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest) and tap **Pixlink-android.apk** to download it.
 2. Open the downloaded file. If your phone asks, allow your browser to **install unknown apps**.
 3. Tap **Install**. If Google Play Protect warns you, tap **More details → Install anyway** (this happens because the app isn't on the Play Store yet).
-4. Open Pixlink and tap **Notification access**, then turn Pixlink on. Tap **Calls, contacts & photos** and allow the permissions.
+4. Open Pixlink and go through **Setup**: Notification access, Calls/contacts/photos, Texts and Screen control. Pixlink shows where to find it in each list.
+   - If Android says **"Restricted setting"** (it does for every app installed from a file), open **App info → ⋮ → Allow restricted settings**, then try again. Pixlink's **Open app info** button takes you there.
+   - Play Protect or "unverified developer" warnings: see [docs/OFFICIAL.md](docs/OFFICIAL.md).
 
 ### 2. Install on your Windows PC
 
-1. On your PC, open the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest) and download **Pixlink-windows-x64.zip**.
-2. Right-click the zip → **Extract All**, and pick a folder to keep it in (for example `Documents\Pixlink`).
-3. Open the folder and double-click **Pixlink.exe**. If Windows SmartScreen appears, click **More info → Run anyway**.
-4. When Windows Firewall asks, tick **Private networks** and click **Allow**. Pixlink needs this to talk to your phone.
+Pick one:
+
+- **Installer (recommended):** download **Pixlink-Setup-x64.exe** from the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest) and run it. No admin needed. It adds Start menu and desktop shortcuts, can start Pixlink when you sign in, and shows up in Windows' Installed apps so you can uninstall it.
+- **Portable:** download **Pixlink-windows-x64-portable.zip**, right-click → **Extract All** anywhere (even a USB stick) and run **Pixlink.exe**. Its settings stay in a `Data` folder next to it, and it leaves nothing behind on the PC.
+
+Then:
+
+1. If Windows SmartScreen appears, click **More info → Run anyway**.
+2. When Windows Firewall asks, tick **Private networks** and click **Allow**. Pixlink needs this to talk to your phone.
+3. After linking, Pixlink asks a few setup questions (start with Windows, pop-ups, clipboard, theme). You can change them later in Settings.
 
 ### 3. Link them
 
@@ -88,6 +98,7 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 - **The phone can't find the PC:** check both are on the same Wi-Fi (not a guest network), and that Pixlink is allowed in Windows Firewall on private networks.
 - **The QR code expired:** click **Get a new code** on your PC.
 - **Notifications stopped:** on your phone, check Pixlink still has notification access, and that battery saver isn't stopping it.
+- **Something else:** on your PC, Settings → **View logs** shows what Pixlink did. Copy them into a GitHub issue.
 
 ### Updates
 
@@ -99,7 +110,8 @@ Both apps update themselves. You don't need to download anything again.
 ### Uninstall
 
 - **Pixel:** long-press the Pixlink icon → **Uninstall**.
-- **PC:** close Pixlink and delete its folder. To remove its settings too, delete `%LOCALAPPDATA%\Pixlink`.
+- **PC (installer):** Settings → Apps → Installed apps → Pixlink → **Uninstall**. To remove its settings too, delete `%LOCALAPPDATA%\Pixlink`.
+- **PC (portable):** quit Pixlink (right-click the tray icon → Quit) and delete its folder.
 
 ## Repo layout
 

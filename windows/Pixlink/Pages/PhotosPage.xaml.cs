@@ -61,10 +61,57 @@ public sealed partial class PhotosPage : Page
         await Windows.System.Launcher.LaunchFolderPathAsync(FileTransfers.DownloadFolder);
     }
 
-    private async void OnOpen(object sender, DoubleTappedRoutedEventArgs e)
+    // ---------- Viewer ----------
+    private PhotoItem? _viewing;
+
+    private void OnItemClick(object sender, ItemClickEventArgs e) { if (e.ClickedItem is PhotoItem p) _ = ShowAsync(p); }
+
+    private async Task ShowAsync(PhotoItem p)
     {
-        if ((e.OriginalSource as FrameworkElement)?.DataContext is not PhotoItem p) return;
-        var path = await Session.Files.DownloadAsync(photoId: p.Id, suggestedName: p.Name);
+        _viewing = p;
+        Viewer.Visibility = Visibility.Visible;
+        Viewer.Focus(FocusState.Programmatic);
+        ViewerName.Text = p.Name;
+        ViewerImage.Source = p.Thumb; // the thumbnail straight away, the sharp version a moment later
+        ViewerLoading.IsActive = true;
+        var r = await Session.RequestAsync("photos.thumb", new { id = p.Id, size = 1800 }, TimeSpan.FromSeconds(20));
+        ViewerLoading.IsActive = false;
+        if (_viewing == p && r?.Str("jpegBase64") is { } b64) ViewerImage.Source = PhoneSession.ImageFromBase64(b64);
+    }
+
+    private void Step(int by)
+    {
+        if (_viewing is null || Grid1.ItemsSource is not IList<PhotoItem> list) return;
+        var i = list.IndexOf(_viewing) + by;
+        if (i >= 0 && i < list.Count) _ = ShowAsync(list[i]);
+    }
+
+    private void OnViewerPrev(object sender, RoutedEventArgs e) => Step(-1);
+    private void OnViewerNext(object sender, RoutedEventArgs e) => Step(1);
+    private void OnViewerClose(object sender, RoutedEventArgs e) { Viewer.Visibility = Visibility.Collapsed; _viewing = null; }
+    private void OnViewerClose(object sender, TappedRoutedEventArgs e) => OnViewerClose(sender, (RoutedEventArgs)e);
+
+    private void OnViewerKey(object sender, KeyRoutedEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Windows.System.VirtualKey.Escape: OnViewerClose(sender, e); e.Handled = true; break;
+            case Windows.System.VirtualKey.Left: Step(-1); e.Handled = true; break;
+            case Windows.System.VirtualKey.Right: Step(1); e.Handled = true; break;
+        }
+    }
+
+    private async void OnViewerSave(object sender, RoutedEventArgs e)
+    {
+        if (_viewing is null) return;
+        await Session.Files.DownloadAsync(photoId: _viewing.Id, suggestedName: _viewing.Name);
+        await Windows.System.Launcher.LaunchFolderPathAsync(FileTransfers.DownloadFolder);
+    }
+
+    private async void OnViewerOpen(object sender, RoutedEventArgs e)
+    {
+        if (_viewing is null) return;
+        var path = await Session.Files.DownloadAsync(photoId: _viewing.Id, suggestedName: _viewing.Name);
         if (path is not null) await Windows.System.Launcher.LaunchUriAsync(new Uri(path));
     }
 

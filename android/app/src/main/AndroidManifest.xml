@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Text history for the PC's Messages tab (no Google Messages sign-in needed) -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <!-- Photos -->
@@ -109,6 +112,33 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".clipboard.ClipboardSendActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <service
+            android:name=".clipboard.ClipboardTile"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_link"
+            android:label="Send clipboard to PC"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".mirror.ControlService"
+            android:exported="false"
+            android:label="Pixlink screen control"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/control_service" />
+        </service>
         <service
             android:name=".link.LinkService"
             android:exported="false"

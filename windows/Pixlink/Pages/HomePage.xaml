@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Pixlink.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Pixlink"
+    xmlns:models="using:Pixlink.Models">
+
+    <Page.Resources>
+        <Style x:Key="Tile" TargetType="Border" BasedOn="{StaticResource PanelCardStyle}">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="MinHeight" Value="96" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel Padding="24" Spacing="16">
+            <!-- At a glance -->
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Connection" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind Session.StatusText, Mode=OneWay}" Foreground="{x:Bind Session.StatusBrush, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind Session.PhoneName, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Tile}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Battery" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="{x:Bind Session.BatteryGlyph, Mode=OneWay}" FontSize="22" />
+                            <TextBlock Text="{x:Bind Session.BatteryText, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Tile}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Screen control" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{x:Bind ControlText(Session.CanControl, Session.PowerMode), Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind ControlHint(Session.CanControl), Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource Tile}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Do not disturb" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <ToggleSwitch IsOn="{x:Bind Session.DoNotDisturb, Mode=OneWay}" Toggled="OnDnd" IsEnabled="{x:Bind Session.IsConnected, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Pinned -->
+            <Grid>
+                <TextBlock Text="Pinned" Style="{StaticResource SubtitleTextBlockStyle}" />
+            </Grid>
+            <StackPanel x:Name="NoPins" Spacing="4">
+                <TextBlock Text="Nothing pinned yet" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Text="Pin a notification with its pin button, or right-click a chat in Messages and choose Pin to top. Pinned things stay here so you can get back to them fast." />
+            </StackPanel>
+            <ItemsRepeater x:Name="PinnedChats" ItemsSource="{x:Bind PinnedConversations}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="220" MinItemHeight="72" MinColumnSpacing="12" MinRowSpacing="12" ItemsStretch="Fill" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:Conversation">
+                        <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Click="OnOpenChat" Tag="{x:Bind}" Padding="12">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Grid>
+                                    <PersonPicture DisplayName="{x:Bind Name}" Width="40" Height="40" />
+                                    <Image Source="{x:Bind Icon, Mode=OneWay}" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                </Grid>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind Preview, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+            <ItemsRepeater x:Name="PinnedNotifs" ItemsSource="{x:Bind Session.PinnedNotifications}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="300" MinColumnSpacing="12" MinRowSpacing="12" ItemsStretch="Fill" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:PhoneNotification">
+                        <Border Style="{StaticResource PanelCardStyle}" Padding="14">
+                            <Grid ColumnSpacing="10" RowSpacing="4">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Image Source="{x:Bind Icon, Mode=OneWay}" Width="20" Height="20" />
+                                <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center">
+                                    <Run Text="{x:Bind AppName}" /> · <Run Text="{x:Bind TimeText}" />
+                                </TextBlock>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button Style="{StaticResource SubtleButtonStyle}" Padding="6,4" Click="OnOpenOnPhone" Tag="{x:Bind}" ToolTipService.ToolTip="Open on phone"><FontIcon Glyph="&#xE8A7;" FontSize="12" /></Button>
+                                    <Button Style="{StaticResource SubtleButtonStyle}" Padding="6,4" Click="OnUnpin" Tag="{x:Bind}" ToolTipService.ToolTip="Unpin"><FontIcon Glyph="&#xE77A;" FontSize="12" /></Button>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.ColumnSpan="3">
+                                    <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                                    <local:LinkTextBlock Text="{x:Bind Text}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -24,8 +24,8 @@
                 </Button>
             </StackPanel>
         </Grid>
-        <GridView x:Name="Grid1" Grid.Row="1" Padding="12,0" SelectionMode="Extended" SelectionChanged="OnSelection"
-                  IsItemClickEnabled="False" DoubleTapped="OnOpen" ContainerContentChanging="OnContainerChanging">
+        <GridView x:Name="Grid1" Grid.Row="1" Padding="12,0" SelectionMode="Multiple" SelectionChanged="OnSelection"
+                  IsItemClickEnabled="True" ItemClick="OnItemClick" ContainerContentChanging="OnContainerChanging">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="models:PhotoItem">
                     <Border Width="150" Height="150" CornerRadius="6" Background="{ThemeResource ControlFillColorSecondaryBrush}">
@@ -37,5 +37,22 @@
         <ProgressRing x:Name="Loading" Grid.Row="1" IsActive="False" />
         <TextBlock x:Name="StatusText" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <!-- Viewer: click a photo to see it large. Arrow keys move, Esc closes. -->
+        <Grid x:Name="Viewer" Grid.RowSpan="2" Visibility="Collapsed" Background="#E6101216" KeyDown="OnViewerKey" IsTabStop="True">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Grid Padding="16,10">
+                <TextBlock x:Name="ViewerName" Foreground="White" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,220,0" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+                    <Button Click="OnViewerSave" ToolTipService.ToolTip="Save to PC"><FontIcon Glyph="&#xE896;" FontSize="14" /></Button>
+                    <Button Click="OnViewerOpen" ToolTipService.ToolTip="Open in Photos app"><FontIcon Glyph="&#xE8A7;" FontSize="14" /></Button>
+                    <Button Click="OnViewerClose" ToolTipService.ToolTip="Close (Esc)"><FontIcon Glyph="&#xE711;" FontSize="14" /></Button>
+                </StackPanel>
+            </Grid>
+            <Image x:Name="ViewerImage" Grid.Row="1" Stretch="Uniform" Margin="72,0,72,24" Tapped="OnViewerClose" />
+            <ProgressRing x:Name="ViewerLoading" Grid.Row="1" IsActive="False" Foreground="White" />
+            <Button Grid.Row="1" HorizontalAlignment="Left" Margin="16,0" Click="OnViewerPrev" ToolTipService.ToolTip="Previous"><FontIcon Glyph="&#xE76B;" /></Button>
+            <Button Grid.Row="1" HorizontalAlignment="Right" Margin="16,0" Click="OnViewerNext" ToolTipService.ToolTip="Next"><FontIcon Glyph="&#xE76C;" /></Button>
+        </Grid>
     </Grid>
 </Page>

@@ -100,6 +100,16 @@ class PairedStore(context: Context) {
         get() = prefs.getBoolean("allowRing", true)
         set(v) = prefs.edit { putBoolean("allowRing", v) }
 
+    /** Copy sign-in codes from notifications to the PC's clipboard. */
+    var sendCodes: Boolean
+        get() = prefs.getBoolean("sendCodes", true)
+        set(v) = prefs.edit { putBoolean("sendCodes", v) }
+
+    /** Send what you copied on the phone whenever you open Pixlink. */
+    var sendClipboardOnOpen: Boolean
+        get() = prefs.getBoolean("sendClipboardOnOpen", true)
+        set(v) = prefs.edit { putBoolean("sendClipboardOnOpen", v) }
+
     var allowClipboard: Boolean
         get() = prefs.getBoolean("allowClipboard", true)
         set(v) = prefs.edit { putBoolean("allowClipboard", v) }

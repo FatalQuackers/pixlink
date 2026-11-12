@@ -31,14 +31,33 @@ public sealed class AppSettings
     public int MirrorMaxSize { get; set; } = 1600;
     public int MirrorBitrateMbps { get; set; } = 8;
     public int MirrorFps { get; set; } = 60;
+    public bool StopMirrorWhenHidden { get; set; } = true;
+
+    // Layout
+    public List<string> QuickActions { get; set; } = new(Pixlink.Models.QuickActionItem.Defaults);
+    public bool GroupNotificationsByApp { get; set; }
+    public bool CloseToTray { get; set; } = true;
+    public bool SetupDone { get; set; }
+    public List<string> PinnedNotificationApps { get; set; } = new();
+
+    // Clipboard
+    public bool AutoClipboard { get; set; } = true;
+    public bool CopyCodes { get; set; } = true;
 
     // App
     public string Theme { get; set; } = "System";
     public bool AutoCheckUpdates { get; set; } = true;
     public bool StartWithWindows { get; set; }
 
-    public static string Folder { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pixlink");
+    /// <summary>
+    /// Portable copies (a "portable.txt" next to Pixlink.exe) keep everything in a Data folder beside the app,
+    /// so they run from a USB stick and leave nothing behind. Installed copies use %LOCALAPPDATA%\Pixlink.
+    /// </summary>
+    public static bool IsPortable { get; } = File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt"));
+
+    public static string Folder { get; } = IsPortable
+        ? Path.Combine(AppContext.BaseDirectory, "Data")
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pixlink");
 
     private static string FilePath => Path.Combine(Folder, "settings.json");
 

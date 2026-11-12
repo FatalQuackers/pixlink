@@ -10,7 +10,7 @@ using Windows.Media.Playback;
 namespace Pixlink.Pages;
 
 /// <summary>
-/// Screen mirroring with mouse/keyboard control (control needs Power mode on the phone).
+/// Screen mirroring with mouse/keyboard control (Power mode, or Pixlink's screen control on the phone).
 /// Mouse input becomes whole gestures sent on release: click = tap, hold = long press,
 /// drag = swipe. One shell command per gesture is far more reliable than streaming moves.
 /// </summary>
@@ -33,7 +33,22 @@ public sealed partial class ScreenPage : Page
         Session.Message += OnMessage;
         Session.PropertyChanged += OnSessionChanged;
         Session.Mirror.StreamEnded += OnStreamEnded;
+        App.Window!.HiddenChanged += OnWindowHidden;
         StartButton.IsEnabled = Session.IsConnected;
+        UpdateControlNote();
+        // Opened from a notification's Open button: the phone is already starting the stream.
+        if (e.Parameter is string s && s == "starting") { StartButton.IsEnabled = false; Waiting.IsActive = true; StartHint.Text = "Opening it on your phone…"; }
+    }
+
+    /// <summary>Minimized, or covered by another window: stop sharing so the phone isn't streaming to nobody.</summary>
+    private void OnWindowHidden(bool hidden)
+    {
+        if (hidden && _player is not null && Session.Settings.StopMirrorWhenHidden)
+        {
+            _ = Session.SendAsync(Envelope.Of("mirror.stop"));
+            Stop();
+            StartHint.Text = "Screen sharing stopped because Pixlink was minimized. Start it again anytime.";
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -41,16 +56,18 @@ public sealed partial class ScreenPage : Page
         Session.Message -= OnMessage;
         Session.PropertyChanged -= OnSessionChanged;
         Session.Mirror.StreamEnded -= OnStreamEnded;
+        App.Window!.HiddenChanged -= OnWindowHidden;
+        if (_player is not null) _ = Session.SendAsync(Envelope.Of("mirror.stop"));
         Stop();
     }
 
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PhoneSession.PowerMode)) UpdateControlNote();
+        if (e.PropertyName is nameof(PhoneSession.PowerMode) or nameof(PhoneSession.CanControl)) UpdateControlNote();
     }
 
     private void UpdateControlNote() =>
-        ControlNote.Visibility = Session.PowerMode ? Visibility.Collapsed : Visibility.Visible;
+        ControlNote.Visibility = Session.CanControl ? Visibility.Collapsed : Visibility.Visible;
 
     private async void OnStart(object sender, RoutedEventArgs e)
     {
@@ -107,7 +124,8 @@ public sealed partial class ScreenPage : Page
         StartPanel.Visibility = Visibility.Visible;
         Waiting.IsActive = false;
         StartButton.IsEnabled = Session.IsConnected;
-        StartHint.Text = "Your phone will ask you to confirm each time — that's an Android rule.";
+        if (StartHint.Text.StartsWith("Screen sharing stopped")) return;
+        StartHint.Text = "Your phone will ask you to confirm each time. That's an Android rule.";
     }
 
     private void OnStop(object sender, RoutedEventArgs e)
@@ -135,7 +153,7 @@ public sealed partial class ScreenPage : Page
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
         Focus(FocusState.Pointer);
-        if (!Session.PowerMode) return;
+        if (!Session.CanControl) return;
         var props = e.GetCurrentPoint(TouchLayer).Properties;
         if (props.IsRightButtonPressed) { Nav("back"); return; } // right-click = Back, like Phone Link
         if (props.IsMiddleButtonPressed) { Nav("home"); return; }
@@ -166,7 +184,7 @@ public sealed partial class ScreenPage : Page
 
     private void OnWheel(object sender, PointerRoutedEventArgs e)
     {
-        if (!Session.PowerMode || Normalize(e) is not { } pt) return;
+        if (!Session.CanControl || Normalize(e) is not { } pt) return;
         var delta = e.GetCurrentPoint(TouchLayer).Properties.MouseWheelDelta / 120.0;
         _ = Session.SendAsync(Envelope.Of("input.scroll", new { x = pt.x, y = pt.y, dy = delta }));
         e.Handled = true;
@@ -176,7 +194,7 @@ public sealed partial class ScreenPage : Page
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!Session.PowerMode || PhoneFrame.Visibility != Visibility.Visible) return;
+        if (!Session.CanControl || PhoneFrame.Visibility != Visibility.Visible) return;
         int? keycode = e.Key switch
         {
             Windows.System.VirtualKey.Back => 67,     // KEYCODE_DEL
@@ -199,7 +217,7 @@ public sealed partial class ScreenPage : Page
 
     private void OnChar(UIElement sender, CharacterReceivedRoutedEventArgs e)
     {
-        if (!Session.PowerMode || PhoneFrame.Visibility != Visibility.Visible || char.IsControl(e.Character)) return;
+        if (!Session.CanControl || PhoneFrame.Visibility != Visibility.Visible || char.IsControl(e.Character)) return;
         _ = Session.SendAsync(Envelope.Of("input.key", new { text = e.Character.ToString() }));
         e.Handled = true;
     }

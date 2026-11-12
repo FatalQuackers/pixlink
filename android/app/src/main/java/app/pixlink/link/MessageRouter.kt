@@ -14,6 +14,7 @@ import app.pixlink.pairing.PairedStore
 import app.pixlink.power.CallLogReader
 import app.pixlink.power.HotspotController
 import app.pixlink.power.InputInjector
+import app.pixlink.power.PowerMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -77,6 +78,23 @@ class MessageRouter(
             "notif.reply" -> NotificationBridge.reply(m.str("key")!!, m.str("text")!!)
             "notif.action" -> NotificationBridge.action(m.str("key")!!, m.int("actionIndex")!!)
             "notif.sync" -> NotificationBridge.syncAll(out)
+            "notif.open" -> NotificationBridge.open(m.str("key")!!)
+
+            // Power mode extras (the PC shows "needs Power mode" when it's off)
+            "power.lock" -> if (PowerMode.isReady) PowerMode.exec("input keyevent 26")
+            "power.screenshot" -> {
+                val ok = PowerMode.isReady && runCatching {
+                    val name = "Pixlink_" + java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date()) + ".png"
+                    PowerMode.exec("mkdir -p /sdcard/Pictures/Screenshots && screencap -p /sdcard/Pictures/Screenshots/$name && " +
+                        "am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Pictures/Screenshots/$name")
+                }.isSuccess
+                out(m.reply("power.screenshot") { put("ok", ok) })
+            }
+
+            // Texts straight from the phone (no Google Messages sign-in)
+            "sms.threads" -> out(app.pixlink.messages.SmsBridge.threads(context, m, m.int("limit") ?: 80))
+            "sms.thread" -> out(app.pixlink.messages.SmsBridge.thread(context, m, m.long("threadId")!!, m.int("limit") ?: 150))
+            "sms.send" -> out(app.pixlink.messages.SmsBridge.send(context, m, m.str("address")!!, m.str("text")!!))
 
             // Mirroring (one PC at a time; a new request takes over)
             "mirror.start" -> ProjectionPermissionActivity.launch(
@@ -123,10 +141,7 @@ class MessageRouter(
     }
 
     private fun setClipboard(text: String) {
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            val cm = context.getSystemService(android.content.ClipboardManager::class.java)
-            cm.setPrimaryClip(android.content.ClipData.newPlainText("From your PC", text))
-        }
+        app.pixlink.clipboard.ClipboardSync.fromPc(context, text)
     }
 
     companion object {

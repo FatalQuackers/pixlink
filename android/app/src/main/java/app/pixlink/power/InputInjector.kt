@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * Turns mouse/keyboard events from the PC into touches on the phone (Power mode only).
+ * Turns mouse/keyboard events from the PC into touches on the phone. Power mode injects them
+ * through the shell; without it, Pixlink's accessibility service performs them instead.
  * Moves are coalesced so a fast mouse never builds up a queue of stale events.
  */
 object InputInjector {
@@ -22,7 +23,7 @@ object InputInjector {
     private var started = false
 
     fun handle(context: Context, m: Envelope) {
-        if (!PowerMode.isReady) return
+        if (!PowerMode.isReady) { app.pixlink.mirror.ControlService.instance?.handle(m); return }
         ensureStarted()
         val (w, h) = screenSize(context)
         fun px(key: String, size: Int) = ((m.double(key) ?: 0.0) * size).roundToInt()

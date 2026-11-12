@@ -20,18 +20,114 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Pixlink.ico"));
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1240, 820));
 
-        ContentFrame.Navigate(typeof(MessagesPage));
+        ContentFrame.Navigate(typeof(HomePage));
         PairingFrame.Navigate(typeof(PairingPage));
 
         ApplyTheme();
         _ = CheckForUpdatesAsync();
-        Session.JustPaired += () => DispatcherQueue.TryEnqueue(ShowLinkedAnimation);
+        Session.JustPaired += () => DispatcherQueue.TryEnqueue(() => { ShowLinkedAnimation(); ShowSetupIfNeeded(); });
+        Session.Reconnected += () => DispatcherQueue.TryEnqueue(() => ShowConnection(InfoBarSeverity.Success, $"Reconnected to {Session.PhoneName}"));
 
         Session.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(PhoneSession.IsPaired) && !Session.IsPaired)
                 PairingFrame.Navigate(typeof(PairingPage));
+            if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Disconnected)
+                ShowConnection(InfoBarSeverity.Warning, $"{Session.PhoneName} is disconnected. Check it's on the same Wi-Fi with Pixlink open.");
+            if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Connected && ConnectionBar.Severity == InfoBarSeverity.Warning)
+                ConnectionBar.IsOpen = false;
         };
+        Session.Notifications.CollectionChanged += (_, _) => UpdateNotificationView();
+        UpdateNotificationView();
+
+        AppWindow.Closing += OnClosing;
+        AppWindow.Changed += (_, a) => { if (a.DidPresenterChange || a.DidVisibilityChange) RaiseHidden(); };
+        VisibilityChanged += (_, _) => RaiseHidden();
+        Tray.Create(this);
+        Activated += OnFirstActivated;
+        ShowSetupIfNeeded();
+    }
+
+    // ---------- Splash ----------
+    private bool _splashDone;
+    private async void OnFirstActivated(object sender, WindowActivatedEventArgs e)
+    {
+        if (_splashDone) return;
+        _splashDone = true;
+        if (Ui.AnimationsEnabled) ((Microsoft.UI.Xaml.Media.Animation.Storyboard)Splash.Resources["SplashIn"]).Begin();
+        await Task.Delay(Environment.GetCommandLineArgs().Contains("--background") ? 0 : 1300);
+        var outro = (Microsoft.UI.Xaml.Media.Animation.Storyboard)Splash.Resources["SplashOut"];
+        outro.Completed += (_, _) => Splash.Visibility = Visibility.Collapsed;
+        outro.Begin();
+    }
+
+    // ---------- Minimized / hidden (screen sharing stops, tray) ----------
+    /// <summary>True while the window is minimized or hidden in the tray.</summary>
+    public event Action<bool>? HiddenChanged;
+    private bool _hidden;
+    public bool IsHidden => !AppWindow.IsVisible || (AppWindow.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Minimized);
+    private void RaiseHidden()
+    {
+        var h = IsHidden;
+        if (h == _hidden) return;
+        _hidden = h;
+        HiddenChanged?.Invoke(h);
+    }
+
+    private bool _quitting, _trayHintShown;
+    private void OnClosing(AppWindow sender, AppWindowClosingEventArgs e)
+    {
+        if (_quitting || !Session.Settings.CloseToTray || !Session.IsPaired) { Tray.Dispose(); return; }
+        e.Cancel = true;
+        AppWindow.Hide();
+        RaiseHidden();
+        if (!_trayHintShown)
+        {
+            _trayHintShown = true;
+            Toasts.ShowSimple("Pixlink is still running", "It's in the system tray by the clock, so notifications keep coming. Right-click the icon to quit.");
+        }
+    }
+
+    public void Quit()
+    {
+        _quitting = true;
+        Tray.Dispose();
+        Application.Current.Exit();
+    }
+
+    // ---------- Setup after linking ----------
+    private void ShowSetupIfNeeded()
+    {
+        if (!Session.IsPaired || Session.Settings.SetupDone) { SetupFrame.Visibility = Visibility.Collapsed; return; }
+        SetupFrame.Navigate(typeof(SetupPage));
+        SetupFrame.Visibility = Visibility.Visible;
+    }
+
+    public void FinishSetup()
+    {
+        Session.Settings.SetupDone = true;
+        Session.Settings.Save();
+        SetupFrame.Visibility = Visibility.Collapsed;
+        Session.RebuildQuickActions();
+        UpdateNotificationView();
+    }
+
+    public void RefreshLayout() => UpdateNotificationView();
+
+    public void RunSetup()
+    {
+        SetupFrame.Navigate(typeof(SetupPage));
+        SetupFrame.Visibility = Visibility.Visible;
+    }
+
+    private void ShowConnection(InfoBarSeverity severity, string message)
+    {
+        ConnectionBar.Severity = severity;
+        ConnectionBar.Title = "";
+        ConnectionBar.Message = message;
+        ConnectionBar.IsOpen = true;
+        if (severity == InfoBarSeverity.Success)
+            _ = Task.Delay(4000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => { if (ConnectionBar.Severity == InfoBarSeverity.Success) ConnectionBar.IsOpen = false; }));
     }
 
     /// <summary>Light, Dark or follow Windows (from Settings).</summary>
@@ -140,51 +236,133 @@ public sealed partial class MainWindow : Window
 
     public void BringToFront()
     {
+        if (!AppWindow.IsVisible) AppWindow.Show();
         if (AppWindow.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Minimized) p.Restore();
         Activate();
+        RaiseHidden();
     }
 
     private void OnTabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         if (ContentFrame is null || sender.SelectedItem is null) return; // fires during InitializeComponent
-        var page = (sender.SelectedItem?.Tag as string) switch
-        {
-            "Calls" => typeof(CallsPage),
-            "Photos" => typeof(PhotosPage),
-            "Files" => typeof(FilesPage),
-            "Screen" => typeof(ScreenPage),
-            _ => typeof(MessagesPage),
-        };
-        ContentFrame.Navigate(page);
+        ContentFrame.Navigate(PageFor(sender.SelectedItem.Tag as string));
     }
 
-    private void SelectTab(string tag)
+    private static Type PageFor(string? tag) => tag switch
+    {
+        "Messages" => typeof(MessagesPage),
+        "Calls" => typeof(CallsPage),
+        "Photos" => typeof(PhotosPage),
+        "Files" => typeof(FilesPage),
+        "Screen" => typeof(ScreenPage),
+        "Settings" => typeof(SettingsPage),
+        _ => typeof(HomePage),
+    };
+
+    /// <summary>Switches tab; picking the tab you're already on still reloads it (e.g. to leave a sub-page).</summary>
+    public void SelectTab(string tag, object? parameter = null)
     {
         foreach (var item in Tabs.Items)
-            if ((item.Tag as string) == tag) Tabs.SelectedItem = item;
+        {
+            if ((item.Tag as string) != tag) continue;
+            if (Tabs.SelectedItem == item) ContentFrame.Navigate(PageFor(tag), parameter);
+            else if (parameter is null) Tabs.SelectedItem = item;
+            else { Tabs.SelectionChanged -= OnTabChanged; Tabs.SelectedItem = item; Tabs.SelectionChanged += OnTabChanged; ContentFrame.Navigate(PageFor(tag), parameter); }
+        }
     }
 
-    private void OnSettings(object sender, RoutedEventArgs e)
+    // ---------- Notifications list ----------
+    private void UpdateNotificationView()
     {
-        ContentFrame.Navigate(typeof(SettingsPage));
+        var grouped = Session.Settings.GroupNotificationsByApp;
+        GroupToggle.IsChecked = grouped;
+        FlatList.Visibility = grouped ? Visibility.Collapsed : Visibility.Visible;
+        GroupedList.Visibility = grouped ? Visibility.Visible : Visibility.Collapsed;
+        NoNotifications.Visibility = Session.Notifications.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (grouped) Session.RebuildGroups();
     }
 
-    private void OnScreen(object sender, RoutedEventArgs e) => SelectTab("Screen");
+    private void OnGroupToggle(object sender, RoutedEventArgs e)
+    {
+        Session.Settings.GroupNotificationsByApp = GroupToggle.IsChecked == true;
+        Session.Settings.Save();
+        UpdateNotificationView();
+    }
 
-    private bool _hotspotBusy;
+    private void OnToggleGroup(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is NotificationGroup g) g.IsExpanded = !g.IsExpanded;
+    }
+
+    private void OnPinNotification(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not PhoneNotification n) return;
+        Session.TogglePin(n);
+        ShowHotspot(InfoBarSeverity.Success, Session.PinnedNotifications.Contains(n) ? "Pinned to Home." : "Unpinned from Home.");
+    }
+
+    // ---------- Quick actions ----------
+    private bool _hotspotBusy, _hotspotOn, _ringing;
+
+    private async void OnQuickAction(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not QuickActionItem q) return;
+        if (!Session.IsConnected && q.Id is not ("photos" or "messages"))
+        {
+            ShowHotspot(InfoBarSeverity.Warning, $"Connect {Session.PhoneName} first. It connects by itself when it's on the same Wi-Fi with Pixlink open.");
+            return;
+        }
+        if (q.NeedsPower && !Session.PowerMode)
+        {
+            ShowHotspot(InfoBarSeverity.Warning, $"{q.Name} needs Power mode. Open Pixlink on your phone and tap Power mode to turn it on.");
+            return;
+        }
+        switch (q.Id)
+        {
+            case "hotspot": await ToggleHotspotAsync(q); break;
+            case "screen": SelectTab("Screen"); break;
+            case "photos": SelectTab("Photos"); break;
+            case "messages": SelectTab("Messages"); break;
+            case "sendfile": await SendFilesAsync(); break;
+            case "ring":
+                _ringing = !_ringing;
+                await Session.RingPhoneAsync(_ringing);
+                q.Label = _ringing ? "Stop ringing" : q.Name; q.IsActive = _ringing;
+                if (_ringing)
+                {
+                    await Task.Delay(30_000); // the phone stops by itself after 30 seconds
+                    _ringing = false; q.Label = q.Name; q.IsActive = false;
+                }
+                break;
+            case "clipboard":
+                var sent = await Session.SendClipboardAsync();
+                q.Label = sent ? "Sent" : "Nothing copied";
+                await Task.Delay(1500);
+                q.Label = q.Name;
+                break;
+            case "dnd": _ = Session.SetDndAsync(!Session.DoNotDisturb); break;
+            case "lock":
+                await Session.SendAsync(Envelope.Of("power.lock"));
+                ShowHotspot(InfoBarSeverity.Success, "Phone locked.");
+                break;
+            case "screenshot":
+                ShowHotspot(InfoBarSeverity.Informational, "Taking a screenshot on your phone…");
+                var r = await Session.RequestAsync("power.screenshot", null, TimeSpan.FromSeconds(20));
+                ShowHotspot(r?.Bool("ok") == true ? InfoBarSeverity.Success : InfoBarSeverity.Error,
+                    r?.Bool("ok") == true ? "Screenshot saved to your phone's Screenshots folder. It'll appear in Photos." : "Couldn't take the screenshot.");
+                break;
+        }
+    }
 
     /// <summary>One button: turn on the phone's hotspot and connect this PC to it.</summary>
-    private async void OnHotspot(object sender, RoutedEventArgs e)
+    private async Task ToggleHotspotAsync(QuickActionItem q)
     {
-        var on = HotspotButton.IsChecked == true;
-        if (_hotspotBusy) { HotspotButton.IsChecked = !on; return; }
-
-        if (on && string.IsNullOrEmpty(Session.HotspotSsid))
-        {
-            if (!await AskHotspotDetailsAsync()) { HotspotButton.IsChecked = false; return; }
-        }
+        if (_hotspotBusy) return;
+        var on = !_hotspotOn;
+        if (on && string.IsNullOrEmpty(Session.HotspotSsid) && !await AskHotspotDetailsAsync()) return;
 
         _hotspotBusy = true;
+        q.IsActive = on;
         ShowHotspot(InfoBarSeverity.Informational, on ? "Turning on your phone's hotspot…" : "Turning off hotspot…");
         try
         {
@@ -193,25 +371,28 @@ public sealed partial class MainWindow : Window
             switch (outcome)
             {
                 case PhoneSession.HotspotOutcome.Joined:
+                    _hotspotOn = true;
                     ShowHotspot(InfoBarSeverity.Success, $"Connected to {Session.HotspotSsid}. Your PC is using your phone's internet.");
                     break;
                 case PhoneSession.HotspotOutcome.TurnedOff:
+                    _hotspotOn = false;
                     ShowHotspot(InfoBarSeverity.Informational, "Hotspot off. Windows will reconnect to your usual Wi-Fi.");
                     break;
                 case PhoneSession.HotspotOutcome.PhoneSwitchedOnJoinFailed:
+                    _hotspotOn = true;
                     ShowHotspot(InfoBarSeverity.Warning, $"The hotspot is on, but this PC couldn't join \"{Session.HotspotSsid}\". Check the name and password in Settings.");
                     break;
                 case PhoneSession.HotspotOutcome.TurnOnOnPhone:
+                    _hotspotOn = false;
                     ShowHotspot(InfoBarSeverity.Warning, "Couldn't find the hotspot. Switch it on from the Pixlink notification on your phone, then click Hotspot again. Turn on Power mode on the phone to skip this step.");
-                    HotspotButton.IsChecked = false;
                     break;
                 default:
+                    _hotspotOn = false;
                     ShowHotspot(InfoBarSeverity.Error, "Your phone didn't respond. Check it's connected.");
-                    HotspotButton.IsChecked = false;
                     break;
             }
         }
-        finally { _hotspotBusy = false; }
+        finally { _hotspotBusy = false; q.IsActive = _hotspotOn; }
     }
 
     private void ShowHotspot(InfoBarSeverity severity, string message)
@@ -250,7 +431,7 @@ public sealed partial class MainWindow : Window
         return true;
     }
 
-    private async void OnSendFile(object sender, RoutedEventArgs e)
+    private async Task SendFilesAsync()
     {
         var picker = new FileOpenPicker();
         picker.FileTypeFilter.Add("*");
@@ -260,34 +441,6 @@ public sealed partial class MainWindow : Window
     }
 
     private void OnClearAll(object sender, RoutedEventArgs e) => _ = Session.DismissAllAsync();
-
-    private bool _ringing;
-
-    private async void OnRing(object sender, RoutedEventArgs e)
-    {
-        _ringing = !_ringing;
-        await Session.RingPhoneAsync(_ringing);
-        RingLabel.Text = _ringing ? "Stop ringing" : "Find phone";
-        if (_ringing)
-        {
-            await Task.Delay(30_000); // the phone stops by itself after 30 seconds
-            _ringing = false;
-            RingLabel.Text = "Find phone";
-        }
-    }
-
-    private async void OnSendClipboard(object sender, RoutedEventArgs e)
-    {
-        var sent = await Session.SendClipboardAsync();
-        ClipboardLabel.Text = sent ? "Sent" : "Nothing copied";
-        await Task.Delay(1500);
-        ClipboardLabel.Text = "Clipboard";
-    }
-
-    private void OnDnd(object sender, RoutedEventArgs e)
-    {
-        if (sender is Microsoft.UI.Xaml.Controls.Primitives.ToggleButton t) _ = Session.SetDndAsync(t.IsChecked == true);
-    }
 
     private void OnMediaPrevious(object sender, RoutedEventArgs e) => _ = Session.MediaActionAsync("previous");
     private void OnMediaToggle(object sender, RoutedEventArgs e) => _ = Session.MediaActionAsync("toggle");
@@ -309,13 +462,26 @@ public sealed partial class MainWindow : Window
 
     private void OnCardTapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
     {
+        if (e.OriginalSource is Microsoft.UI.Xaml.Documents.Hyperlink) return;
         if ((sender as FrameworkElement)?.Tag is PhoneNotification n && n.HasMore) n.IsExpanded = !n.IsExpanded;
     }
 
-    /// <summary>An app button (Mark as read, Like…) — pressed on the phone.</summary>
+    /// <summary>An app button (Mark as read, Like…) pressed on the phone; "Open on phone" opens the app and shows the phone screen.</summary>
     private void OnNotifAction(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.Tag is NotifAction a) _ = Session.ActionAsync(a);
+        if ((sender as FrameworkElement)?.Tag is not NotifAction a) return;
+        if (a.Semantic == "open") OpenOnPhone(a.Key);
+        else _ = Session.ActionAsync(a);
+    }
+
+    public async void OpenOnPhone(string key)
+    {
+        BringToFront();
+        await Session.OpenNotificationAsync(key);
+        if (Session.Mirror.IsStreaming) { SelectTab("Screen"); return; }
+        SelectTab("Screen", "starting");
+        var s = Session.Settings;
+        await Session.SendAsync(Envelope.Of("mirror.start", new { maxSize = s.MirrorMaxSize, bitrate = s.MirrorBitrateMbps * 1_000_000, fps = s.MirrorFps }));
     }
 
     private void OnNotifReply(object sender, RoutedEventArgs e)

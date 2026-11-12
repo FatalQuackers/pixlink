@@ -47,7 +47,18 @@ class NotificationBridge : NotificationListenerService() {
         if (!shouldMirror(sbn)) return
         sendIconOnce(sbn.packageName, LinkHub::send)
         LinkHub.send(toMessage(sbn))
+        // A sign-in code in a new notification goes straight onto the PC's clipboard.
+        if (sbn.notification.`when` > System.currentTimeMillis() - 120_000) {
+            val e = sbn.notification.extras
+            app.pixlink.clipboard.ClipboardSync.maybeSendCode(this, appName(sbn.packageName),
+                e.getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString() ?: "",
+                (e.getCharSequence(android.app.Notification.EXTRA_BIG_TEXT) ?: e.getCharSequence(android.app.Notification.EXTRA_TEXT))?.toString() ?: "")
+        }
     }
+
+    private fun appName(pkg: String) = runCatching {
+        packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+    }.getOrDefault(pkg)
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         LinkHub.send(msg("notif.removed") { put("key", sbn.key) })
@@ -191,6 +202,21 @@ class NotificationBridge : NotificationListenerService() {
         }
 
         /** Presses the notification's Nth button (same order as the "actions" list sent to the PC). */
+        /** Opens what tapping the notification on the phone would open (the PC then shows the phone screen). */
+        fun open(key: String) {
+            val svc = instance ?: return
+            val sbn = find(key) ?: return
+            val pi = sbn.notification.contentIntent
+            val opts = if (android.os.Build.VERSION.SDK_INT >= 34) android.app.ActivityOptions.makeBasic()
+                .setPendingIntentBackgroundActivityStartMode(android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle() else null
+            val sent = pi != null && runCatching { pi.send(svc, 0, null, null, null, null, opts) }.isSuccess
+            if (!sent) {
+                // No tap action: open the app itself.
+                svc.packageManager.getLaunchIntentForPackage(sbn.packageName)
+                    ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let { runCatching { svc.startActivity(it) } }
+            }
+        }
+
         fun action(key: String, index: Int) {
             val svc = instance ?: return
             val sbn = find(key) ?: return

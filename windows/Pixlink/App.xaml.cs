@@ -51,6 +51,7 @@ internal static class Crash
 
     public static void Log(Exception? ex, string? context = null)
     {
+        try { Pixlink.Services.Log.Error(context ?? "Unexpected error", ex); } catch { }
         try
         {
             Directory.CreateDirectory(AppSettings.Folder);
