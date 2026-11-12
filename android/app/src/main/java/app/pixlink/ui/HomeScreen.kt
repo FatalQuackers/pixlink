@@ -259,7 +259,7 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text(detail, style = MaterialTheme.typography.bodySmall)
+                    Text(detail, style = MaterialTheme.typography.bodySmall, maxLines = 4, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
                 action?.let { (label, onClick) -> Button(onClick = onClick) { Text(label) } }
             }

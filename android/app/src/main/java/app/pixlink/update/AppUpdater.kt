@@ -61,10 +61,30 @@ object AppUpdater {
             }
             val apk = download(app, update)
             _status.value = Status.Installing(update.version)
-            if (PowerMode.isReady) installWithShell(app, apk) else installWithPackageInstaller(app, apk)
+            if (PowerMode.isReady) {
+                // Silent install through Power mode; if Android refuses, use the normal installer instead.
+                val silent = runCatching { installWithShell(app, apk) }
+                if (silent.isFailure) {
+                    Log.w("AppUpdater", "Power mode install failed, using the normal installer", silent.exceptionOrNull())
+                    if (!app.packageManager.canRequestPackageInstalls()) { _status.value = Status.NeedsPermission; return@withLock }
+                    installWithPackageInstaller(app, apk)
+                }
+            } else installWithPackageInstaller(app, apk)
         } catch (e: Exception) {
             Log.w("AppUpdater", "Update failed", e)
-            _status.value = Status.Failed(e.message ?: "Update failed", update.apkUrl)
+            _status.value = Status.Failed(friendly(e), update.apkUrl)
+        }
+    }
+
+    /** A short message for the phone screen; the full details go to the log. */
+    private fun friendly(e: Exception): String {
+        val m = e.message.orEmpty()
+        return when {
+            "Unable to resolve host" in m || "timeout" in m.lowercase() -> "Couldn't download the update. Check your internet connection."
+            "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in m -> "This update is signed differently from the installed app. Uninstall Pixlink, then install the new version."
+            "INSTALL_FAILED_INSUFFICIENT_STORAGE" in m -> "Not enough storage to install the update."
+            m.length > 140 -> "Android couldn't install the update. Tap Download to install it yourself."
+            else -> m.ifEmpty { "Update failed" }
         }
     }
 
@@ -109,8 +129,16 @@ object AppUpdater {
         file
     }
 
+    /**
+     * The installer service can't read files in Android/data, so the shell first copies the APK to
+     * /data/local/tmp (which it can), installs from there and cleans up.
+     */
     private suspend fun installWithShell(context: Context, apk: File) {
-        val out = PowerMode.exec("pm install -r -i ${context.packageName} ${PowerMode.quote(apk.absolutePath)}")
+        val tmp = "/data/local/tmp/pixlink-update.apk"
+        val out = PowerMode.exec(
+            "cp ${PowerMode.quote(apk.absolutePath)} $tmp && chmod 644 $tmp && " +
+                "pm install -r -i ${context.packageName} $tmp; rm -f $tmp"
+        )
         if (!out.contains("Success")) throw IllegalStateException(out.trim().ifEmpty { "pm install failed" })
         // Android stops the app to replace it; UpdateReceiver restarts the connection afterwards.
     }
