@@ -18,6 +18,20 @@ android {
         versionName = (project.findProperty("versionName") as String?) ?: "0.1.0-dev"
     }
 
+    // CI signs with the permanent Pixlink key (from GitHub secrets) so updates install over
+    // the old version. Local builds keep Android's normal debug key.
+    signingConfigs {
+        getByName("debug") {
+            val keystore = project.findProperty("pixlinkKeystore") as String?
+            if (keystore != null) {
+                storeFile = file(keystore)
+                storePassword = project.findProperty("pixlinkKeystorePassword") as String?
+                keyAlias = "pixlink"
+                keyPassword = project.findProperty("pixlinkKeystorePassword") as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

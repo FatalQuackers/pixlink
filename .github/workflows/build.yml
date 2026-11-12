@@ -18,8 +18,16 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }}
+      - name: Use the permanent signing key (if the secrets are set)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/pixlink.jks"
+          echo "SIGN_ARGS=-PpixlinkKeystore=$RUNNER_TEMP/pixlink.jks -PpixlinkKeystorePassword=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+      - name: Build APK
+        run: ./gradlew assembleDebug --stacktrace -PversionCode=${{ github.run_number }} -PversionName=0.1.${{ github.run_number }} $SIGN_ARGS
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-android-debug
