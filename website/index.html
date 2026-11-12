@@ -139,6 +139,7 @@
   /* Features table: real information, so it's a table. */
   .features { background: var(--paper); }
   .trailer { padding-top: 0; }
+  .setup-video { display: block; width: 100%; height: auto; border-radius: 20px; margin: 8px 0 40px; background: var(--sky); box-shadow: 0 30px 60px -30px rgba(22,33,58,.35); }
   .trailer video { display: block; width: 100%; height: auto; border-radius: 20px; background: var(--sky); box-shadow: 0 30px 60px -30px rgba(22,33,58,.35); }
   table { width: 100%; border-collapse: collapse; font-size: 17px; }
   th { text-align: left; font: 600 16px/1.3 var(--display); color: var(--slate); padding: 0 20px 16px 0; border-bottom: 2px solid var(--navy); }
@@ -347,6 +348,10 @@
     <div class="wrap">
       <h2 id="setup-title">Linked in about a minute.</h2>
       <p class="intro">No account to create. Your phone and PC just need to be on the same Wi-Fi.</p>
+      <video class="setup-video" controls preload="none" playsinline poster="setup-poster.jpg" width="1920" height="1080">
+        <source src="setup.mp4" type="video/mp4">
+        <a href="setup.mp4">Download the setup video (MP4)</a>
+      </video>
       <ol class="steps">
         <li>
           <h3>Install both apps</h3>

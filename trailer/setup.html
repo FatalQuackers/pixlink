@@ -1,0 +1,387 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Set up Pixlink</title>
+<style>
+:root{--navy:#16213A;--blue:#3D7BFF;--deep:#2557D6;--sky:#E8EEF8;--mint:#C9F0DE;--slate:#4A5675;--line:#CDD7EA;--green:#1E9E63;--red:#E5484D}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;background:#fff}
+body{font-family:'Inter Display','Inter',sans-serif;color:var(--navy);-webkit-font-smoothing:antialiased}
+.a{position:absolute}
+#stage{position:absolute;left:0;top:0;overflow:hidden;background:#F6F8FD}
+.glow{position:absolute;border-radius:50%}
+.dev{position:absolute;left:0;top:0;transform-origin:0 0}
+.lapframe{position:absolute;left:0;top:0;width:1044px;height:679px;padding:22px 22px 32px;background:#1B2132;border-radius:24px 24px 8px 8px;box-shadow:0 40px 80px -30px rgba(22,33,58,.45)}
+.lapbase{position:absolute;left:-74px;top:679px;width:1192px;height:30px;background:linear-gradient(#E4E8F0,#B8C0CF);border-radius:2px 2px 18px 18px}
+.phframe{position:absolute;left:0;top:0;width:324px;height:664px;padding:12px;background:#141824;border-radius:48px;box-shadow:0 40px 80px -30px rgba(22,33,58,.5)}
+.scr{position:relative;overflow:hidden;font-family:'Inter','Inter Display',sans-serif}
+.layer{position:absolute}
+.dim{position:absolute;inset:0;background:rgba(10,16,32,.42)}
+.sbar{position:absolute;left:0;top:0;width:300px;height:26px;font-size:11px;font-weight:600;padding:7px 18px;display:flex;justify-content:space-between;z-index:20}
+.pill{display:inline-flex;align-items:center;gap:12px;border-radius:999px;font-weight:650;letter-spacing:-.01em}
+.pill b{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700}
+.item{position:absolute;left:0;display:flex;gap:18px;align-items:flex-start;letter-spacing:-.015em;line-height:1.22}
+.item .dot{flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+.btnp{position:absolute;border-radius:20px;font-weight:600;text-align:center}
+.row{position:absolute;left:0;width:100%}
+.win{position:absolute;background:#FBFCFE;border-radius:10px;box-shadow:0 18px 40px -14px rgba(22,33,58,.4);overflow:hidden;border:1px solid rgba(22,33,58,.08)}
+.wt{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12px;color:var(--slate);border-bottom:1px solid #EDF0F6;background:#F3F6FB}
+.wt .x{margin-left:auto;display:flex;gap:18px;color:#8A93A8;font-size:13px}
+.gl{position:absolute;height:9px;border-radius:5px;background:#E3E8F2}
+.chk{display:inline-block;width:16px;height:16px;border-radius:4px;border:2px solid #7C86A0;vertical-align:-3px;margin-right:8px;position:relative}
+.wbtn{position:absolute;height:32px;border-radius:6px;font-size:13px;font-weight:600;text-align:center;line-height:30px;border:1px solid #CBD3E3;background:#fff}
+#cur{position:absolute;left:0;top:0;width:22px;height:28px;z-index:80}
+.ripple{position:absolute;border-radius:50%;background:rgba(61,123,255,.3);z-index:90}
+</style></head>
+<body><div id="stage"></div>
+<script>
+const Q=new URLSearchParams(location.search);
+const F=Q.get('f')||'wide', TALL=F!=='wide';
+const W=TALL?1080:1920,H=TALL?1920:1080;
+const stage=document.getElementById('stage');stage.style.width=W+'px';stage.style.height=H+'px';
+document.body.style.width=W+'px';document.body.style.height=H+'px';
+
+const STEPS=[
+ {title:'Install on your Pixel',items:[
+   'Open the latest release and tap Pixlink‑android.apk',
+   'Allow your browser to install unknown apps',
+   'Tap Install, then Install anyway if Play Protect asks',
+   'Open Pixlink and allow notification access']},
+ {title:'Install on your PC',items:[
+   'Download Pixlink‑windows‑x64.zip from the latest release',
+   'Right-click the zip, choose Extract All, pick a folder',
+   'Open Pixlink.exe. If SmartScreen appears, click More info, then Run anyway',
+   'Tick Private networks in Windows Firewall and click Allow']},
+ {title:'Link them',items:[
+   'Pixlink on your PC shows a QR code and a 5‑digit code',
+   'On your Pixel, tap Enter 5‑digit code (or Scan QR code)',
+   'Type the code. That’s it, you’re linked']}];
+const STEP_T=[[5.5,28],[28,48.5],[48.5,61]];
+const ITEM_T=[[5.5,11,15.5,21.5],[28,33,38.5,43.5],[48.5,52,55.5]];
+
+// ---------- text panel ----------
+const TX=TALL?{x:80,w:920,pillY:120,titleY:200,titleS:70,listY:300,itemS:33,gap:100,dot:40}
+             :{x:130,w:700,pillY:220,titleY:300,titleS:72,listY:440,itemS:31,gap:104,dot:42};
+let html=`<div class="glow" id="g1" style="width:${W*0.9}px;height:${W*0.9}px;background:radial-gradient(circle,rgba(61,123,255,.14),rgba(61,123,255,0) 65%)"></div>
+<div class="glow" id="g2" style="width:${W*0.8}px;height:${W*0.8}px;background:radial-gradient(circle,rgba(201,240,222,.5),rgba(201,240,222,0) 65%)"></div>`;
+// intro
+const introY=TALL?160:250;
+html+=`<div id="intro" class="a" style="left:${TX.x}px;top:${introY}px;width:${TX.w}px">
+ <div id="iT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;line-height:1">Set up Pixlink</div>
+ <div id="iS" style="font-size:${TALL?40:36}px;font-weight:500;color:var(--slate);margin-top:18px;letter-spacing:-.02em">It takes about 5 minutes.</div>
+ <div id="iN" style="margin-top:${TALL?50:56}px;font-size:${TALL?32:28}px;font-weight:650;letter-spacing:-.01em">You need</div>
+ ${['A Pixel on Android 13 or newer','A Windows 10 or 11 PC','Both on the same Wi-Fi'].map((s,i)=>`<div class="iR" id="iR${i}" style="margin-top:16px;font-size:${TALL?32:28}px;font-weight:500;display:flex;gap:16px;align-items:center;color:#33405E"><span style="width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none"></span>${s}</div>`).join('')}
+</div>`;
+// step pills
+const pS=TALL?28:24;
+html+=`<div id="pills" class="a" style="left:${TALL?0:TX.x}px;top:${TX.pillY}px;${TALL?`width:${W}px;text-align:center`:''}">${['Phone','PC','Link'].map((n,i)=>`<span class="pill" id="pl${i}" style="font-size:${pS}px;padding:8px 20px 8px 8px;margin-right:12px"><b id="plb${i}" style="width:${pS*1.5}px;height:${pS*1.5}px;font-size:${pS*0.8}px">${i+1}</b>${n}</span>`).join('')}</div>`;
+STEPS.forEach((s,si)=>{
+ html+=`<div class="a stepT" id="sT${si}" style="left:${TX.x}px;top:${TX.titleY}px;width:${TX.w}px;font-size:${TX.titleS}px;font-weight:700;letter-spacing:-.035em;line-height:1">${s.title}</div>`;
+ s.items.forEach((it,ii)=>html+=`<div class="item" id="it${si}_${ii}" style="left:${TX.x}px;top:${TX.listY+ii*TX.gap}px;width:${TX.w}px;font-size:${TX.itemS}px;font-weight:550">
+   <span class="dot" id="dt${si}_${ii}" style="width:${TX.dot}px;height:${TX.dot}px;font-size:${TX.dot*0.45}px;margin-top:${(TX.itemS*1.22-TX.dot)/2}px">${ii+1}</span><span>${it}</span></div>`);
+});
+// outro
+html+=`<div id="outro" class="a" style="left:0;top:${TALL?560:240}px;width:${W}px;text-align:center">
+ <div id="oC" style="width:${TALL?170:150}px;height:${TALL?170:150}px;border-radius:50%;background:var(--green);margin:0 auto;display:flex;align-items:center;justify-content:center"><svg width="${TALL?90:80}" height="${TALL?90:80}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="oTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
+ <div id="oT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;margin-top:40px">You’re all set.</div>
+ <div id="oS" style="font-size:${TALL?38:34}px;font-weight:500;color:var(--slate);margin:20px auto 0;max-width:${TALL?900:1200}px;letter-spacing:-.02em">Pixlink updates itself from now on. Want screen control and the hotspot switch? Turn on Power mode in Settings.</div>
+ <div id="oU" style="font-size:${TALL?34:30}px;font-weight:600;color:var(--blue);margin-top:${TALL?50:40}px">github.com/FatalQuackers/pixlink</div>
+</div>`;
+// devices
+html+=`<div class="dev" id="lap"><div class="lapframe"><div class="scr" id="lin" style="width:1000px;height:625px;border-radius:6px;background:#dfe8fb"></div></div><div class="lapbase"></div></div>
+<div class="dev" id="ph"><div class="phframe"><div class="scr" id="pin" style="width:300px;height:640px;border-radius:38px;background:#F7F9FF"></div></div>
+ <div class="a" style="left:156px;top:22px;width:12px;height:12px;border-radius:50%;background:#0B0E16;z-index:30"></div></div>`;
+stage.innerHTML=html;
+
+if(TALL){STEPS.forEach((st_,si)=>{let y=TX.listY;st_.items.forEach((_,ii)=>{const e=document.getElementById('it'+si+'_'+ii);e.style.top=y+'px';y+=e.offsetHeight+30;});});}
+// ---------- phone screens ----------
+const sb=`<div class="sbar"><span>10:24</span><span>▾ ▮ 82%</span></div>`;
+const kl=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+document.getElementById('pin').innerHTML=`
+<div class="layer" id="pBrowser" style="inset:0;background:#fff">
+  <div style="position:absolute;left:12px;top:32px;width:276px;height:34px;border-radius:17px;background:#EEF2FA;font-size:11px;padding:10px 14px;color:#4A5675">🔒 github.com/FatalQuackers/pixlink/releases</div>
+  <div style="position:absolute;left:18px;top:86px;font-size:22px;font-weight:700;letter-spacing:-.02em">Pixlink v1.0.2</div>
+  <div style="position:absolute;left:196px;top:91px;font-size:11px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 8px">Latest</div>
+  <div class="gl" style="left:18px;top:128px;width:250px"></div><div class="gl" style="left:18px;top:146px;width:210px"></div><div class="gl" style="left:18px;top:164px;width:236px"></div>
+  <div style="position:absolute;left:18px;top:200px;font-size:15px;font-weight:700">Assets</div>
+  ${[['pApk','Pixlink-android.apk','18 MB'],['pZip','Pixlink-windows-x64.zip','92 MB'],['pSrc','Source code (zip)','']].map((r,i)=>`<div id="${r[0]}" style="position:absolute;left:12px;top:${228+i*48}px;width:276px;height:42px;border:1px solid #E3E8F2;border-radius:10px;font-size:12.5px;font-weight:600;padding:12px 12px 0 38px;color:#2557D6">
+    <span style="position:absolute;left:12px;top:12px;width:16px;height:18px;border-radius:3px;background:#C7D3EA"></span>${r[1]}<span style="position:absolute;right:12px;top:13px;color:#7C86A0;font-weight:500">${r[2]}</span></div>`).join('')}
+  <div id="pSnack" style="position:absolute;left:12px;top:560px;width:276px;height:50px;border-radius:12px;background:#2A3350;color:#fff;font-size:12.5px;padding:17px 14px">Pixlink-android.apk downloaded
+    <span id="pOpen" style="position:absolute;right:8px;top:9px;padding:7px 12px;color:#9DBBFF;font-weight:700">Open</span></div>
+</div>
+<div class="layer" id="pUnk" style="inset:0"><div class="dim"></div>
+  <div style="position:absolute;left:20px;top:200px;width:260px;height:196px;border-radius:24px;background:#F3F6FC;padding:22px">
+   <div style="font-size:15px;font-weight:700">Chrome</div>
+   <div style="font-size:12.5px;color:#33405E;margin-top:10px;line-height:1.4">For your security, your phone currently isn’t allowed to install unknown apps from this source.</div>
+   <span style="position:absolute;left:108px;top:150px;font-size:13px;font-weight:700;color:var(--deep)">Cancel</span>
+   <span id="pSet" style="position:absolute;left:170px;top:142px;padding:8px 12px;font-size:13px;font-weight:700;color:var(--deep)">Settings</span></div>
+</div>
+<div class="layer" id="pUnkSet" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:18px;top:52px;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15">Install unknown<br>apps</div>
+  <div style="position:absolute;left:18px;top:122px;display:flex;gap:10px;align-items:center;font-size:14px;font-weight:600"><span style="width:28px;height:28px;border-radius:50%;background:conic-gradient(#E5484D 0 33%,#F2C46B 0 66%,#1E9E63 0)"></span>Chrome</div>
+  <div style="position:absolute;left:12px;top:172px;width:276px;height:58px;border-radius:16px;background:#E6ECF8;font-size:14px;font-weight:600;padding:20px 16px">Allow from this source
+    <div id="pTog" style="position:absolute;right:14px;top:17px;width:44px;height:24px;border-radius:12px;background:#9AA6BF"><div id="pKnob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div></div>
+</div>
+<div class="layer" id="pInst" style="inset:0"><div class="dim"></div>
+  <div style="position:absolute;left:0;top:388px;width:300px;height:252px;border-radius:28px 28px 0 0;background:#F3F6FC;padding:24px">
+   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Pixlink</span></div>
+   <div id="pInstQ" style="font-size:13.5px;color:#33405E;margin-top:16px">Do you want to install this app?</div>
+   <div id="pInstBar" style="position:absolute;left:24px;top:120px;width:252px;height:6px;border-radius:3px;background:#DCE3F0;overflow:hidden"><div id="pInstFill" style="width:0;height:6px;background:var(--blue)"></div></div>
+   <span style="position:absolute;left:120px;top:186px;font-size:13.5px;font-weight:700;color:var(--deep)">Cancel</span>
+   <span id="pInstall" style="position:absolute;left:186px;top:176px;padding:10px 18px;border-radius:20px;background:var(--blue);color:#fff;font-size:13.5px;font-weight:700">Install</span></div>
+</div>
+<div class="layer" id="pProt" style="inset:0"><div class="dim"></div>
+  <div style="position:absolute;left:20px;top:150px;width:260px;height:300px;border-radius:24px;background:#F3F6FC;padding:22px;text-align:center">
+   <div style="width:44px;height:50px;margin:0 auto;background:var(--green);clip-path:polygon(50% 0,100% 18%,100% 55%,50% 100%,0 55%,0 18%)"></div>
+   <div style="font-size:16px;font-weight:700;margin-top:12px">Play Protect</div>
+   <div style="font-size:12.5px;color:#33405E;margin-top:8px;line-height:1.4">This app isn’t from the Play Store, so Play Protect doesn’t know it yet.</div>
+   <div id="pMore" style="position:absolute;left:60px;top:176px;width:140px;padding:8px;font-size:13px;font-weight:700;color:var(--deep)">More details ⌄</div>
+   <div id="pAnyway" style="position:absolute;left:40px;top:216px;width:180px;padding:10px;border-radius:20px;border:1.5px solid var(--deep);font-size:13px;font-weight:700;color:var(--deep)">Install anyway</div>
+   <div style="position:absolute;left:40px;top:262px;width:180px;font-size:13px;font-weight:700;color:var(--deep)">OK</div></div>
+</div>
+<div class="layer" id="pDone" style="inset:0"><div class="dim"></div>
+  <div style="position:absolute;left:0;top:388px;width:300px;height:252px;border-radius:28px 28px 0 0;background:#F3F6FC;padding:24px">
+   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Pixlink</span></div>
+   <div style="font-size:13.5px;color:var(--green);font-weight:600;margin-top:16px">✓ App installed.</div>
+   <span style="position:absolute;left:126px;top:186px;font-size:13.5px;font-weight:700;color:var(--deep)">Done</span>
+   <span id="pOpenApp" style="position:absolute;left:190px;top:176px;padding:10px 20px;border-radius:20px;background:var(--blue);color:#fff;font-size:13.5px;font-weight:700">Open</span></div>
+</div>
+<div class="layer" id="pPerm" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:20px;top:64px;font-size:26px;font-weight:700;letter-spacing:-.02em">A few permissions</div>
+  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Pixlink needs these to show your phone on your PC.</div>
+  ${[['pR1','Notification access','Show and reply to notifications'],['pR2','Calls, contacts & photos','Calls, Messages and Photos tabs']].map((r,i)=>`<div id="${r[0]}" style="position:absolute;left:14px;top:${160+i*90}px;width:272px;height:78px;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(22,33,58,.07);padding:16px 0 0 18px">
+    <div style="font-size:14px;font-weight:700">${r[1]}</div><div style="font-size:11.5px;color:#6A7590;margin-top:4px">${r[2]}</div>
+    <div id="${r[0]}c" style="position:absolute;right:16px;top:25px;width:28px;height:28px;border-radius:50%;background:#E6ECF8;color:#fff;font-size:15px;font-weight:700;text-align:center;line-height:28px">›</div></div>`).join('')}
+  <div style="position:absolute;left:14px;top:560px;width:272px;height:48px;border-radius:24px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:48px">Next</div>
+</div>
+<div class="layer" id="pNL" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:18px;top:52px;width:260px;font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.15">Notification read, reply &amp; control</div>
+  <div style="position:absolute;left:12px;top:136px;width:276px;height:60px;border-radius:16px;background:#E6ECF8;font-size:14px;font-weight:600;padding:20px 16px 0 54px">Pixlink
+    <img src="icon.png" style="position:absolute;left:14px;top:15px;width:30px;height:30px;border-radius:8px">
+    <div id="pNTog" style="position:absolute;right:14px;top:18px;width:44px;height:24px;border-radius:12px;background:#9AA6BF"><div id="pNKnob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div></div>
+  <div style="position:absolute;left:12px;top:206px;width:276px;height:60px;border-radius:16px;background:#E6ECF8;opacity:.6"></div>
+</div>
+<div class="layer" id="pAllow" style="inset:0"><div class="dim"></div>
+  <div style="position:absolute;left:20px;top:210px;width:260px;height:220px;border-radius:24px;background:#F3F6FC;padding:22px;text-align:center">
+   <div style="font-size:15px;font-weight:700;line-height:1.3">Allow <b>Pixlink</b> to access your contacts?</div>
+   <div id="pAllowB" style="position:absolute;left:20px;top:96px;width:220px;height:42px;border-radius:21px;background:#DCE5F7;font-size:13.5px;font-weight:700;line-height:42px;color:var(--deep)">Allow</div>
+   <div style="position:absolute;left:20px;top:148px;width:220px;height:42px;border-radius:21px;background:#E8EDF7;font-size:13.5px;font-weight:700;line-height:42px;color:var(--deep)">Don’t allow</div></div>
+</div>
+<div class="layer" id="pLink" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:20px;top:64px;font-size:26px;font-weight:700;letter-spacing:-.02em">Link your PC</div>
+  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Open Pixlink on your PC. It shows a QR code and a 5-digit code.</div>
+  <div style="position:absolute;left:70px;top:170px;width:160px;height:110px;border:6px solid var(--navy);border-radius:10px"></div><div style="position:absolute;left:50px;top:280px;width:200px;height:12px;border-radius:0 0 8px 8px;background:var(--navy)"></div>
+  <div style="position:absolute;left:14px;top:450px;width:272px;height:50px;border-radius:25px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:50px">Scan QR code</div>
+  <div id="pEnter" style="position:absolute;left:14px;top:512px;width:272px;height:50px;border-radius:25px;border:2px solid var(--blue);color:var(--blue);font-size:14px;font-weight:700;text-align:center;line-height:46px">Enter 5-digit code</div>
+</div>
+<div class="layer" id="pCode" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:24px;top:62px;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2">Enter the code<br>shown on your PC</div>
+  <div style="position:absolute;left:24px;top:162px;display:flex;gap:9px">${[0,1,2,3,4].map(i=>`<div class="pbox" style="width:44px;height:58px;border-radius:12px;background:#E6ECF8;font-size:28px;font-weight:700;text-align:center;line-height:58px;border:2px solid transparent"><span id="pd${i}">${'48217'[i]}</span></div>`).join('')}</div>
+  <div id="pairMsg" style="position:absolute;left:24px;top:240px;font-size:13px;font-weight:600;color:var(--green)">✓ Linked to DESKTOP-PC</div>
+  ${kl.map((k,i)=>`<div class="key" id="key${k}" style="position:absolute;left:${24+(i%3)*90}px;top:${352+Math.floor(i/3)*62}px;width:76px;height:50px;border-radius:25px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500">${k}</div>`).join('')}
+</div>
+${sb}
+<div class="ripple" id="pRip" style="width:56px;height:56px"></div>`;
+
+// ---------- laptop screens ----------
+let qr='';{let r=7;for(let y=0;y<25;y++)for(let x=0;x<25;x++){const fp=(a,b)=>x>=a&&x<a+7&&y>=b&&y<b+7;let on;
+ if(fp(0,0)||fp(18,0)||fp(0,18)){const lx=x>=18?x-18:x, ly=y>=18?y-18:y;on=lx==0||lx==6||ly==0||ly==6||(lx>=2&&lx<=4&&ly>=2&&ly<=4);}
+ else {r=(r*1103515245+12345)&0x7fffffff;on=(r>>16)%2==0;}
+ if(on)qr+=`<div style="position:absolute;left:${x*9.6}px;top:${y*9.6}px;width:9.6px;height:9.6px;background:#16213A"></div>`;}}
+const winT=(t)=>`<div class="wt"><span style="width:14px;height:14px;border-radius:4px;background:#9AB3E6"></span>${t}<span class="x"><span>–</span><span>□</span><span>✕</span></span></div>`;
+document.getElementById('lin').innerHTML=`
+<div class="layer" style="inset:0;background:radial-gradient(circle at 20% 15%,#BBD2FF 0,transparent 45%),radial-gradient(circle at 85% 80%,#C9F0DE 0,transparent 40%),linear-gradient(135deg,#DCE7FF,#EEF3FF)"></div>
+<div class="win" id="lBrowser" style="left:50px;top:24px;width:900px;height:550px">
+  <div class="wt" style="background:#E9EEF7"><span style="background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;margin-top:6px">Release Pixlink v1.0.2</span><span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
+  <div style="height:40px;border-bottom:1px solid #EDF0F6;padding:8px 14px"><div style="height:24px;border-radius:12px;background:#EEF2FA;font-size:12px;color:#4A5675;padding:5px 14px">🔒 github.com/FatalQuackers/pixlink/releases/latest</div></div>
+  <div style="position:absolute;left:60px;top:100px;font-size:30px;font-weight:700;letter-spacing:-.02em">Pixlink v1.0.2</div>
+  <div style="position:absolute;left:290px;top:108px;font-size:12px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 9px">Latest</div>
+  <div class="gl" style="left:60px;top:160px;width:520px"></div><div class="gl" style="left:60px;top:180px;width:460px"></div><div class="gl" style="left:60px;top:200px;width:500px"></div>
+  <div style="position:absolute;left:60px;top:240px;font-size:17px;font-weight:700">Assets</div>
+  ${[['lApk','Pixlink-android.apk','18 MB'],['lZip','Pixlink-windows-x64.zip','92 MB'],['lSrc','Source code (zip)','']].map((r,i)=>`<div style="position:absolute;left:60px;top:${274+i*46}px;width:780px;height:40px;border-bottom:1px solid #EDF0F6;font-size:14px;font-weight:600;color:#2557D6;padding:10px 0 0 30px">
+    <span style="position:absolute;left:4px;top:11px;width:14px;height:17px;border-radius:3px;background:#C7D3EA"></span><span id="${r[0]}">${r[1]}</span><span style="position:absolute;right:10px;top:11px;color:#7C86A0;font-weight:500">${r[2]}</span></div>`).join('')}
+  <div id="lDl" style="position:absolute;left:560px;top:70px;width:320px;height:126px;border-radius:10px;background:#fff;box-shadow:0 12px 30px -8px rgba(22,33,58,.35);padding:14px 16px;border:1px solid #E3E8F2">
+    <div style="font-size:13px;font-weight:700">Downloads</div>
+    <div style="font-size:13px;font-weight:600;margin-top:12px">Pixlink-windows-x64.zip</div><div style="font-size:11.5px;color:var(--green);margin-top:3px">92 MB · Done</div>
+    <span id="lShow" style="position:absolute;left:16px;top:94px;font-size:12.5px;font-weight:600;color:var(--deep)">Show in folder</span></div>
+</div>
+<div class="win" id="lExp" style="left:110px;top:50px;width:780px;height:480px">
+  ${winT('<span id="lExpT">Downloads</span>')}
+  <div style="position:absolute;left:0;top:34px;width:170px;height:446px;background:#F3F6FB;border-right:1px solid #E7EBF3;padding:16px;font-size:12.5px;line-height:2.3;color:#33405E">🏠 Home<br>🖥 Desktop<br><span id="lNavD">⬇ Downloads</span><br><span id="lNavDoc">📄 Documents</span><br>🖼 Pictures</div>
+  <div style="position:absolute;left:190px;top:48px;font-size:11.5px;color:#7C86A0;display:flex;gap:250px"><span>Name</span><span>Size</span></div>
+  <div id="lFilesZip" class="layer" style="left:180px;top:70px;width:590px;height:300px">
+    <div id="lZipRow" style="position:absolute;left:0;top:0;width:580px;height:34px;border-radius:6px;font-size:13px;padding:8px 10px 0 40px">Pixlink-windows-x64.zip<span style="position:absolute;left:12px;top:7px;width:18px;height:20px;border-radius:3px;background:#F2C46B"></span><span style="position:absolute;left:300px;top:8px;color:#7C86A0">92 MB</span></div>
+  </div>
+  <div id="lFilesExe" class="layer" style="left:180px;top:70px;width:590px;height:300px">
+    ${[['lExeRow','Pixlink.exe','#3D7BFF','1 MB'],['','Pixlink.dll','#C7D3EA','4 MB'],['','Microsoft.WindowsAppRuntime.dll','#C7D3EA','2 MB'],['','resources.pri','#C7D3EA','1 MB'],['','Assets','#F2C46B','']].map((r,i)=>`<div ${r[0]?`id="${r[0]}"`:''} style="position:absolute;left:0;top:${i*36}px;width:580px;height:34px;border-radius:6px;font-size:13px;padding:8px 10px 0 40px">${r[1]}<span style="position:absolute;left:12px;top:7px;width:18px;height:20px;border-radius:${i==0?6:3}px;background:${r[2]}"></span><span style="position:absolute;left:300px;top:8px;color:#7C86A0">${r[3]}</span></div>`).join('')}
+  </div>
+  <div id="lCtx" style="position:absolute;left:330px;top:120px;width:220px;padding:6px;border-radius:10px;background:#fff;box-shadow:0 12px 30px -8px rgba(22,33,58,.35);border:1px solid #E3E8F2;font-size:13px">
+    ${['Open','Extract All…','Share','Copy as path','Delete'].map((m,i)=>`<div ${i==1?'id="lExtractItem"':''} style="height:32px;padding:7px 12px;border-radius:6px">${m}</div>`).join('')}</div>
+</div>
+<div class="win" id="lExtract" style="left:220px;top:110px;width:560px;height:380px">
+  ${winT('Extract Compressed (Zipped) Folders')}
+  <div style="position:absolute;left:30px;top:56px;font-size:17px;font-weight:600;color:#2557D6">Select a destination and extract files</div>
+  <div style="position:absolute;left:30px;top:100px;font-size:13px">Files will be extracted to this folder:</div>
+  <div style="position:absolute;left:30px;top:124px;width:390px;height:32px;border:1px solid #CBD3E3;border-radius:4px;font-size:13px;padding:7px 10px;background:#fff">C:\\Users\\You\\Documents\\Pixlink</div>
+  <div class="wbtn" style="left:430px;top:124px;width:100px">Browse…</div>
+  <div style="position:absolute;left:30px;top:180px;font-size:13px"><span class="chk" style="background:var(--blue);border-color:var(--blue)"></span>Show extracted files when complete</div>
+  <div id="lExBtn" class="wbtn" style="left:340px;top:326px;width:96px;background:var(--blue);color:#fff;border-color:var(--blue)">Extract</div>
+  <div class="wbtn" style="left:446px;top:326px;width:96px">Cancel</div>
+</div>
+<div id="lSmart" class="layer" style="left:250px;top:80px;width:500px;height:440px;background:#0F5FBF;color:#fff;box-shadow:0 18px 40px -14px rgba(22,33,58,.5);padding:34px 32px">
+  <div style="font-size:26px;font-weight:600;letter-spacing:-.01em">Windows protected your PC</div>
+  <div style="font-size:13.5px;margin-top:20px;line-height:1.5;opacity:.95">Microsoft Defender SmartScreen prevented an unrecognised app from starting. Running this app might put your PC at risk.</div>
+  <div id="lMore" style="position:absolute;left:32px;top:180px;font-size:13.5px;text-decoration:underline">More info</div>
+  <div id="lSmInfo" style="position:absolute;left:32px;top:180px;font-size:13.5px;line-height:1.7">App: Pixlink.exe<br>Publisher: Unknown publisher</div>
+  <div id="lRun" style="position:absolute;left:230px;top:380px;width:120px;height:34px;border:2px solid #fff;font-size:13.5px;font-weight:600;text-align:center;line-height:30px">Run anyway</div>
+  <div style="position:absolute;left:360px;top:380px;width:110px;height:34px;background:#fff;color:#0F5FBF;font-size:13.5px;font-weight:600;text-align:center;line-height:34px">Don’t run</div>
+</div>
+<div class="win" id="lPx" style="left:90px;top:36px;width:820px;height:528px">
+  <div class="wt"><img src="icon.png" style="width:16px;height:16px;border-radius:4px">Pixlink<span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
+  <div style="position:absolute;left:80px;top:120px;width:260px;height:260px;padding:10px;background:#fff;border-radius:14px;border:1px solid #E3E8F2"><div style="position:relative;width:240px;height:240px">${qr}</div></div>
+  <div style="position:absolute;left:400px;top:126px;font-size:28px;font-weight:700;letter-spacing:-.02em">Link your phone</div>
+  <div style="position:absolute;left:400px;top:170px;width:360px;font-size:14px;color:#4A5675;line-height:1.45">On your Pixel, open Pixlink and type this code, or scan the QR code.</div>
+  <div style="position:absolute;left:400px;top:236px;display:flex;gap:10px">${'48217'.split('').map(d=>`<div style="width:58px;height:74px;border-radius:12px;background:#EEF2FA;font-size:38px;font-weight:700;text-align:center;line-height:74px">${d}</div>`).join('')}</div>
+  <div id="lLinked" class="layer" style="left:0;top:34px;width:820px;height:494px;background:#FBFCFE;text-align:center">
+    <div id="lOk" style="width:110px;height:110px;border-radius:50%;background:var(--green);margin:130px auto 0;display:flex;align-items:center;justify-content:center"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="lTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
+    <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:22px">Linked to Pixel 9</div>
+    <div style="font-size:14px;color:#4A5675;margin-top:8px">Your notifications will show up here.</div></div>
+</div>
+<div id="lFw" class="win" style="left:230px;top:100px;width:540px;height:420px">
+  ${winT('Windows Security Alert')}
+  <div style="height:64px;background:#F3F6FB;border-bottom:1px solid #E7EBF3;display:flex;align-items:center;gap:14px;padding:0 24px;font-size:15px;font-weight:600"><span style="width:30px;height:34px;background:#F2A93B;clip-path:polygon(50% 0,100% 18%,100% 55%,50% 100%,0 55%,0 18%)"></span>Windows Defender Firewall has blocked some features of this app</div>
+  <div style="position:absolute;left:24px;top:120px;font-size:12.5px;line-height:1.7;color:#33405E">Name: Pixlink<br>Path: C:\\Users\\You\\Documents\\Pixlink\\Pixlink.exe</div>
+  <div style="position:absolute;left:24px;top:182px;font-size:13px;font-weight:600">Allow Pixlink to communicate on these networks:</div>
+  <div style="position:absolute;left:30px;top:214px;font-size:13px"><span class="chk" id="lPriv"><span id="lPrivT" style="position:absolute;left:1px;top:-4px;color:#fff;font-size:12px;font-weight:700">✓</span></span>Private networks, such as my home or work network</div>
+  <div style="position:absolute;left:30px;top:246px;font-size:13px"><span class="chk"></span>Public networks, such as those in airports and cafés</div>
+  <div id="lAllow" class="wbtn" style="left:290px;top:366px;width:120px;background:var(--blue);color:#fff;border-color:var(--blue)">Allow access</div>
+  <div class="wbtn" style="left:420px;top:366px;width:96px">Cancel</div>
+</div>
+<div id="lToast" style="position:absolute;left:660px;top:452px;width:320px;height:100px;border-radius:12px;background:#fff;box-shadow:0 18px 40px -10px rgba(22,33,58,.4);border:1px solid #E7EBF3;padding:14px 16px 0 66px">
+  <div style="position:absolute;left:16px;top:20px;width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;font-weight:700;text-align:center;line-height:36px">S</div>
+  <div style="font-size:11px;color:#7C86A0">Messages · Pixel 9</div><div style="font-size:14px;font-weight:700;margin-top:3px">Sam</div><div style="font-size:13px;color:#33405E;margin-top:2px">Are you still coming tonight?</div></div>
+<div style="position:absolute;left:0;top:585px;width:1000px;height:40px;background:rgba(243,246,252,.92);border-top:1px solid rgba(22,33,58,.08)">
+  ${[0,1,2,3,4].map(i=>`<div style="position:absolute;top:9px;left:${434+i*30}px;width:22px;height:22px;border-radius:6px;background:${['#9AB3E6','#7FC8A9','#3D7BFF','#F2C46B','#B9A7EE'][i]}"></div>`).join('')}
+  <div style="position:absolute;right:14px;top:12px;font-size:12px;font-weight:600">10:24</div></div>
+<div class="ripple" id="lRip" style="width:40px;height:40px"></div>
+<svg id="cur" viewBox="0 0 22 28"><path d="M2 2l0 21 5.5-5 3.6 8.2 3.6-1.6-3.6-8 7.4-.4z" fill="#16213A" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+
+// ---------- helpers ----------
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eout=x=>1-Math.pow(1-x,3);
+const back=x=>{const c=1.5;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const P=(t,a,b,e=eio)=>e(cl((t-a)/(b-a)));
+const lerp=(a,b,k)=>a+(b-a)*k;
+const win=(t,a,b,f=.35)=>Math.min(P(t,a,a+f,eout),1-P(t,b-f,b,eio));
+function path(t,pts){if(t<=pts[0][0])return pts[0].slice(1);
+ for(let i=1;i<pts.length;i++)if(t<=pts[i][0]){const k=eio(cl((t-pts[i-1][0])/(pts[i][0]-pts[i-1][0])));return pts[i].slice(1).map((v,j)=>lerp(pts[i-1][j+1],v,k));}
+ return pts[pts.length-1].slice(1);}
+const $=id=>document.getElementById(id);
+function st(id,o){const e=$(id);for(const k in o)e.style[k]=o[k];}
+function op(id,v){const e=$(id);e.style.opacity=v;e.style.visibility=v<=0.001?'hidden':'visible';}
+function ctr(id,root){let e=$(id),x=e.offsetWidth/2,y=e.offsetHeight/2;while(e&&e.id!==root){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent;}return [x,y];}
+const C=id=>ctr(id,'lin'), PC=id=>ctr(id,'pin');
+
+// ---------- interaction script ----------
+// phone taps [time, element]
+const PT=[[7.6,'pApk'],[10.2,'pOpen'],[12.4,'pSet'],[13.8,'pTog'],[16.9,'pInstall'],[18.8,'pMore'],[19.7,'pAnyway'],[20.9,'pOpenApp'],
+ [22.6,'pR1'],[23.7,'pNTog'],[25.3,'pR2'],[26.1,'pAllowB'],[53.4,'pEnter'],[56.0,'key4'],[56.35,'key8'],[56.7,'key2'],[57.05,'key1'],[57.4,'key7']].map(([t,id])=>[t,...PC(id)]);
+// laptop clicks [time, element]
+const LC=[[30.0,'lZip'],[31.8,'lShow'],[34.2,'lZipRow'],[35.2,'lExtractItem'],[37.4,'lExBtn'],[39.6,'lExeRow'],[40.9,'lMore'],[42.2,'lRun'],[45.0,'lPriv'],[46.4,'lAllow']].map(([t,id])=>[t,...C(id)]);
+const curPts=[[28.6,820,520]];
+LC.forEach(([t,x,y],i)=>{const prev=curPts[curPts.length-1];curPts.push([Math.max(prev[0]+0.2,t-0.75),x+2,y+4]);curPts.push([t+0.25,x+2,y+4]);});
+curPts.push([48.0,860,540]);
+const dbl=[39.6];
+
+// ---------- poses ----------
+const PH_W=324, LAP_W=1044;
+const pose=TALL?{
+ ph:[[0,640,1060,280],[5.0,640,1060,280],[5.9,300,740,480],[27.5,300,740,480],[28.3,300,1990,480],[48.0,410,1990,260],[48.8,410,1365,260]],
+ lap:[[0,120,820,760],[5.0,120,820,760],[5.8,120,1990,760],[27.6,50,1990,980],[28.4,50,900,980],[48.0,50,900,980],[48.8,60,740,960]],
+}:{
+ ph:[[0,1560,330,300],[5.0,1560,330,300],[5.9,1160,100,420],[27.5,1160,100,420],[28.3,2050,100,420],[48.0,2050,320,250],[48.8,1625,320,250]],
+ lap:[[0,890,290,760],[5.0,890,290,760],[5.8,890,1150,760],[27.6,820,1150,1000],[28.4,820,220,1000],[48.0,820,220,1000],[48.8,830,280,790]],
+};
+function setPose(id,p,ref){st(id,{transform:`translate(${p[0]}px,${p[1]}px) scale(${p[2]/ref})`});}
+function ripple(id,t,t0,x,y,size){const k=cl((t-t0)/0.45);st(id,{left:(x-size/2)+'px',top:(y-size/2)+'px',transform:`scale(${lerp(0.2,1.6,eout(k))})`});op(id,k>0&&k<1?(1-k)*0.9:0);}
+
+function render(t){
+ st('g1',{left:(W*-0.25+Math.sin(t*0.12)*80)+'px',top:(H*-0.35+Math.cos(t*0.1)*60)+'px'});
+ st('g2',{left:(W*0.45+Math.cos(t*0.09)*90)+'px',top:(H*0.35+Math.sin(t*0.11)*70)+'px'});
+ // intro text
+ const io=1-P(t,4.7,5.3);
+ [['iT',0.3],['iS',0.8],['iN',1.6],['iR0',2.0],['iR1',2.4],['iR2',2.8]].forEach(([id,a])=>{const k=P(t,a,a+0.6,eout);op(id,k*io);st(id,{transform:`translateY(${(1-k)*24}px)`});});
+ op('intro',t<5.4?1:0);
+ // pills
+ const pv=win(t,5.3,61.0,0.5);op('pills',pv);
+ for(let i=0;i<3;i++){const cur=t>=STEP_T[i][0]&&t<STEP_T[i][1], done=t>=STEP_T[i][1];
+  st('pl'+i,{background:cur?'#16213A':done?'#DDF5E9':'#E8EDF7',color:cur?'#fff':done?'#1E9E63':'#7C86A0'});
+  st('plb'+i,{background:cur?'#3D7BFF':done?'#1E9E63':'#CBD4E6',color:'#fff'});$('plb'+i).textContent=done?'✓':String(i+1);}
+ // step titles + items
+ STEPS.forEach((s,si)=>{const [a,b]=STEP_T[si];const v=win(t,a,b,0.45);op('sT'+si,v);st('sT'+si,{transform:`translateY(${(1-P(t,a,a+0.5,eout))*24}px)`});
+  s.items.forEach((_,ii)=>{const ia=ITEM_T[si][ii]+(ii===0?0.15:0)+ii*0.0;const k=P(t,a+0.15+ii*0.12,a+0.65+ii*0.12,eout);
+   op('it'+si+'_'+ii,v*k);st('it'+si+'_'+ii,{transform:`translateY(${(1-k)*18}px)`});
+   const s0=ITEM_T[si][ii], s1=ITEM_T[si][ii+1]??b;const cur=t>=s0&&t<s1, done=t>=s1-0.25&&!(si===2&&ii===2&&t<58);
+   const it=$('it'+si+'_'+ii);it.style.color=cur?'#16213A':done?'#4A5675':'#9AA3B8';it.style.fontWeight=cur?'650':'550';
+   const d=$('dt'+si+'_'+ii);d.style.background=done&&!cur?'#1E9E63':cur?'#3D7BFF':'#CBD4E6';d.textContent=done&&!cur?'✓':String(ii+1);
+   d.style.transform=`scale(${cur?1+0.12*Math.exp(-(t-s0)*6):1})`;});});
+ // outro
+ const ok=P(t,61.4,61.9,back);op('outro',t>=61.2?1:0);op('oC',cl(P(t,61.4,61.7)));st('oC',{transform:`scale(${lerp(0.5,1,ok)})`});
+ $('oTick').style.strokeDashoffset=24*(1-P(t,61.8,62.3));
+ [['oT',62.1],['oS',62.7],['oU',63.3]].forEach(([id,a])=>{const k=P(t,a,a+0.6,eout);op(id,k);st(id,{transform:`translateY(${(1-k)*24}px)`});});
+
+ // devices
+ const pp=path(t,pose.ph), lp=path(t,pose.lap);
+ setPose('ph',pp,PH_W);setPose('lap',lp,LAP_W);
+ op('ph',P(t,0.9,1.6)*(1-P(t,60.8,61.4)));op('lap',P(t,1.2,1.9)*(1-P(t,60.8,61.4)));
+
+ // ---- phone screens ----
+ op('pBrowser',t<15.5?1:0);
+ const snack=P(t,8.2,8.6,eout);op('pSnack',t>=8.2&&t<10.6?1:0);st('pSnack',{transform:`translateY(${(1-snack)*80}px)`});
+ op('pUnk',win(t,10.6,12.7,0.25));
+ op('pUnkSet',win(t,12.5,15.6,0.3));
+ const tg=P(t,13.8,14.0);st('pTog',{background:tg>0.5?'#3D7BFF':'#9AA6BF'});st('pKnob',{left:lerp(3,23,tg)+'px'});
+ op('pInst',win(t,15.4,18.3,0.3));
+ st('pInstBar',{opacity:t>17.0?1:0});st('pInstFill',{width:(252*P(t,17.0,18.1))+'px'});
+ $('pInstQ').textContent=t<17.0?'Do you want to install this app?':'Installing…';
+ st('pInstall',{opacity:t<17.0?1:0.4});
+ op('pProt',win(t,18.2,20.1,0.25));op('pAnyway',t>=19.0?P(t,19.0,19.25):0);st('pMore',{opacity:t<19?1:0.5});
+ op('pDone',win(t,20.0,21.3,0.25));
+ op('pPerm',t>=21.2&&t<28.5?P(t,21.2,21.5):0);
+ op('pNL',win(t,22.75,24.7,0.25));
+ const nt=P(t,23.7,23.9);st('pNTog',{background:nt>0.5?'#3D7BFF':'#9AA6BF'});st('pNKnob',{left:lerp(3,23,nt)+'px'});
+ op('pAllow',win(t,25.45,26.4,0.2));
+ [['pR1c',24.7],['pR2c',26.3]].forEach(([id,tt])=>{const d=t>=tt;st(id,{background:d?'#1E9E63':'#E6ECF8',color:d?'#fff':'#7C86A0'});$(id).textContent=d?'✓':'›';});
+ op('pLink',t>=48.3&&t<53.7?P(t,48.3,48.6):0);
+ op('pCode',t>=53.55?P(t,53.55,53.85):0);
+ const digT=[56.0,56.35,56.7,57.05,57.4];digT.forEach((d,i)=>op('pd'+i,t>=d?1:0));
+ document.querySelectorAll('.pbox').forEach((e,i)=>{const done=t>=57.8;e.style.borderColor=done?'#1E9E63':(t>=digT[i]-0.35&&t<(digT[i+1]||57.8)?'#3D7BFF':'transparent');e.style.background=done?'#DDF5E9':'#E6ECF8'});
+ op('pairMsg',P(t,57.85,58.1));
+ kl.forEach(k=>{if(!k)return;const idx='48217'.indexOf(k);const pr=idx>=0&&t>digT[idx]-0.12&&t<digT[idx]+0.12;$('key'+k).style.background=pr?'#C9D8FF':'transparent'});
+ let pr=false;for(const [c,x,y] of PT){if(t>=c&&t<c+0.45){ripple('pRip',t,c,x,y,56);pr=true;}}if(!pr)op('pRip',0);
+
+ // ---- laptop screens ----
+ op('lBrowser',t<33.2?1:0);
+ const dl=P(t,30.3,30.6,eout);op('lDl',t>=30.3&&t<32.2?dl:0);st('lDl',{transform:`translateY(${(1-dl)*-10}px)`});
+ op('lExp',t>=32.1&&t<43.9?P(t,32.1,32.4):0);
+ const inDocs=t>=38.0;op('lFilesZip',inDocs?0:1);op('lFilesExe',inDocs?1:0);
+ $('lExpT').textContent=inDocs?'Documents › Pixlink':'Downloads';
+ st('lNavD',{fontWeight:inDocs?'400':'700'});st('lNavDoc',{fontWeight:inDocs?'700':'400'});
+ st('lZipRow',{background:t>=34.2&&t<38?'#DCE7FF':'transparent'});
+ st('lExeRow',{background:t>=39.5&&t<44?'#DCE7FF':'transparent'});
+ op('lCtx',t>=34.3&&t<35.3?P(t,34.3,34.45):0);st('lExtractItem',{background:t>34.8?'#E3ECFF':'transparent'});
+ op('lExtract',win(t,35.35,37.6,0.25));
+ op('lSmart',win(t,39.9,42.4,0.25));op('lMore',t<40.95?1:0);op('lSmInfo',t>=40.95?1:0);op('lRun',t>=40.95?1:0);
+ op('lPx',t>=42.5?P(t,42.5,42.9):0);
+ op('lFw',win(t,43.1,46.6,0.3));
+ const pv2=t>=45.0;st('lPriv',{background:pv2?'#3D7BFF':'#fff',borderColor:pv2?'#3D7BFF':'#7C86A0'});op('lPrivT',pv2?1:0);
+ const lk=P(t,57.9,58.2);op('lLinked',lk);st('lOk',{transform:`scale(${lerp(0.6,1,back(cl((t-57.9)/0.5)))})`});$('lTick').style.strokeDashoffset=24*(1-P(t,58.2,58.7));
+ const ts=P(t,59.4,59.8,eout);op('lToast',t>=59.4?ts:0);st('lToast',{transform:`translateX(${(1-ts)*60}px)`});
+ // cursor
+ const cp=path(t,curPts);const press=LC.some(([c])=>t>c-0.08&&t<c+0.1)||dbl.some(c=>t>c+0.12&&t<c+0.28);
+ st('cur',{left:(cp[0]-2)+'px',top:(cp[1]-2)+'px',transform:`scale(${press?0.86:1})`,transformOrigin:'2px 2px'});op('cur',t>=28.6&&t<48?1:0);
+ let rp=false;for(const [c,x,y] of LC){if(t>=c&&t<c+0.45){ripple('lRip',t,c,x,y,40);rp=true;}}if(!rp)op('lRip',0);
+}
+window.render=render;
+window.TAPS={phone:PT.map(p=>p[0]),laptop:LC.map(p=>p[0])};
+render(parseFloat(Q.get('t')||'0'));
+</script></body></html>

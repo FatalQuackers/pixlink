@@ -39,6 +39,8 @@ Website: https://fatalquackers.github.io/pixlink/
 
 Pixlink isn't on Google Play yet, so for now you install it from this page. It takes about 5 minutes.
 
+**Prefer to watch?** [See the 1-minute setup video](https://fatalquackers.github.io/pixlink/#setup).
+
 **You need:** a Google Pixel on Android 13 or newer, a Windows 10 or 11 PC, and both on the same Wi-Fi.
 
 ### 1. Install on your Pixel

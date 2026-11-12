@@ -12,3 +12,7 @@ A 29-second, 128 BPM sizzle version uses the same scenes with beat-synced word s
 
 - Preview: `trailer.html?f=wide&m=hype&t=12`
 - Render: `bash renderhype.sh` (writes `hwide/video.mp4` and `htall/video.mp4`), sound: `python3 hype.py` (writes `hype.wav`).
+
+## Setup video
+
+A 68-second how-to-set-up walkthrough: `setup.html` (preview with `setup.html?f=wide&t=40`), render with `bash rendersetup.sh`, sound with `python3 setup_music.py` (writes `setup.wav`).
