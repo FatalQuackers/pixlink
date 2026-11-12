@@ -2,52 +2,129 @@
 <Page
     x:Class="Pixlink.Pages.PairingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Loaded="OnLoaded">
 
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ColumnSpacing="64" Padding="32">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="380" />
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+    <Page.Resources>
+        <!-- Entrance: the three blocks rise and fade in one after another. -->
+        <Storyboard x:Key="Intro">
+            <DoubleAnimation Storyboard.TargetName="Hero" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5" />
+            <DoubleAnimation Storyboard.TargetName="HeroShift" Storyboard.TargetProperty="Y" From="24" To="0" Duration="0:0:0.6">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="QrCard" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.5" />
+            <DoubleAnimation Storyboard.TargetName="QrShift" Storyboard.TargetProperty="Y" From="32" To="0" BeginTime="0:0:0.15" Duration="0:0:0.6">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="CodeCard" Storyboard.TargetProperty="Opacity" From="0" To="1" BeginTime="0:0:0.3" Duration="0:0:0.5" />
+            <DoubleAnimation Storyboard.TargetName="CodeShift" Storyboard.TargetProperty="Y" From="32" To="0" BeginTime="0:0:0.3" Duration="0:0:0.6">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
 
-        <StackPanel Spacing="20" VerticalAlignment="Center">
-            <TextBlock Text="Link your Pixel to this PC" Style="{StaticResource TitleLargeTextBlockStyle}" TextWrapping="Wrap" />
-            <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       Text="See notifications, reply to texts, make calls, browse photos and files, and use your phone's screen — right here." />
+        <!-- "Waiting for your phone": two rings ripple out from the link icon, forever. -->
+        <Storyboard x:Key="Pulse" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="Ring1Scale" Storyboard.TargetProperty="ScaleX" From="1" To="2.2" Duration="0:0:2" />
+            <DoubleAnimation Storyboard.TargetName="Ring1Scale" Storyboard.TargetProperty="ScaleY" From="1" To="2.2" Duration="0:0:2" />
+            <DoubleAnimation Storyboard.TargetName="Ring1" Storyboard.TargetProperty="Opacity" From="0.6" To="0" Duration="0:0:2" />
+            <DoubleAnimation Storyboard.TargetName="Ring2Scale" Storyboard.TargetProperty="ScaleX" From="1" To="2.2" BeginTime="0:0:1" Duration="0:0:2" />
+            <DoubleAnimation Storyboard.TargetName="Ring2Scale" Storyboard.TargetProperty="ScaleY" From="1" To="2.2" BeginTime="0:0:1" Duration="0:0:2" />
+            <DoubleAnimation Storyboard.TargetName="Ring2" Storyboard.TargetProperty="Opacity" From="0.6" To="0" BeginTime="0:0:1" Duration="0:0:2" />
+        </Storyboard>
 
-            <StackPanel Spacing="12">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource PixlinkBlueBrush}">
-                        <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+        <Style x:Key="CodeDigit" TargetType="Border">
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="{ThemeResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ColumnSpacing="56" RowSpacing="32" Padding="40,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: what Pixlink does + how to link -->
+            <StackPanel x:Name="Hero" Spacing="22" VerticalAlignment="Center" Opacity="0">
+                <StackPanel.RenderTransform><TranslateTransform x:Name="HeroShift" /></StackPanel.RenderTransform>
+
+                <!-- Animated link mark -->
+                <Grid Width="72" Height="72" HorizontalAlignment="Left">
+                    <Ellipse x:Name="Ring1" Width="72" Height="72" Stroke="{StaticResource PixlinkBlueBrush}" StrokeThickness="2" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform><ScaleTransform x:Name="Ring1Scale" /></Ellipse.RenderTransform>
+                    </Ellipse>
+                    <Ellipse x:Name="Ring2" Width="72" Height="72" Stroke="{StaticResource PixlinkBlueBrush}" StrokeThickness="2" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform><ScaleTransform x:Name="Ring2Scale" /></Ellipse.RenderTransform>
+                    </Ellipse>
+                    <Border Width="72" Height="72" CornerRadius="20" Background="{StaticResource PixlinkBlueBrush}">
+                        <Image Source="ms-appx:///Assets/Pixlink.png" Width="72" Height="72" />
                     </Border>
-                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="330" Text="Install Pixlink on your Pixel from Google Play" />
+                </Grid>
+
+                <TextBlock Text="Link your Pixel to this PC" Style="{StaticResource TitleLargeTextBlockStyle}" TextWrapping="Wrap" />
+                <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="16"
+                           Text="Texts, calls, photos, files and your phone's screen, right here. Everything stays on your Wi-Fi." />
+
+                <StackPanel Spacing="14">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PixlinkBlueBrush}">
+                            <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold" />
+                        </Border>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Install Pixlink on your Pixel" />
+                    </Grid>
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PixlinkBlueBrush}">
+                            <TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold" />
+                        </Border>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Connect both to the same Wi-Fi" />
+                    </Grid>
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PixlinkBlueBrush}">
+                            <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold" />
+                        </Border>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Scan the QR code or type the 5-digit code in the app" />
+                    </Grid>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource PixlinkBlueBrush}">
-                        <TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
-                    </Border>
-                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="330" Text="Make sure your phone and PC are on the same Wi-Fi" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Border Width="28" Height="28" CornerRadius="14" Background="{StaticResource PixlinkBlueBrush}">
-                        <TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
-                    </Border>
-                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="330" Text="In the app, tap Scan QR code and point it at this screen" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ProgressRing IsActive="True" Width="16" Height="16" />
+                    <TextBlock x:Name="ExpiryText" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock x:Name="ExpiryText" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-        </StackPanel>
+            <!-- Right: QR + code -->
+            <StackPanel Grid.Column="1" Spacing="16" VerticalAlignment="Center">
+                <Border x:Name="QrCard" Style="{StaticResource PanelCardStyle}" Padding="20" Opacity="0">
+                    <Border.RenderTransform><TranslateTransform x:Name="QrShift" /></Border.RenderTransform>
+                    <StackPanel Spacing="12" HorizontalAlignment="Center">
+                        <TextBlock Text="Scan with the Pixlink app" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" />
+                        <Border Background="White" CornerRadius="12" Padding="14">
+                            <Image x:Name="QrImage" Width="220" Height="220" />
+                        </Border>
+                    </StackPanel>
+                </Border>
 
-        <StackPanel Grid.Column="1" Spacing="12" HorizontalAlignment="Center">
-            <Border Background="White" CornerRadius="12" Padding="20">
-                <Image x:Name="QrImage" Width="280" Height="280" />
-            </Border>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-                <Button Content="Get a new code" Click="OnRefresh" />
-                <Button x:Name="CopyButton" Content="Copy link" Click="OnCopy"
-                        ToolTipService.ToolTip="For phones or emulators without a camera: paste this link in the Pixlink app" />
+                <Border x:Name="CodeCard" Style="{StaticResource PanelCardStyle}" Padding="20" Opacity="0">
+                    <Border.RenderTransform><TranslateTransform x:Name="CodeShift" /></Border.RenderTransform>
+                    <StackPanel Spacing="12" HorizontalAlignment="Center">
+                        <TextBlock Text="Or enter this code" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" />
+                        <StackPanel x:Name="CodeDigits" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <Button Content="New code" Click="OnRefresh" />
+                            <Button x:Name="CopyButton" Content="Copy link" Click="OnCopy"
+                                    ToolTipService.ToolTip="For emulators without a camera: paste this link in the Pixlink app" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-        </StackPanel>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </Page>

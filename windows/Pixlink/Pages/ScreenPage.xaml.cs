@@ -59,7 +59,8 @@ public sealed partial class ScreenPage : Page
         StartHint.Text = Session.PowerMode
             ? "Check your phone and tap Start now to share your screen."
             : "Check your phone: tap the Pixlink notification, then Start now.";
-        await Session.SendAsync(Envelope.Of("mirror.start", new { maxSize = 1600, bitrate = 8_000_000, fps = 60 }));
+        var s = Session.Settings;
+        await Session.SendAsync(Envelope.Of("mirror.start", new { maxSize = s.MirrorMaxSize, bitrate = s.MirrorBitrateMbps * 1_000_000, fps = s.MirrorFps }));
     }
 
     private void OnMessage(Envelope m)

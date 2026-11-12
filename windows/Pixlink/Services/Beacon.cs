@@ -14,11 +14,11 @@ public static class Beacon
 {
     public const int Port = 47102;
 
-    public static async Task RunAsync(string pcId, CancellationToken ct)
+    public static async Task RunAsync(Func<string> payloadFactory, CancellationToken ct)
     {
-        var payload = Encoding.UTF8.GetBytes($"{{\"pixlink\":1,\"pcId\":\"{pcId}\",\"port\":{LinkServer.ControlPort}}}");
         while (!ct.IsCancellationRequested)
         {
+            var payload = Encoding.UTF8.GetBytes(payloadFactory());
             foreach (var (local, broadcast) in Networks())
             {
                 try
@@ -28,7 +28,8 @@ public static class Beacon
                 }
                 catch (Exception) { /* interface went away; try again next round */ }
             }
-            try { await Task.Delay(TimeSpan.FromSeconds(3), ct); } catch (TaskCanceledException) { break; }
+            // Faster while pairing is open, so a phone entering a code finds the PC quickly.
+            try { await Task.Delay(TimeSpan.FromSeconds(App.Session?.PairingOpen == true ? 1 : 3), ct); } catch (TaskCanceledException) { break; }
         }
     }
 

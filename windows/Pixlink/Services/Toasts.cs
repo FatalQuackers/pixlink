@@ -26,16 +26,29 @@ public static class Toasts
         catch (Exception) { /* notifications unavailable (e.g. disabled by policy) */ }
     }
 
+    /// <summary>A plain Pixlink message (low battery, file received, copied text…).</summary>
+    public static void ShowSimple(string title, string text)
+    {
+        try
+        {
+            AppNotificationManager.Default.Show(new AppNotificationBuilder().AddText(title).AddText(text).BuildNotification());
+        }
+        catch (Exception) { /* notifications unavailable */ }
+    }
+
     public static void Show(PhoneNotification n)
     {
+        var settings = App.Session.Settings;
+        if (settings.MutedApps.Contains(n.App)) return;
         try
         {
             var builder = new AppNotificationBuilder()
                 .AddArgument("key", n.Key)
                 .AddText(string.IsNullOrEmpty(n.Title) ? n.AppName : n.Title)
-                .AddText(n.Text)
+                .AddText(settings.ToastShowContent ? n.Text : "New notification")
                 .SetAttributionText($"{n.AppName} · {App.Session.PhoneName}");
 
+            if (!settings.ToastSound) builder.MuteAudio();
             if (n.CanReply)
             {
                 builder.AddTextBox("reply", "Type a reply", "")

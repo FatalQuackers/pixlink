@@ -7,6 +7,8 @@ import app.pixlink.files.FileBridge
 import app.pixlink.media.PhotoBridge
 import app.pixlink.mirror.MirrorService
 import app.pixlink.mirror.ProjectionPermissionActivity
+import app.pixlink.features.PhoneRinger
+import app.pixlink.notifications.MediaBridge
 import app.pixlink.notifications.NotificationBridge
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.CallLogReader
@@ -78,6 +80,15 @@ class MessageRouter(
             "hotspot.get" -> hotspot.reportState()
             "hotspot.config" -> { hotspot.saveConfig(m); hotspot.reportState() }
 
+            // Extras (each can be turned off in the phone's settings)
+            "phone.ring" -> if (store.allowRing) {
+                if (m.bool("ring") != false) PhoneRinger.start(context) else PhoneRinger.stop(context)
+            }
+            "dnd.set" -> if (store.allowDndControl) NotificationBridge.setDnd(m.bool("enabled") ?: false)
+            "media.action" -> if (store.allowMediaControls) MediaBridge.action(m.str("action") ?: "toggle")
+            "media.get" -> MediaBridge.report()
+            "clipboard.set" -> if (store.allowClipboard) setClipboard(m.str("text") ?: "")
+
             // Calls
             "call.dial" -> calls.dial(m.str("number")!!)
             "call.answer" -> calls.answer()
@@ -95,6 +106,13 @@ class MessageRouter(
             "file.get" -> files.send(m, photos)
 
             else -> Log.d(TAG, "Unhandled message ${m.t}")
+        }
+    }
+
+    private fun setClipboard(text: String) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            val cm = context.getSystemService(android.content.ClipboardManager::class.java)
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("From your PC", text))
         }
     }
 

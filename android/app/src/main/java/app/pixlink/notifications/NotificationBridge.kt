@@ -11,6 +11,7 @@ import android.util.Base64
 import androidx.core.graphics.drawable.toBitmap
 import app.pixlink.link.LinkHub
 import app.pixlink.link.msg
+import app.pixlink.pairing.PairedStore
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -25,12 +26,20 @@ class NotificationBridge : NotificationListenerService() {
 
     private val iconsSent = mutableSetOf<String>()
 
+    private val store by lazy { PairedStore(this) }
+
     override fun onListenerConnected() {
         instance = this
+        MediaBridge.start(this)
     }
 
     override fun onListenerDisconnected() {
         if (instance === this) instance = null
+        MediaBridge.stop()
+    }
+
+    override fun onInterruptionFilterChanged(interruptionFilter: Int) {
+        LinkHub.send(msg("dnd.state") { put("enabled", interruptionFilter != INTERRUPTION_FILTER_ALL) })
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -46,6 +55,8 @@ class NotificationBridge : NotificationListenerService() {
     private fun shouldMirror(sbn: StatusBarNotification): Boolean {
         val n = sbn.notification
         if (sbn.packageName == packageName) return false
+        if (!store.mirrorNotifications) return false
+        if (sbn.packageName in store.blockedApps) return false
         if (sbn.isOngoing && n.category != Notification.CATEGORY_CALL) return false
         if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return false
         return true
@@ -61,8 +72,13 @@ class NotificationBridge : NotificationListenerService() {
         put("key", sbn.key)
         put("app", sbn.packageName)
         put("appName", appName)
+        val hide = store.hideContent && n.visibility != Notification.VISIBILITY_PUBLIC
         put("title", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: "")
-        put("text", (extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString() ?: "")
+        put(
+            "text",
+            if (hide) "New notification"
+            else (extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString() ?: "",
+        )
         put("time", sbn.postTime)
         put("canReply", findReplyAction(n) != null)
         put("isMessage", n.category == Notification.CATEGORY_MESSAGE)
@@ -101,6 +117,11 @@ class NotificationBridge : NotificationListenerService() {
                 svc.sendIconOnce(it.packageName)
                 LinkHub.send(svc.toMessage(it))
             }
+        }
+
+        /** Do Not Disturb from the PC (notification listeners may request this). */
+        fun setDnd(enabled: Boolean) {
+            instance?.requestInterruptionFilter(if (enabled) INTERRUPTION_FILTER_PRIORITY else INTERRUPTION_FILTER_ALL)
         }
 
         fun dismiss(key: String) {

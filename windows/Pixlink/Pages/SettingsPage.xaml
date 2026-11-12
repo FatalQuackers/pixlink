@@ -4,71 +4,205 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <Page.Resources>
+        <Style x:Key="Section" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+            <Setter Property="Margin" Value="0,20,0,4" />
+        </Style>
+        <Style x:Key="Row" TargetType="Border" BasedOn="{StaticResource PanelCardStyle}">
+            <Setter Property="Padding" Value="16,12" />
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Page.Resources>
+
     <ScrollViewer>
-        <StackPanel Padding="24" Spacing="8" MaxWidth="720" HorizontalAlignment="Left">
-            <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,12" />
+        <StackPanel Padding="24" Spacing="6" MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" />
 
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
-                <Grid>
+            <!-- General -->
+            <TextBlock Text="General" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Show phone notifications on this PC" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <TextBlock Text="Pop-ups with quick reply for texts" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="This PC's name" />
+                        <TextBlock Text="What your phone shows when pairing" Style="{StaticResource Hint}" />
                     </StackPanel>
-                    <ToggleSwitch x:Name="ToastsSwitch" HorizontalAlignment="Right" Toggled="OnToggle" OnContent="" OffContent="" />
+                    <TextBox x:Name="PcNameBox" Grid.Column="1" LostFocus="OnPcNameChanged" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
+                    <TextBlock Text="App theme" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ThemeBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectionChanged="OnThemeChanged">
+                        <ComboBoxItem Content="Use Windows setting" Tag="System" />
+                        <ComboBoxItem Content="Light" Tag="Light" />
+                        <ComboBoxItem Content="Dark" Tag="Dark" />
+                    </ComboBox>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid>
+                    <StackPanel Margin="0,0,80,0">
+                        <TextBlock Text="Start Pixlink when I sign in to Windows" />
+                        <TextBlock Text="So your phone connects without opening the app" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="StartupSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+            <!-- Notifications -->
+            <TextBlock Text="Notifications" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
                 <Grid>
-                    <StackPanel>
-                        <TextBlock Text="Join hotspot automatically" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <TextBlock Text="When you turn on Hotspot, connect this PC to it" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Margin="0,0,80,0">
+                        <TextBlock Text="Show phone notifications as Windows pop-ups" />
+                        <TextBlock Text="Texts get a quick reply box" Style="{StaticResource Hint}" />
                     </StackPanel>
-                    <ToggleSwitch x:Name="HotspotSwitch" HorizontalAlignment="Right" Toggled="OnToggle" OnContent="" OffContent="" />
+                    <ToggleSwitch x:Name="ToastsSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
                 </Grid>
             </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid>
+                    <StackPanel Margin="0,0,80,0">
+                        <TextBlock Text="Show message text in pop-ups" />
+                        <TextBlock Text="Turn off to show only who it's from" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="ContentSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid>
+                    <TextBlock Text="Play a sound for pop-ups" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="SoundSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Pop-ups by app" />
+                    <TextBlock Style="{StaticResource Hint}" Text="Apps appear here after they send a notification. Turn one off to stop its pop-ups (it still shows in the list)." />
+                    <StackPanel x:Name="AppsList" Spacing="2" />
+                </StackPanel>
+            </Border>
 
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+            <!-- Phone -->
+            <TextBlock Text="Phone" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <TextBlock Text="Warn me when my phone's battery is low" VerticalAlignment="Center" />
+                        <ToggleSwitch x:Name="BatterySwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
+                    </Grid>
+                    <Slider x:Name="BatterySlider" Minimum="5" Maximum="50" StepFrequency="5" TickFrequency="5" TickPlacement="BottomRight"
+                            Header="Warn at (%)" ValueChanged="OnBatteryLevel" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Row}">
                 <Grid>
                     <StackPanel Margin="0,0,110,0">
-                        <TextBlock Text="Hotspot details" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <TextBlock x:Name="HotspotText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="Hotspot details" />
+                        <TextBlock x:Name="HotspotText" Style="{StaticResource Hint}" />
                     </StackPanel>
                     <Button Content="Change" HorizontalAlignment="Right" Click="OnChangeHotspot" />
                 </Grid>
             </Border>
-
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+            <Border Style="{StaticResource Row}">
                 <Grid>
-                    <StackPanel Margin="0,0,170,0">
-                        <TextBlock x:Name="VersionText" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <TextBlock x:Name="UpdateStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Pixlink checks for updates when it starts." TextWrapping="Wrap" />
+                    <StackPanel Margin="0,0,80,0">
+                        <TextBlock Text="Join the hotspot automatically" />
+                        <TextBlock Text="When you turn on Hotspot, connect this PC to it" Style="{StaticResource Hint}" />
                     </StackPanel>
-                    <Button x:Name="CheckButton" Content="Check for updates" HorizontalAlignment="Right" Click="OnCheckUpdates" />
+                    <ToggleSwitch x:Name="HotspotSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Security" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Text="Everything travels directly between your phone and PC on your network, encrypted with TLS. No cloud, no account." />
-                    <TextBlock x:Name="FingerprintText" Style="{StaticResource CaptionTextBlockStyle}" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+            <!-- Screen -->
+            <TextBlock Text="Screen mirroring" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Quality" />
+                            <TextBlock Text="Lower quality is smoother on slow Wi-Fi" Style="{StaticResource Hint}" />
+                        </StackPanel>
+                        <ComboBox x:Name="QualityBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectionChanged="OnMirrorChanged">
+                            <ComboBoxItem Content="Smooth (720p)" Tag="1280" />
+                            <ComboBoxItem Content="Balanced (1080p)" Tag="1920" />
+                            <ComboBoxItem Content="Sharp (1600p)" Tag="1600" />
+                            <ComboBoxItem Content="Full resolution" Tag="3200" />
+                        </ComboBox>
+                    </Grid>
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="Frame rate" VerticalAlignment="Center" />
+                        <ComboBox x:Name="FpsBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectionChanged="OnMirrorChanged">
+                            <ComboBoxItem Content="30 fps (saves battery)" Tag="30" />
+                            <ComboBoxItem Content="60 fps" Tag="60" />
+                            <ComboBoxItem Content="90 fps" Tag="90" />
+                        </ComboBox>
+                    </Grid>
+                    <Slider x:Name="BitrateSlider" Minimum="2" Maximum="24" StepFrequency="1" Header="Bitrate (Mbps)" ValueChanged="OnMirrorChanged" />
                 </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource PanelCardStyle}" Padding="16">
+            <!-- Files -->
+            <TextBlock Text="Files" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
                 <Grid>
-                    <StackPanel>
-                        <TextBlock x:Name="PhoneText" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                        <TextBlock Text="Unlink to pair a different phone" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Margin="0,0,140,0">
+                        <TextBlock Text="Files from your phone" />
+                        <TextBlock x:Name="DownloadText" Style="{StaticResource Hint}" />
+                    </StackPanel>
+                    <Button Content="Open folder" HorizontalAlignment="Right" Click="OnOpenDownloads" />
+                </Grid>
+            </Border>
+
+            <!-- Updates -->
+            <TextBlock Text="Updates" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <StackPanel Margin="0,0,170,0">
+                            <TextBlock x:Name="VersionText" />
+                            <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Pixlink checks for updates when it starts." />
+                        </StackPanel>
+                        <Button x:Name="CheckButton" Content="Check for updates" HorizontalAlignment="Right" Click="OnCheckUpdates" />
+                    </Grid>
+                    <Grid>
+                        <TextBlock Text="Check for updates automatically" VerticalAlignment="Center" />
+                        <ToggleSwitch x:Name="AutoUpdateSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Security -->
+            <TextBlock Text="Privacy and security" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <StackPanel Spacing="4">
+                    <TextBlock TextWrapping="Wrap" Text="Everything travels directly between your phone and PC on your network, encrypted with TLS. No cloud, no account." />
+                    <TextBlock x:Name="FingerprintText" Style="{StaticResource Hint}" IsTextSelectionEnabled="True" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid>
+                    <StackPanel Margin="0,0,130,0">
+                        <TextBlock x:Name="PhoneText" />
+                        <TextBlock Text="Unlink to pair a different phone" Style="{StaticResource Hint}" />
                     </StackPanel>
                     <Button Content="Unlink phone" HorizontalAlignment="Right" Click="OnUnpair" />
                 </Grid>
             </Border>
 
-            <TextBlock Margin="0,16,0,0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextWrapping="Wrap"
-                       Text="Open source (MIT). Not affiliated with Google or Microsoft." />
+            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,20,0,0">
+                <HyperlinkButton Content="Pixlink on GitHub" NavigateUri="https://github.com/FatalQuackers/pixlink" />
+                <HyperlinkButton Content="Report a problem" NavigateUri="https://github.com/FatalQuackers/pixlink/issues" />
+                <HyperlinkButton Content="Open crash log folder" Click="OnOpenLogs" />
+            </StackPanel>
+            <TextBlock Style="{StaticResource Hint}" Text="Open source (MIT). Not affiliated with Google or Microsoft." />
         </StackPanel>
     </ScrollViewer>
 </Page>

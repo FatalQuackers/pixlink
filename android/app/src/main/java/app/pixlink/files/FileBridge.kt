@@ -110,7 +110,8 @@ class FileBridge(private val context: Context) {
         streamOut(transferId, name, stream, size)
     }
 
-    private fun streamOut(transferId: String, name: String, input: InputStream, size: Long) {
+    /** Sends a stream to the PC as file.chunk messages (also used by "Share to PC"). */
+    fun streamOut(transferId: String, name: String, input: InputStream, size: Long) {
         // Reads one chunk ahead so we know which chunk is the last one.
         input.use { s ->
             var current = ByteArray(CHUNK)

@@ -10,14 +10,26 @@ Website: https://fatalquackers.github.io/pixlink/
 
 | Feature | Works for everyone | Power mode adds |
 | --- | --- | --- |
-| Notifications & texts | Mirror notifications, reply to SMS / RCS / chat apps | — |
-| Screen mirroring | See your phone screen live | Mouse, keyboard and scroll control |
-| Hotspot | One tap opens hotspot settings, PC joins automatically | Real on/off toggle from the PC |
+| Notifications & texts | Mirror notifications, reply to SMS / RCS / chat apps, Windows pop-ups with quick reply | — |
+| Screen mirroring | See your phone screen live, choose quality | Click, long-press, swipe, scroll and type |
+| Hotspot | One button: phone opens its hotspot switch, PC joins automatically | Phone switches the hotspot on by itself |
 | Calls | Dialer, contacts, calls through your PC's Bluetooth | Call history |
-| Photos | Full gallery | — |
-| Files | Pick folders to share | Browse all phone storage |
+| Photos & files | Full gallery, drag files both ways, shared folders | Browse all phone storage |
+| Now playing | See what's playing on your phone; play, pause, skip | — |
+| Find my phone | Ring it at full volume, even on silent | — |
+| Do Not Disturb | Silence your phone from your PC | — |
+| Clipboard | Send copied text from your PC to your phone | — |
+| Send to PC | Share text, links, photos and files from any app to your PC | — |
+| Battery | Low battery alert on your PC | — |
+
+**Linking** takes seconds: scan the QR code or type the 5-digit code shown on your PC.
 
 **Power mode** uses [Shizuku](https://shizuku.rikka.app/) and a one-time Wireless Debugging pairing. It's optional. See [docs/POWER_MODE.md](docs/POWER_MODE.md).
+
+### Settings
+
+- **PC:** PC name, theme, start with Windows, pop-ups (on/off, message text, sound, per app), low battery alert level, hotspot details, screen mirroring quality / frame rate / bitrate, automatic updates.
+- **Phone:** device name, which apps send notifications, hide private message text, what your PC is allowed to do (ring, clipboard, music, Do Not Disturb), hotspot details, shared folders, background running, updates, welcome tour.
 
 ## How to install
 
@@ -41,8 +53,8 @@ Pixlink isn't on Google Play yet, so for now you install it from this page. It t
 
 ### 3. Link them
 
-1. On your PC, Pixlink shows a QR code.
-2. On your Pixel, open Pixlink and tap **Scan QR code**, then point the camera at your screen.
+1. On your PC, Pixlink shows a QR code and a 5-digit code.
+2. On your Pixel, open Pixlink. After the short welcome tour, tap **Scan QR code** and point the camera at your screen, or tap **Enter 5-digit code** and type it.
 3. Done. Your notifications appear on your PC within a few seconds.
 
 ### Try the phone app on your PC first (Android emulator)

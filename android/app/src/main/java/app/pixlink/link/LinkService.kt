@@ -106,7 +106,7 @@ class LinkService : LifecycleService() {
                     if (pairing != null) {
                         c.send(msg(MessageTypes.PAIR_REQUEST) {
                             put("token", pairing.token)
-                            put("phoneName", Build.MODEL)
+                            put("phoneName", store.displayName)
                             put("model", Build.MODEL)
                             put("androidVersion", Build.VERSION.RELEASE)
                             put("phoneFingerprint", Identity.fingerprint)
@@ -130,8 +130,14 @@ class LinkService : LifecycleService() {
                     else -> "${e.javaClass.simpleName}: ${e.message}"
                 }
                 Log.w(TAG, "Connection failed: ${LinkHub.lastDisconnectReason}", e)
-                if (e is javax.net.ssl.SSLHandshakeException) {
-                    LinkHub.setState(LinkState.Error("Security check failed — re-pair with your PC"))
+                if (pairing != null) {
+                    // While pairing, don't retry forever: tell the user what went wrong.
+                    pending = null
+                    LinkHub.setState(LinkState.Error(LinkHub.lastDisconnectReason ?: "Couldn't reach the PC"))
+                    client.close()
+                    if (store.pc == null) { stopSelf(); return }
+                } else if (e is javax.net.ssl.SSLHandshakeException) {
+                    LinkHub.setState(LinkState.Error("This PC no longer recognises your phone. Pair again."))
                 }
             } finally {
                 client.close()
@@ -186,7 +192,7 @@ class LinkService : LifecycleService() {
 
     private fun sendHello(client: LinkClient, pcName: String) {
         client.send(msg(MessageTypes.HELLO) {
-            put("phoneName", Build.MODEL)
+            put("phoneName", store.displayName)
             put("model", Build.MODEL)
             put("appVersion", BuildConfig.VERSION_NAME)
             put("powerMode", PowerMode.isReady)
@@ -205,7 +211,7 @@ class LinkService : LifecycleService() {
 
     private fun onRejected(reason: String) {
         pending = null
-        LinkHub.setState(LinkState.Error("PC rejected pairing: $reason"))
+        LinkHub.setState(LinkState.Error(reason))
         LinkHub.client?.close()
         if (store.pc == null) stopSelf()
     }
@@ -216,7 +222,10 @@ class LinkService : LifecycleService() {
         LinkHub.client?.close()
         LinkHub.client = null
         status.stop()
-        if (store.pc == null) LinkHub.setState(LinkState.NotPaired) else LinkHub.setState(LinkState.Disconnected)
+        // Keep a pairing error on screen; otherwise show the resting state.
+        if (LinkHub.state.value !is LinkState.Error) {
+            LinkHub.setState(if (store.pc == null) LinkState.NotPaired else LinkState.Disconnected)
+        }
         super.onDestroy()
     }
 
@@ -251,6 +260,8 @@ class LinkService : LifecycleService() {
         }
 
         fun pair(context: Context, uri: String) {
+            LinkHub.lastDisconnectReason = null
+            LinkHub.setState(LinkState.Connecting(PairingInfo.parse(uri)?.pcName ?: "your PC"))
             context.startForegroundService(
                 Intent(context, LinkService::class.java).setAction(ACTION_PAIR).putExtra(EXTRA_PAIR_URI, uri)
             )

@@ -23,13 +23,29 @@ public sealed partial class MainWindow : Window
         ContentFrame.Navigate(typeof(MessagesPage));
         PairingFrame.Navigate(typeof(PairingPage));
 
-        _ = CheckForUpdatesAsync();
+        ApplyTheme();
+        if (Session.Settings.AutoCheckUpdates) _ = CheckForUpdatesAsync();
+        Session.JustPaired += () => DispatcherQueue.TryEnqueue(ShowLinkedAnimation);
 
         Session.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(PhoneSession.IsPaired) && !Session.IsPaired)
                 PairingFrame.Navigate(typeof(PairingPage));
         };
+    }
+
+    /// <summary>Light, Dark or follow Windows (from Settings).</summary>
+    public void ApplyTheme()
+    {
+        if (Content is FrameworkElement root)
+        {
+            root.RequestedTheme = Session.Settings.Theme switch
+            {
+                "Light" => ElementTheme.Light,
+                "Dark" => ElementTheme.Dark,
+                _ => ElementTheme.Default,
+            };
+        }
     }
 
     private Updater.Update? _update;
@@ -69,6 +85,18 @@ public sealed partial class MainWindow : Window
             UpdateBar.Message = $"Update failed: {ex.Message}. You can download it from GitHub instead.";
             UpdateNowButton.IsEnabled = true;
         }
+    }
+
+    private async void ShowLinkedAnimation()
+    {
+        SuccessText.Text = $"{Session.PhoneName} is connected to this PC";
+        SuccessOverlay.Visibility = Visibility.Visible;
+        if (Ui.AnimationsEnabled) ((Microsoft.UI.Xaml.Media.Animation.Storyboard)SuccessOverlay.Resources["SuccessIn"]).Begin();
+        else SuccessCheck.Opacity = 1;
+        await Task.Delay(2200);
+        var outro = (Microsoft.UI.Xaml.Media.Animation.Storyboard)SuccessOverlay.Resources["SuccessOut"];
+        outro.Completed += (_, _) => { SuccessOverlay.Visibility = Visibility.Collapsed; SuccessOverlay.Opacity = 1; };
+        outro.Begin();
     }
 
     public void BringToFront()
@@ -193,6 +221,38 @@ public sealed partial class MainWindow : Window
     }
 
     private void OnClearAll(object sender, RoutedEventArgs e) => _ = Session.DismissAllAsync();
+
+    private bool _ringing;
+
+    private async void OnRing(object sender, RoutedEventArgs e)
+    {
+        _ringing = !_ringing;
+        await Session.RingPhoneAsync(_ringing);
+        RingLabel.Text = _ringing ? "Stop ringing" : "Find phone";
+        if (_ringing)
+        {
+            await Task.Delay(30_000); // the phone stops by itself after 30 seconds
+            _ringing = false;
+            RingLabel.Text = "Find phone";
+        }
+    }
+
+    private async void OnSendClipboard(object sender, RoutedEventArgs e)
+    {
+        var sent = await Session.SendClipboardAsync();
+        ClipboardLabel.Text = sent ? "Sent" : "Nothing copied";
+        await Task.Delay(1500);
+        ClipboardLabel.Text = "Clipboard";
+    }
+
+    private void OnDnd(object sender, RoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.Primitives.ToggleButton t) _ = Session.SetDndAsync(t.IsChecked == true);
+    }
+
+    private void OnMediaPrevious(object sender, RoutedEventArgs e) => _ = Session.MediaActionAsync("previous");
+    private void OnMediaToggle(object sender, RoutedEventArgs e) => _ = Session.MediaActionAsync("toggle");
+    private void OnMediaNext(object sender, RoutedEventArgs e) => _ = Session.MediaActionAsync("next");
 
     private void OnDismiss(object sender, RoutedEventArgs e)
     {

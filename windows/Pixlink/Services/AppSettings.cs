@@ -10,6 +10,26 @@ public sealed class AppSettings
     public string? PhoneName { get; set; }
     public bool ShowToasts { get; set; } = true;
     public bool AutoJoinHotspot { get; set; } = true;
+    public string? PcDisplayName { get; set; }
+
+    // Notifications
+    public bool ToastShowContent { get; set; } = true;
+    public bool ToastSound { get; set; } = true;
+    public HashSet<string> MutedApps { get; set; } = new();
+
+    // Phone battery
+    public bool LowBatteryAlert { get; set; } = true;
+    public int LowBatteryLevel { get; set; } = 15;
+
+    // Screen mirroring
+    public int MirrorMaxSize { get; set; } = 1600;
+    public int MirrorBitrateMbps { get; set; } = 8;
+    public int MirrorFps { get; set; } = 60;
+
+    // App
+    public string Theme { get; set; } = "System";
+    public bool AutoCheckUpdates { get; set; } = true;
+    public bool StartWithWindows { get; set; }
 
     public static string Folder { get; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pixlink");

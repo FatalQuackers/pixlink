@@ -21,10 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import app.pixlink.features.PhoneRinger
 import app.pixlink.link.LinkService
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
+import android.net.Uri
+import androidx.compose.runtime.remember
+import app.pixlink.pairing.PairingInfo
+import app.pixlink.ui.AppFilterScreen
+import app.pixlink.ui.CodeEntryScreen
 import app.pixlink.ui.HomeScreen
+import app.pixlink.ui.LinkingScreen
+import app.pixlink.ui.onboarding.OnboardingScreen
 import app.pixlink.ui.PairScreen
 import app.pixlink.ui.PixlinkTheme
 import app.pixlink.ui.PowerModeScreen
@@ -60,8 +68,9 @@ class MainActivity : ComponentActivity() {
         PowerMode.refresh()
     }
 
-    /** A pixlink://pair link opened from any QR scanner app. */
+    /** A pixlink://pair link opened from any QR scanner app, or "stop ringing" from the notification. */
     private fun handleDeepLink(intent: Intent?) {
+        if (intent?.action == PhoneRinger.ACTION_STOP) { PhoneRinger.stop(this); return }
         val data = intent?.data?.toString() ?: return
         if (data.startsWith("pixlink://pair")) LinkService.pair(this, data)
     }
@@ -84,7 +93,25 @@ class MainActivity : ComponentActivity() {
     @androidx.compose.runtime.Composable
     private fun AppNav() {
         val nav = rememberNavController()
-        NavHost(nav, startDestination = "home") {
+        val store = remember { PairedStore(this) }
+        val start = if (!store.onboardingDone && store.pc == null) "onboarding" else "home"
+
+        fun goHome() {
+            store.onboardingDone = true
+            nav.navigate("home") { popUpTo(0) { inclusive = true } }
+        }
+        fun goLinking(pcName: String, from: String) =
+            nav.navigate("linking/${Uri.encode(pcName)}") { popUpTo(from) { inclusive = true } }
+
+        NavHost(nav, startDestination = start) {
+            composable("onboarding") {
+                OnboardingScreen(
+                    onScan = { nav.navigate("pair") },
+                    onEnterCode = { nav.navigate("code") },
+                    onGrantPermissions = ::requestCorePermissions,
+                    onSkip = ::goHome,
+                )
+            }
             composable("home") {
                 HomeScreen(
                     onPair = { nav.navigate("pair") },
@@ -94,13 +121,30 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable("pair") {
-                PairScreen(onScanned = { uri ->
-                    LinkService.pair(this@MainActivity, uri)
-                    nav.popBackStack()
-                }, onBack = { nav.popBackStack() })
+                PairScreen(
+                    onScanned = { uri ->
+                        LinkService.pair(this@MainActivity, uri)
+                        goLinking(PairingInfo.parse(uri)?.pcName ?: "your PC", "pair")
+                    },
+                    onEnterCode = { nav.navigate("code") { popUpTo("pair") { inclusive = true } } },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable("code") {
+                CodeEntryScreen(onBack = { nav.popBackStack() }, onPairStarted = { name -> goLinking(name, "code") })
+            }
+            composable("linking/{name}") { entry ->
+                LinkingScreen(
+                    pcName = entry.arguments?.getString("name") ?: "your PC",
+                    onDone = ::goHome,
+                    onRetry = { nav.navigate("code") { popUpTo("linking/{name}") { inclusive = true } } },
+                )
             }
             composable("power") { PowerModeScreen(onBack = { nav.popBackStack() }) }
-            composable("settings") { SettingsScreen(onBack = { nav.popBackStack() }) }
+            composable("settings") {
+                SettingsScreen(onBack = { nav.popBackStack() }, onChooseApps = { nav.navigate("apps") })
+            }
+            composable("apps") { AppFilterScreen(onBack = { nav.popBackStack() }) }
         }
     }
 

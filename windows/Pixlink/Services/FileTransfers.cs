@@ -91,7 +91,18 @@ public sealed class FileTransfers
     {
         if (m.T != "file.chunk") return;
         var id = m.Str("transferId");
-        if (id is null || !_incoming.TryGetValue(id, out var t)) return;
+        if (id is null) return;
+        if (!_incoming.TryGetValue(id, out var t))
+        {
+            // A file the phone sent by itself ("Send to PC" in the share menu).
+            if (m.Long("seq") != 0 || m.Str("name") is not { } name) return;
+            var path = UniquePath(Path.Combine(DownloadFolder, Path.GetFileName(name)));
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            tcs.Task.ContinueWith(done => Toasts.ShowSimple($"Received from {_session.PhoneName}", Path.GetFileName(done.Result)),
+                TaskContinuationOptions.OnlyOnRanToCompletion);
+            t = (File.Create(path), tcs);
+            _incoming[id] = t;
+        }
         var data = Convert.FromBase64String(m.Str("dataBase64") ?? "");
         t.stream.Write(data);
         if (m.Bool("last") == true)

@@ -19,10 +19,17 @@ Discovery after pairing: the PC broadcasts `{"pixlink":1,"pcId":"…","port":471
 pixlink://pair?v=1&host=192.168.1.20&port=47100&token=K3J9...&fp=SHA256:AB:CD:...&name=DESKTOP-01
 ```
 
-3. Phone scans it, opens TLS to `host:port`, and **only accepts** the server certificate whose SHA-256 matches `fp`.
+3. Phone scans it (or the user types the 5-digit code, see below), opens TLS to `host:port`, and **only accepts** the server certificate whose SHA-256 matches `fp`.
 4. Phone presents its own self-signed client certificate and sends `pair.request` with the token.
 5. PC checks the token (single use, expires after 5 minutes), stores the phone's certificate fingerprint and replies `pair.accept`.
 6. Future connections: both sides pin each other's fingerprint; no token needed.
+
+### Pairing with a 5-digit code
+
+While the pairing screen is open, the PC also shows a 5-digit code and its beacon (UDP 47102, every second) adds
+`"pairing":true, "name":"<PC name>", "fp":"<cert SHA-256>"`. The phone listens for these, connects to the PC that
+advertised (pinning `fp`), and sends `pair.request` with `token` = the 5 digits. After 5 wrong codes the PC makes a new
+code, so the 100,000 possibilities can't practically be guessed within its 5-minute lifetime.
 
 ## Message envelope
 
@@ -71,6 +78,22 @@ pixlink://pair?v=1&host=192.168.1.20&port=47100&token=K3J9...&fp=SHA256:AB:CD:..
 | `input.nav` | PC → phone | `{button: back|home|recents}` (Power mode) |
 
 Mirror channel framing: `[uint32 big-endian length][uint64 pts microseconds][NAL bytes]`. First frame carries SPS/PPS.
+
+### Extras
+| Type | Direction | Payload |
+| --- | --- | --- |
+| `phone.ring` | PC → phone | `{ring}` — alarm sound at full volume for up to 30 s |
+| `dnd.set` | PC → phone | `{enabled}` — Do Not Disturb (priority only) |
+| `dnd.state` | phone → PC | `{enabled}` |
+| `media.state` | phone → PC | `{active, playing, title?, artist?, app?}` |
+| `media.get` | PC → phone | `{}` → `media.state` |
+| `media.action` | PC → phone | `{action: play|pause|toggle|next|previous}` |
+| `clipboard.set` | PC → phone | `{text}` |
+| `share.text` | phone → PC | `{text}` — from "Send to PC" in Android's share menu; PC puts it on the clipboard |
+
+Files shared from the phone arrive as `file.chunk` messages the PC didn't ask for (first chunk carries `name`); the PC saves them to Downloads\Pixlink.
+
+Each extra can be turned off on the phone (Settings → Your PC can).
 
 ### Hotspot
 | Type | Direction | Payload |

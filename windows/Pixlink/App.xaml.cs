@@ -30,6 +30,9 @@ public partial class App : Application
             Toasts.Register();
             Window = new MainWindow();
             Window.Activate();
+            // Started with Windows: stay out of the way in the taskbar.
+            if (Environment.GetCommandLineArgs().Contains("--background") &&
+                Window.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter p) p.Minimize();
             _ = Session.StartAsync(Window.DispatcherQueue);
         }
         catch (Exception ex)

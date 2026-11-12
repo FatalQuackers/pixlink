@@ -45,10 +45,21 @@ public partial class PhoneSession : ObservableObject
     [ObservableProperty] private bool _doNotDisturb;
     [ObservableProperty] private bool _powerMode;
     [ObservableProperty] private string? _pairingUri;
+    [ObservableProperty] private string? _pairingCode;
     [ObservableProperty] private string? _hotspotSsid;
     [ObservableProperty] private string? _hotspotPassword;
     [ObservableProperty] private bool _hotspotToggleSupported;
     [ObservableProperty] private string _callState = "ended";
+
+    // Now playing on the phone
+    [ObservableProperty] private bool _mediaActive;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(PlayPauseGlyph))] private bool _mediaPlaying;
+    [ObservableProperty] private string _mediaTitle = "";
+    [ObservableProperty] private string _mediaArtist = "";
+    [ObservableProperty] private string _mediaApp = "";
+    public string PlayPauseGlyph => MediaPlaying ? "\uE769" : "\uE768";
+
+    private bool _lowBatteryWarned;
 
     public ObservableCollection<PhoneNotification> Notifications { get; } = new();
     public ObservableCollection<Conversation> Conversations { get; } = new();
@@ -72,25 +83,55 @@ public partial class PhoneSession : ObservableObject
         IsPaired = _settings.PhoneFingerprint is not null;
         if (_settings.PhoneName is { } n) PhoneName = n;
 
-        var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => _pairToken is not null && DateTimeOffset.Now < _pairExpires);
+        var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => PairingOpen);
         server.Connected += OnConnected;
         _ = Mirror.RunAsync(_cts.Token);
-        _ = Beacon.RunAsync(_settings.PcId, _cts.Token);
+        _ = Beacon.RunAsync(BeaconPayload, _cts.Token);
         try { await server.RunAsync(_cts.Token); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Server stopped: {ex}"); }
     }
 
     // ---------- Pairing ----------
 
-    /// <summary>Creates a fresh one-time token and the pixlink:// URI shown as a QR code.</summary>
+    private int _failedCodeAttempts;
+
+    /// <summary>
+    /// Opens pairing for 5 minutes: a long one-time token for the QR code, and a 5-digit code
+    /// people can type instead. The phone finds this PC through the beacon while pairing is open.
+    /// </summary>
     public string BeginPairing()
     {
         _pairToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(18)).Replace('+', '-').Replace('/', '_');
         _pairExpires = DateTimeOffset.Now.AddMinutes(5);
+        _failedCodeAttempts = 0;
+        PairingCode = RandomNumberGenerator.GetInt32(0, 100_000).ToString("D5");
         var uri = $"pixlink://pair?v=1&host={LinkServer.LocalAddress()}&port={LinkServer.ControlPort}" +
-                  $"&token={_pairToken}&fp=SHA256:{PcFingerprint}&name={Uri.EscapeDataString(Environment.MachineName)}";
+                  $"&token={_pairToken}&fp=SHA256:{PcFingerprint}&name={Uri.EscapeDataString(PcName)}";
         PairingUri = uri;
         return uri;
+    }
+
+    public bool PairingOpen => _pairToken is not null && DateTimeOffset.Now < _pairExpires;
+
+    /// <summary>The name phones see for this PC.</summary>
+    public string PcName => string.IsNullOrWhiteSpace(_settings.PcDisplayName) ? Environment.MachineName : _settings.PcDisplayName!;
+
+    /// <summary>What the beacon announces. While pairing is open it also lets phones find us by code.</summary>
+    public string BeaconPayload()
+    {
+        var obj = new JsonObject
+        {
+            ["pixlink"] = 1,
+            ["pcId"] = _settings.PcId,
+            ["port"] = LinkServer.ControlPort,
+        };
+        if (PairingOpen)
+        {
+            obj["pairing"] = true;
+            obj["name"] = PcName;
+            obj["fp"] = PcFingerprint;
+        }
+        return obj.ToJsonString();
     }
 
     public void Unpair()
@@ -141,12 +182,23 @@ public partial class PhoneSession : ObservableObject
                 StartPing();
                 _ = SendAsync(Envelope.Of("notif.sync"));
                 _ = SendAsync(Envelope.Of("hotspot.get"));
+                _ = SendAsync(Envelope.Of("media.get"));
                 break;
             case "status":
                 Battery = m.Int("battery") ?? -1;
                 Charging = m.Bool("charging") ?? false;
                 DoNotDisturb = m.Bool("dnd") ?? false;
+                CheckLowBattery();
                 break;
+            case "dnd.state": DoNotDisturb = m.Bool("enabled") ?? false; break;
+            case "media.state":
+                MediaActive = m.Bool("active") ?? false;
+                MediaPlaying = m.Bool("playing") ?? false;
+                MediaTitle = m.Str("title") ?? "";
+                MediaArtist = m.Str("artist") ?? "";
+                MediaApp = m.Str("app") ?? "";
+                break;
+            case "share.text": OnSharedText(m.Str("text") ?? ""); break;
             case "notif.posted": OnNotification(m); break;
             case "notif.removed":
                 var key = m.Str("key");
@@ -167,22 +219,35 @@ public partial class PhoneSession : ObservableObject
 
     private void HandlePairRequest(PhoneConnection conn, Envelope m)
     {
-        var ok = _pairToken is not null && DateTimeOffset.Now < _pairExpires && m.Str("token") == _pairToken;
+        var token = m.Str("token");
+        if (!PairingOpen)
+        {
+            _ = conn.SendAsync(Envelope.Of("pair.reject", new { reason = "The code expired. Show a new one on your PC." }));
+            return;
+        }
+        var ok = token == _pairToken || (token is { Length: 5 } && token == PairingCode);
         if (!ok)
         {
-            _ = conn.SendAsync(Envelope.Of("pair.reject", new { reason = "Code expired — show a new QR code" }));
+            // 5 wrong codes and the code changes, so guessing all 100,000 isn't practical.
+            if (++_failedCodeAttempts >= 5) BeginPairing();
+            _ = conn.SendAsync(Envelope.Of("pair.reject", new { reason = "Wrong code. Check the code on your PC and try again." }));
             return;
         }
         _pairToken = null;
         PairingUri = null;
+        PairingCode = null;
         _settings.PhoneFingerprint = conn.PhoneFingerprint;
         _settings.PhoneName = m.Str("phoneName");
         _settings.Save();
         PhoneName = _settings.PhoneName ?? PhoneName;
+        JustPaired?.Invoke();
         IsPaired = true;
-        _ = conn.SendAsync(Envelope.Of("pair.accept", new { pcName = Environment.MachineName, pcId = _settings.PcId }));
+        _ = conn.SendAsync(Envelope.Of("pair.accept", new { pcName = PcName, pcId = _settings.PcId }));
         // The phone follows up with "hello", which makes this the active connection.
     }
+
+    /// <summary>Raised right before the UI switches from pairing to the main screen (for the success animation).</summary>
+    public event Action? JustPaired;
 
     private void StartPing()
     {
@@ -289,6 +354,43 @@ public partial class PhoneSession : ObservableObject
     }
 
     public static BitmapImage ImageFromBase64(string b64) => ImageFromBytes(Convert.FromBase64String(b64));
+
+    // ---------- Extras ----------
+
+    public Task RingPhoneAsync(bool ring = true) => SendAsync(Envelope.Of("phone.ring", new { ring }));
+    public Task SetDndAsync(bool enabled) => SendAsync(Envelope.Of("dnd.set", new { enabled }));
+    public Task MediaActionAsync(string action) => SendAsync(Envelope.Of("media.action", new { action }));
+
+    /// <summary>Sends the text on this PC's clipboard to the phone's clipboard.</summary>
+    public async Task<bool> SendClipboardAsync()
+    {
+        var content = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
+        if (!content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)) return false;
+        var text = await content.GetTextAsync();
+        await SendAsync(Envelope.Of("clipboard.set", new { text }));
+        return true;
+    }
+
+    /// <summary>Text shared from the phone ("Send to PC") goes on the clipboard.</summary>
+    private void OnSharedText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(text);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        Toasts.ShowSimple($"Copied from {PhoneName}", text.Length > 120 ? text[..120] + "…" : text);
+    }
+
+    private void CheckLowBattery()
+    {
+        if (!_settings.LowBatteryAlert || Battery < 0) return;
+        if (Charging || Battery > _settings.LowBatteryLevel + 5) { _lowBatteryWarned = false; return; }
+        if (Battery <= _settings.LowBatteryLevel && !_lowBatteryWarned)
+        {
+            _lowBatteryWarned = true;
+            Toasts.ShowSimple($"{PhoneName} battery is low", $"{Battery}% left. Time to plug it in.");
+        }
+    }
 
     // ---------- Calls ----------
 

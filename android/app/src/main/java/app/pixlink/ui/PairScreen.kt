@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +48,7 @@ import java.util.concurrent.Executors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PairScreen(onScanned: (String) -> Unit, onBack: () -> Unit) {
+fun PairScreen(onScanned: (String) -> Unit, onEnterCode: () -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     var hasCamera by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -78,6 +79,7 @@ fun PairScreen(onScanned: (String) -> Unit, onBack: () -> Unit) {
                     if (PairingInfo.parse(text) != null) onScanned(text)
                     else pasteError = "No pairing link found. On your PC, click Copy link first."
                 }) { Text("Paste pairing link") }
+                Button(onClick = onEnterCode) { Text("Enter 5-digit code instead") }
                 pasteError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         }

@@ -53,6 +53,51 @@ class PairedStore(context: Context) {
         _paired.value = pc
     }
 
+    /** Whether the welcome / onboarding flow has been finished. */
+    var onboardingDone: Boolean
+        get() = prefs.getBoolean("onboardingDone", false)
+        set(v) = prefs.edit { putBoolean("onboardingDone", v) }
+
+    // ----- Settings -----
+
+    /** Name your PC shows for this phone. Empty = the phone model. */
+    var deviceName: String
+        get() = prefs.getString("deviceName", "") ?: ""
+        set(v) = prefs.edit { putString("deviceName", v) }
+
+    var mirrorNotifications: Boolean
+        get() = prefs.getBoolean("mirrorNotifications", true)
+        set(v) = prefs.edit { putBoolean("mirrorNotifications", v) }
+
+    /** Apps whose notifications are NOT sent to the PC. */
+    var blockedApps: Set<String>
+        get() = prefs.getStringSet("blockedApps", emptySet()) ?: emptySet()
+        set(v) = prefs.edit { putStringSet("blockedApps", v) }
+
+    /** Send "New notification" instead of the message text (for private notifications). */
+    var hideContent: Boolean
+        get() = prefs.getBoolean("hideContent", false)
+        set(v) = prefs.edit { putBoolean("hideContent", v) }
+
+    var allowRing: Boolean
+        get() = prefs.getBoolean("allowRing", true)
+        set(v) = prefs.edit { putBoolean("allowRing", v) }
+
+    var allowClipboard: Boolean
+        get() = prefs.getBoolean("allowClipboard", true)
+        set(v) = prefs.edit { putBoolean("allowClipboard", v) }
+
+    var allowMediaControls: Boolean
+        get() = prefs.getBoolean("allowMediaControls", true)
+        set(v) = prefs.edit { putBoolean("allowMediaControls", v) }
+
+    var allowDndControl: Boolean
+        get() = prefs.getBoolean("allowDndControl", true)
+        set(v) = prefs.edit { putBoolean("allowDndControl", v) }
+
+    /** Name sent to the PC. */
+    val displayName: String get() = deviceName.ifBlank { android.os.Build.MODEL }
+
     /** Hotspot details the user enters once, so the PC can auto-join. */
     var hotspotSsid: String?
         get() = prefs.getString("hotspotSsid", null)
