@@ -25,7 +25,15 @@ public sealed partial class MainWindow : Window
 
         ApplyTheme();
         _ = CheckForUpdatesAsync();
-        Session.JustPaired += () => DispatcherQueue.TryEnqueue(() => { ShowLinkedAnimation(); ShowSetupIfNeeded(); });
+        Session.JustPaired += () => DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowLinkedAnimation();
+            ShowSetupIfNeeded();
+            if (Session.IsIPhone)
+                ShowConnection(InfoBarSeverity.Informational,
+                    "iPhone linked. Photos, files, clipboard and screen casting work over Wi-Fi, and notifications and call alerts come over Bluetooth. " +
+                    "Apple doesn't let other devices reply to messages, read texts, carry call audio or control an iPhone, so those stay Pixel-only.");
+        });
         Session.Reconnected += () => DispatcherQueue.TryEnqueue(() => ShowConnection(InfoBarSeverity.Success, $"Reconnected to {Session.PhoneName}"));
 
         Session.PropertyChanged += (_, e) =>
@@ -36,7 +44,7 @@ public sealed partial class MainWindow : Window
                 ShowConnection(InfoBarSeverity.Warning, $"{Session.PhoneName} is disconnected. Check it's on the same Wi-Fi with Pixlink open.");
             if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Connected && ConnectionBar.Severity == InfoBarSeverity.Warning)
                 ConnectionBar.IsOpen = false;
-            if (e.PropertyName == nameof(PhoneSession.IsIPhone)) ApplyPlatform();
+            if (e.PropertyName is nameof(PhoneSession.IsIPhone) or nameof(PhoneSession.IPhoneBtState)) ApplyPlatform();
         };
         // An iPhone starts casting from its own Control Center: jump to the Screen tab to show it.
         Session.Mirror.SizeAnnounced += (_, _) => DispatcherQueue.TryEnqueue(() => SelectTab("Screen", "cast"));
@@ -327,9 +335,13 @@ public sealed partial class MainWindow : Window
         var iphone = Session.IsIPhone;
         MessagesTab.Visibility = CallsTab.Visibility = iphone ? Visibility.Collapsed : Visibility.Visible;
         if (iphone && Tabs.SelectedItem is { Visibility: Visibility.Collapsed }) SelectTab("Home");
-        NoNotificationsText.Text = iphone
-            ? "iPhone notifications aren't available yet. Send photos, files and your clipboard from the Pixlink app on your iPhone."
-            : "You're all caught up";
+        NoNotificationsText.Text = !iphone ? "You're all caught up" : Session.IPhoneBtState switch
+        {
+            IPhoneBluetooth.LinkState.Connected => "You're all caught up",
+            IPhoneBluetooth.LinkState.NeedsPermission => "Almost there. On your iPhone, open Settings → Bluetooth, tap (i) next to this PC and turn on Share System Notifications.",
+            IPhoneBluetooth.LinkState.NotSupported => "This PC's Bluetooth can't receive iPhone notifications. A Bluetooth 4.0+ USB adapter fixes that. Photos, files, clipboard and casting still work.",
+            _ => "To see your iPhone's notifications here, open Pixlink on your iPhone and tap Set up notifications. Accept the pairing request on both.",
+        };
     }
 
     // ---------- Notifications list ----------

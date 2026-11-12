@@ -40,6 +40,8 @@ targets:
         NSPhotoLibraryUsageDescription: Pixlink shows your photos on your PC when you open the Photos tab there.
         NSLocalNetworkUsageDescription: Pixlink connects to your PC on your Wi-Fi.
         NSBonjourServices: [_pixlink._tcp]
+        NSBluetoothAlwaysUsageDescription: Pixlink uses Bluetooth so your PC can show your iPhone's notifications and battery, even when Pixlink is closed.
+        UIBackgroundModes: [bluetooth-central]
         CFBundleURLTypes:
           - CFBundleURLName: app.pixlink.pair
             CFBundleURLSchemes: [pixlink]

@@ -3,12 +3,20 @@ import SwiftUI
 @main
 struct PixlinkApp: App {
     @StateObject private var link = LinkClient.shared
+    @StateObject private var bluetooth = BluetoothLink.shared
     @Environment(\.scenePhase) private var phase
+
+    init() {
+        // Resume the Bluetooth link straight away: iOS may relaunch Pixlink in the background for it.
+        BluetoothLink.shared.startIfEnabled()
+        InstallInfo.scheduleReminder()
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(link)
+                .environmentObject(bluetooth)
                 .tint(.pixBlue)
                 // Scanning the PC's QR code with the iPhone camera opens Pixlink straight into pairing.
                 .onOpenURL { url in PendingPairing.shared.info = PairingInfo(url.absoluteString) }

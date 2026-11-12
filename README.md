@@ -77,13 +77,18 @@ Then:
 
 ### iPhone (early)
 
-Pixlink for iPhone does photos, files, clipboard, screen casting and Find my phone. Apple doesn't let apps share notifications, texts or calls, or let a PC control the screen, so those stay Pixel-only.
+Pixlink for iPhone does notifications and call alerts (over Bluetooth, like Phone Link), photos, files, clipboard, screen casting, battery and Find my phone.
+
+**Not possible on iPhone** (Apple rules): replying to messages, text history, call audio on the PC, controlling the screen and switching the hotspot. iOS also pauses apps you're not using: notifications and battery keep coming over Bluetooth, but photos, files and clipboard need Pixlink open on the iPhone.
 
 1. Download `Pixlink-iOS.ipa` from the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest).
 2. Install it with [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) on your PC. They sign it with your own Apple ID (free accounts need a refresh every 7 days).
 3. On your iPhone, go to Settings → General → VPN & Device Management and trust your Apple ID. On iOS 16+, also turn on Settings → Privacy & Security → Developer Mode.
 4. Open Pixlink on the iPhone and scan the QR code on your PC. The 5-digit code is Pixel-only.
-5. To cast your screen, tap **Cast screen** in the app (or long-press Screen Recording in Control Center and pick Pixlink).
+5. For notifications, tap **Set up notifications** and accept the Bluetooth pairing on both the iPhone and the PC (your PC needs Bluetooth 4.0+). If nothing shows, on the iPhone go to Settings → Bluetooth → (i) next to your PC → turn on **Share System Notifications**.
+6. To cast your screen, tap **Cast screen** in the app (or long-press Screen Recording in Control Center and pick Pixlink).
+
+**Free Apple ID?** Installs stop opening after 7 days. [AltStore](https://altstore.io) (with AltServer running on your PC) and [SideStore](https://sidestore.io) refresh it automatically. Pixlink shows a warning and sends a reminder the day before it expires.
 
 Pixlink stays connected while it's open on your iPhone. iOS pauses apps soon after you leave them, so it reconnects when you open it again.
 

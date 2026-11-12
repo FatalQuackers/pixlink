@@ -88,8 +88,22 @@ public static class Toasts
                 .AddArgument("key", n.Key)
                 .AddArgument("action", "dismiss"));
 
-            AppNotificationManager.Default.Show(builder.BuildNotification());
+            // Incoming iPhone calls ring like a call (stays on screen with Answer / Decline).
+            if (n.Actions.Any(a => a.Semantic == "call")) builder.SetScenario(AppNotificationScenario.IncomingCall);
+
+            var toast = builder.BuildNotification();
+            toast.Tag = TagFor(n.Key);
+            AppNotificationManager.Default.Show(toast);
         }
         catch (Exception ex) { Crash.Log(ex, "Showing pop-up"); }
     }
+
+    /// <summary>Takes a notification's pop-up away (it was cleared or answered on the phone).</summary>
+    public static void Remove(string key)
+    {
+        try { _ = AppNotificationManager.Default.RemoveByTagAsync(TagFor(key)); } catch { }
+    }
+
+    private static string TagFor(string key) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(key)))[..16];
 }

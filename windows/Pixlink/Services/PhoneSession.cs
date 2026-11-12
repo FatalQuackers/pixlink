@@ -109,7 +109,7 @@ public partial class PhoneSession : ObservableObject
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _phaseTimer;
 
     partial void OnIsConnectedChanged(bool value) => UpdatePhase();
-    partial void OnIsPairedChanged(bool value) => UpdatePhase();
+    partial void OnIsPairedChanged(bool value) { UpdatePhase(); if (_ui is not null) StartIPhoneBluetooth(); }
 
     private void UpdatePhase()
     {
@@ -165,6 +165,7 @@ public partial class PhoneSession : ObservableObject
         _ = Mirror.RunAsync(_cts.Token);
         _ = Beacon.RunAsync(BeaconPayload, _cts.Token);
         _ = Bonjour.StartAsync(_settings.PcId);
+        StartIPhoneBluetooth();
         try { await server.RunAsync(_cts.Token); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Server stopped: {ex}"); }
     }
@@ -385,7 +386,60 @@ public partial class PhoneSession : ObservableObject
 
     // ---------- Sending ----------
 
-    public Task SendAsync(Envelope env) => _conn?.SendAsync(env) ?? Task.CompletedTask;
+    public Task SendAsync(Envelope env)
+    {
+        // iPhone notifications came over Bluetooth, so their buttons go back that way.
+        if (env.T is "notif.dismiss" or "notif.action" or "notif.open" or "notif.reply" && IPhoneBluetooth.IsIPhoneKey(env.Str("key")))
+        {
+            return env.T switch
+            {
+                "notif.dismiss" => IPhoneBt.DismissAsync(env.Str("key")!),
+                "notif.action" => IPhoneBt.PerformActionAsync(env.Str("key")!, env.Int("actionIndex") ?? -1),
+                _ => Task.CompletedTask, // iOS doesn't let other devices open or reply to notifications
+            };
+        }
+        return _conn?.SendAsync(env) ?? Task.CompletedTask;
+    }
+
+    // ---------- iPhone notifications over Bluetooth ----------
+    public IPhoneBluetooth IPhoneBt { get; } = new();
+    /// <summary>Changes whenever the iPhone Bluetooth link changes (for the UI).</summary>
+    public IPhoneBluetooth.LinkState IPhoneBtState => IPhoneBt.State;
+    private bool _iphoneBtHooked;
+
+    private void StartIPhoneBluetooth()
+    {
+        if (!_iphoneBtHooked)
+        {
+            _iphoneBtHooked = true;
+            IPhoneBt.StateChanged += () => _ui.TryEnqueue(() => OnPropertyChanged(nameof(IPhoneBtState)));
+            IPhoneBt.NotificationPosted += (env, preExisting) => _ui.TryEnqueue(() =>
+            {
+                if (preExisting) _seenKeys.Add(env.Str("key")!); // already on the iPhone: list it, don't pop it up
+                OnNotification(env);
+            });
+            IPhoneBt.NotificationRemoved += key => _ui.TryEnqueue(() =>
+            {
+                var n = Notifications.FirstOrDefault(x => x.Key == key);
+                if (n is not null) Notifications.Remove(n);
+                Toasts.Remove(key);
+            });
+            IPhoneBt.Disconnected += () => _ui.TryEnqueue(() =>
+            {
+                foreach (var n in Notifications.Where(n => IPhoneBluetooth.IsIPhoneKey(n.Key)).ToList()) Notifications.Remove(n);
+            });
+            IPhoneBt.StatusReceived += (battery, charging) => _ui.TryEnqueue(() =>
+            {
+                Battery = battery;
+                Charging = charging;
+                CheckLowBattery();
+            });
+        }
+        if (IsIPhone && IsPaired) _ = IPhoneBt.StartAsync(_settings.PcId);
+        else IPhoneBt.Stop();
+    }
+
+    partial void OnIsIPhoneChanged(bool value) { if (_ui is not null) StartIPhoneBluetooth(); }
 
     /// <summary>Sends a request and waits for the reply with the same id.</summary>
     public async Task<Envelope?> RequestAsync(string type, object? data = null, TimeSpan? timeout = null)

@@ -80,6 +80,7 @@ final class LinkClient: ObservableObject {
     func forget() {
         retryTask?.cancel()
         close()
+        BluetoothLink.shared.stop()
         SharedStore.forget()
         pc = nil
         state = .notPaired
