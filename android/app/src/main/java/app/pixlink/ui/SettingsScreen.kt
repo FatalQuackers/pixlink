@@ -57,6 +57,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
     var clip by remember { mutableStateOf(store.allowClipboard) }
     var media by remember { mutableStateOf(store.allowMediaControls) }
     var dnd by remember { mutableStateOf(store.allowDndControl) }
+    var autoUpdate by remember { mutableStateOf(store.autoUpdate) }
     var ssid by remember { mutableStateOf(store.hotspotSsid ?: "") }
     var pass by remember { mutableStateOf(store.hotspotPassword ?: "") }
     var checking by remember { mutableStateOf(false) }
@@ -142,6 +143,11 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
             )
 
             Section("Updates")
+            SwitchRow(
+                "Install updates automatically",
+                "New versions download and install by themselves. With Power mode, completely silently.",
+                autoUpdate,
+            ) { autoUpdate = it; store.autoUpdate = it }
             ListItem(
                 headlineContent = { Text("Pixlink ${UpdateChecker.currentVersion}") },
                 supportingContent = { Text(updateStatus ?: "Pixlink checks for updates when you open it.") },
@@ -151,7 +157,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                         scope.launch {
                             updateStatus = try {
                                 val u = UpdateChecker.check()
-                                if (u == null) "You're on the latest version." else "Pixlink ${u.version} is available. Tap Download on the home screen."
+                                if (u == null) "You're on the latest version." else "Pixlink ${u.version} is available. It installs from the home screen."
                             } catch (e: Exception) {
                                 "Couldn't check for updates. Are you online?"
                             }

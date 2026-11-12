@@ -168,12 +168,15 @@
                     <Grid>
                         <StackPanel Margin="0,0,170,0">
                             <TextBlock x:Name="VersionText" />
-                            <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Pixlink checks for updates when it starts." />
+                            <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Pixlink checks for updates when it starts and every 6 hours." />
                         </StackPanel>
                         <Button x:Name="CheckButton" Content="Check for updates" HorizontalAlignment="Right" Click="OnCheckUpdates" />
                     </Grid>
                     <Grid>
-                        <TextBlock Text="Check for updates automatically" VerticalAlignment="Center" />
+                        <StackPanel Margin="0,0,80,0">
+                            <TextBlock Text="Install updates automatically" />
+                            <TextBlock Text="New versions install by themselves and Pixlink restarts (never during a call or screen mirroring)" Style="{StaticResource Hint}" />
+                        </StackPanel>
                         <ToggleSwitch x:Name="AutoUpdateSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
                     </Grid>
                 </StackPanel>

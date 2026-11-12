@@ -84,7 +84,7 @@ public static class Updater
             :wait
             tasklist /FI "PID eq {pid}" | find "{pid}" >nul && (timeout /t 1 /nobreak >nul & goto wait)
             robocopy "{newDir}" "{appDir}" /E /R:5 /W:1 /NFL /NDL /NJH /NJS /NP >nul
-            start "" "{appDir}\Pixlink.exe"
+            start "" "{appDir}\Pixlink.exe" --updated
             """);
 
         Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{script}\"")

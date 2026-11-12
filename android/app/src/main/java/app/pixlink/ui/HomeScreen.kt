@@ -27,6 +27,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,7 +52,9 @@ import app.pixlink.link.LinkState
 import app.pixlink.notifications.NotificationBridge
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
+import app.pixlink.update.AppUpdater
 import app.pixlink.update.UpdateChecker
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,23 +129,11 @@ fun HomeScreen(
                 }
             }
 
-            // Update banner
-            val update by UpdateChecker.available.collectAsState()
-            LaunchedEffect(Unit) { UpdateChecker.checkQuietly() }
-            update?.let { u ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Update available", style = MaterialTheme.typography.titleMedium)
-                            Text("Pixlink ${u.version} (you have ${UpdateChecker.currentVersion})", style = MaterialTheme.typography.bodySmall)
-                        }
-                        Button(onClick = { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u.apkUrl))) }) { Text("Download") }
-                    }
-                }
-            }
+            // Updates install by themselves; this card only shows progress or a step that needs you.
+            val updateStatus by AppUpdater.status.collectAsState()
+            val available by UpdateChecker.available.collectAsState()
+            LaunchedEffect(Unit) { AppUpdater.autoUpdate(ctx) }
+            UpdateCard(updateStatus, available)
 
             Text("Setup", style = MaterialTheme.typography.titleMedium)
 
@@ -183,5 +175,48 @@ private fun SetupRow(icon: ImageVector, title: String, subtitle: String, done: B
             supportingContent = { Text(subtitle) },
             trailingContent = { if (done) Icon(Icons.Outlined.CheckCircle, "Done", tint = MaterialTheme.colorScheme.primary) },
         )
+    }
+}
+
+@Composable
+private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Update?) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val (title, detail, action) = when (status) {
+        is AppUpdater.Status.Downloading -> Triple("Updating Pixlink", "Downloading ${status.version}… ${(status.progress * 100).toInt()}%", null)
+        is AppUpdater.Status.Installing -> Triple("Updating Pixlink", "Installing ${status.version}. Pixlink restarts by itself.", null)
+        is AppUpdater.Status.WaitingForConfirm -> Triple("One tap to finish updating", "Tap Update on the Android prompt. Future updates install by themselves.", null)
+        AppUpdater.Status.NeedsPermission -> Triple(
+            "Turn on automatic updates",
+            "Allow Pixlink to install updates once, and new versions install by themselves.",
+            "Allow" to {
+                ctx.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}")))
+            },
+        )
+        is AppUpdater.Status.Failed -> Triple(
+            "Update didn't install", status.message,
+            status.apkUrl?.let { url -> "Download" to { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } },
+        )
+        AppUpdater.Status.Idle -> if (available != null) Triple(
+            "Update available", "Pixlink ${available.version} (you have ${UpdateChecker.currentVersion})",
+            "Install" to { scope.launch { AppUpdater.install(ctx, available) }; Unit },
+        ) else return
+    }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    Text(detail, style = MaterialTheme.typography.bodySmall)
+                }
+                action?.let { (label, onClick) -> Button(onClick = onClick) { Text(label) } }
+            }
+            if (status is AppUpdater.Status.Downloading) {
+                LinearProgressIndicator(progress = { status.progress }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+            }
+        }
     }
 }

@@ -85,7 +85,10 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 
 ### Updates
 
-Both apps check for new versions by themselves. On the PC, click **Update now** in the banner and Pixlink updates and restarts. On the phone, tap **Download** on the home screen and install the new APK over the old one. You can also check manually in **Settings** on either app.
+Both apps update themselves. You don't need to download anything again.
+
+- **PC:** Pixlink checks when it starts and every 6 hours, installs the new version and restarts. It never updates during a call or while mirroring your screen. (Settings → Install updates automatically.)
+- **Phone:** new versions download and install by themselves. With Power mode on, it's completely silent. Without it, Android asks you to allow Pixlink to install updates once, and shows one confirmation the first time; after that, updates install silently. Pixlink reconnects to your PC afterwards.
 
 ### Uninstall
 

@@ -24,7 +24,7 @@ public sealed partial class MainWindow : Window
         PairingFrame.Navigate(typeof(PairingPage));
 
         ApplyTheme();
-        if (Session.Settings.AutoCheckUpdates) _ = CheckForUpdatesAsync();
+        _ = CheckForUpdatesAsync();
         Session.JustPaired += () => DispatcherQueue.TryEnqueue(ShowLinkedAnimation);
 
         Session.PropertyChanged += (_, e) =>
@@ -50,16 +50,55 @@ public sealed partial class MainWindow : Window
 
     private Updater.Update? _update;
 
-    /// <summary>Quietly checks GitHub a few seconds after start; shows a banner if there's a newer version.</summary>
+    private DispatcherTimer? _updateTimer;
+
+    /// <summary>
+    /// Automatic updates: check a few seconds after start and every 6 hours. With automatic
+    /// updates on, a new version installs by itself (and Pixlink restarts) as soon as you're not
+    /// on a call or mirroring your screen. With it off, a banner offers Update now instead.
+    /// </summary>
     public async Task CheckForUpdatesAsync(bool quiet = true)
     {
+        if (_updateTimer is null)
+        {
+            _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+            _updateTimer.Tick += (_, _) => { if (Session.Settings.AutoCheckUpdates) _ = CheckForUpdatesAsync(); };
+            _updateTimer.Start();
+        }
         try
         {
             if (quiet) await Task.Delay(TimeSpan.FromSeconds(5));
             _update = await Updater.CheckAsync();
-            if (_update is not null) ShowUpdate(_update);
+            if (_update is null) return;
+            if (Session.Settings.AutoCheckUpdates) await InstallWhenIdleAsync(_update);
+            else ShowUpdate(_update);
         }
-        catch (Exception ex) when (quiet) { Crash.Log(ex); }
+        catch (Exception ex) when (quiet) { Crash.Log(ex, "Update check"); }
+    }
+
+    private bool Busy => Session.CallState != "ended" || Session.Mirror.IsStreaming;
+
+    private async Task InstallWhenIdleAsync(Updater.Update update)
+    {
+        // Don't cut off a call or a screen-mirroring session; check again every minute.
+        while (Busy) await Task.Delay(TimeSpan.FromMinutes(1));
+        _update = update;
+        UpdateBar.Title = "Updating Pixlink";
+        UpdateBar.IsOpen = true;
+        UpdateNowButton.Visibility = Visibility.Collapsed;
+        try
+        {
+            var progress = new Progress<double>(p => UpdateBar.Message = $"Installing Pixlink {update.Version}… {p:P0}. Pixlink will restart by itself.");
+            await Updater.InstallAsync(update, progress); // closes and restarts Pixlink
+        }
+        catch (Exception ex)
+        {
+            // Fall back to the manual button if the automatic install fails (for example, no write access to the folder).
+            Crash.Log(ex, "Automatic update");
+            UpdateBar.Title = "Update available";
+            UpdateNowButton.Visibility = Visibility.Visible;
+            ShowUpdate(update);
+        }
     }
 
     public void ShowUpdate(Updater.Update update)

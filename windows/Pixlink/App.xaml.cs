@@ -34,6 +34,8 @@ public partial class App : Application
             if (Environment.GetCommandLineArgs().Contains("--background") &&
                 Window.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter p) p.Minimize();
             _ = Session.StartAsync(Window.DispatcherQueue);
+            if (Environment.GetCommandLineArgs().Contains("--updated"))
+                Toasts.ShowSimple("Pixlink updated", $"You're now on Pixlink {Updater.Current}.");
         }
         catch (Exception ex)
         {

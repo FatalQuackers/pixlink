@@ -35,6 +35,12 @@ jobs:
         run: |
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/pixlink.jks"
           echo "SIGN_ARGS=-PpixlinkKeystore=$RUNNER_TEMP/pixlink.jks -PpixlinkKeystorePassword=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+      - name: Releases must use the permanent signing key
+        # Phones only auto-update to an APK signed with the same key, so never release without it.
+        if: startsWith(github.ref, 'refs/tags/v') && env.SIGN_ARGS == ''
+        run: |
+          echo "::error::Add the ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD secrets (Settings → Secrets and variables → Actions), then re-run this release."
+          exit 1
       - name: Build release APK
         run: |
           V="${VERSION#v}"

@@ -20,6 +20,7 @@ import app.pixlink.pairing.PairedStore
 import app.pixlink.pairing.PairingInfo
 import app.pixlink.power.PowerMode
 import app.pixlink.status.StatusReporter
+import app.pixlink.update.AppUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -54,6 +55,15 @@ class LinkService : LifecycleService() {
         status = StatusReporter(this)
 
         lifecycleScope.launch(Dispatchers.IO) { listenForPc() }
+
+        // Automatic updates: check now and every 6 hours while Pixlink is running.
+        lifecycleScope.launch(Dispatchers.IO) {
+            delay(10_000)
+            while (true) {
+                runCatching { AppUpdater.autoUpdate(this@LinkService) }
+                delay(6 * 60 * 60 * 1000L)
+            }
+        }
 
         // Tell the PC whenever Power mode turns on or off, so screen control follows along.
         lifecycleScope.launch {

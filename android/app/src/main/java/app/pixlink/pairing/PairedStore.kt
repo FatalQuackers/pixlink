@@ -95,6 +95,10 @@ class PairedStore(context: Context) {
         get() = prefs.getBoolean("allowDndControl", true)
         set(v) = prefs.edit { putBoolean("allowDndControl", v) }
 
+    var autoUpdate: Boolean
+        get() = prefs.getBoolean("autoUpdate", true)
+        set(v) = prefs.edit { putBoolean("autoUpdate", v) }
+
     /** Name sent to the PC. */
     val displayName: String get() = deviceName.ifBlank { android.os.Build.MODEL }
 

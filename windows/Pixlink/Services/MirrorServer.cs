@@ -24,6 +24,9 @@ public sealed class MirrorServer
     private BlockingCollection<(byte[] data, long ptsUs)> _frames = new(boundedCapacity: 120);
 
     public event Action? StreamStarted;
+
+    /// <summary>True while the phone's screen is being shown (used to avoid updating mid-stream).</summary>
+    public bool IsStreaming { get; private set; }
     public event Action? StreamEnded;
 
     public MirrorServer(X509Certificate2 cert, Func<string?> pinnedPhone)
@@ -59,6 +62,7 @@ public sealed class MirrorServer
             }, ct);
 
             _frames = new BlockingCollection<(byte[], long)>(boundedCapacity: 120);
+            IsStreaming = true;
             StreamStarted?.Invoke();
 
             var header = new byte[12];
@@ -78,6 +82,7 @@ public sealed class MirrorServer
         finally
         {
             _frames.CompleteAdding();
+            IsStreaming = false;
             StreamEnded?.Invoke();
         }
     }
