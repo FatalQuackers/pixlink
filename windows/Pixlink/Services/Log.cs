@@ -8,15 +8,9 @@ namespace Pixlink.Services;
 /// </summary>
 public static class Log
 {
-    public sealed record Entry(DateTime Time, string Level, string Text)
-    {
-        public string TimeText => Time.ToString("HH:mm:ss");
-        public string Line => $"{Time:yyyy-MM-dd HH:mm:ss} [{Level}] {Text}";
-    }
-
     private const int Max = 500;
     private static readonly object Gate = new();
-    public static ObservableCollection<Entry> Entries { get; } = new();
+    public static ObservableCollection<LogEntry> Entries { get; } = new();
     public static string FilePath => Path.Combine(AppSettings.Folder, "pixlink.log");
 
     public static void Info(string text) => Write("info", text);
@@ -25,7 +19,7 @@ public static class Log
 
     private static void Write(string level, string text)
     {
-        var e = new Entry(DateTime.Now, level, text);
+        var e = new LogEntry(DateTime.Now, level, text);
         lock (Gate)
         {
             try
@@ -45,4 +39,14 @@ public static class Log
         var ui = App.Window?.DispatcherQueue;
         if (ui is null || ui.HasThreadAccess) Add(); else ui.TryEnqueue(Add);
     }
+}
+
+/// <summary>One line in Pixlink's log.</summary>
+public sealed class LogEntry(DateTime time, string level, string text)
+{
+    public DateTime Time { get; } = time;
+    public string Level { get; } = level;
+    public string Text { get; } = text;
+    public string TimeText => Time.ToString("HH:mm:ss");
+    public string Line => $"{Time:yyyy-MM-dd HH:mm:ss} [{Level}] {Text}";
 }

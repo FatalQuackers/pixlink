@@ -7,7 +7,7 @@ namespace Pixlink.Pages;
 
 public sealed partial class LogsPage : Page
 {
-    public ObservableCollection<Log.Entry> Entries => Log.Entries;
+    public ObservableCollection<LogEntry> Entries => Log.Entries;
 
     public LogsPage() { InitializeComponent(); }
 

@@ -55,8 +55,12 @@ public partial class PhoneNotification : ObservableObject
 }
 
 /// <summary>A button from the phone notification (pressed on the phone when clicked on the PC).</summary>
-public sealed record NotifAction(string Key, int Index, string Title, string Semantic)
+public sealed class NotifAction(string key, int index, string title, string semantic)
 {
+    public string Key { get; } = key;
+    public int Index { get; } = index;
+    public string Title { get; } = title;
+    public string Semantic { get; } = semantic;
     public string Glyph => Semantic switch
     {
         "markAsRead" => "\uE8C3", "delete" => "\uE74D", "archive" => "\uE7B8", "mute" => "\uE74F",
@@ -67,12 +71,12 @@ public sealed record NotifAction(string Key, int Index, string Title, string Sem
 /// <summary>One message thread in the Messages tab, built from messaging notifications.</summary>
 public partial class Conversation : ObservableObject
 {
-    public required string Name { get; init; }
-    public required string App { get; init; }
-    public string AppName { get; init; } = "";
+    public string Name { get; set; } = "";
+    public string App { get; set; } = "";
+    public string AppName { get; set; } = "";
     /// <summary>Set for SMS threads read from the phone ("Texts"); replies go out as SMS.</summary>
-    public long? ThreadId { get; init; }
-    public string? Address { get; init; }
+    public long? ThreadId { get; set; }
+    public string? Address { get; set; }
 
     /// <summary>Remembered key for pinning/removing ("app|name").</summary>
     public string Id => $"{App}|{Name}";
@@ -93,8 +97,12 @@ public partial class Conversation : ObservableObject
     public string Initial => string.IsNullOrEmpty(Name) ? "?" : Name[..1].ToUpperInvariant();
 }
 
-public sealed record ChatBubble(string Text, bool FromMe, string Time, string Sender = "")
+public sealed class ChatBubble(string text, bool fromMe, string time, string sender = "")
 {
+    public string Text { get; } = text;
+    public bool FromMe { get; } = fromMe;
+    public string Time { get; } = time;
+    public string Sender { get; } = sender;
     public bool ShowSender => !FromMe && !string.IsNullOrEmpty(Sender);
     public Microsoft.UI.Xaml.Media.Brush BubbleBrush => (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources[
         FromMe ? "ControlAltFillColorTertiaryBrush" : "ControlFillColorDefaultBrush"];

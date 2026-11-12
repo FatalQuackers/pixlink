@@ -19,7 +19,7 @@ class ClipboardSendActivity : Activity() {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) return
         val msg = when {
-            LinkHub.connectedPcIds().isEmpty() -> "No PC connected"
+            LinkHub.connectedPcIds.isEmpty() -> "No PC connected"
             ClipboardSync.sendCurrent(this) -> "Sent to your PC"
             else -> "Nothing copied"
         }

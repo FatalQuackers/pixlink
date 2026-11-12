@@ -41,7 +41,7 @@ object ClipboardSync {
     }
 
     // "Your code is 123456", "G-123456 is your Google verification code", "OTP: 4821"…
-    private val keyword = Regex("""\b(code|otp|passcode|pin|verification|verify|one[- ]time|security|login|sign[- ]in|2fa|authenticat)""", RegexOptions.IGNORE_CASE)
+    private val keyword = Regex("""\b(code|otp|passcode|pin|verification|verify|one[- ]time|security|login|sign[- ]in|2fa|authenticat)""", RegexOption.IGNORE_CASE)
     private val candidate = Regex("""(?<![\d-])(?:[A-Z]-)?(\d{4,8}|\d{3}[- ]\d{3})(?![\d])""")
 
     fun findCode(text: String): String? {
