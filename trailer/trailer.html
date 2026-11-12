@@ -60,6 +60,18 @@ body{font-family:'Inter Display','Inter',sans-serif;color:var(--navy);-webkit-fo
 .photo{position:absolute;border-radius:8px}
 #cur{position:absolute;left:0;top:0;width:22px;height:28px;z-index:50;pointer-events:none}
 .ripple{position:absolute;border-radius:50%;background:rgba(61,123,255,.28)}
+
+body.hype #stage{background:#0E1735}
+body.hype #g1{background:radial-gradient(circle,rgba(61,123,255,.30),rgba(61,123,255,0) 65%)!important}
+body.hype #g2{background:radial-gradient(circle,rgba(37,87,214,.28),rgba(37,87,214,0) 65%)!important}
+body.hype .lapframe{box-shadow:0 0 0 2px rgba(255,255,255,.10),0 40px 90px -20px rgba(0,0,0,.6)}
+body.hype .phframe{box-shadow:0 0 0 2px rgba(255,255,255,.12),0 40px 90px -20px rgba(0,0,0,.6)}
+body.hype .lapbase{background:linear-gradient(#5A6680,#2A3350)}
+body.hype #eName{color:#fff} body.hype #eUrl{color:#B9C3DB}
+#hcard{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;z-index:30}
+#htext{font-family:'Inter Display','Inter',sans-serif;font-weight:800;letter-spacing:-0.045em;line-height:.95;text-align:center}
+#hflash{position:absolute;left:0;top:0;background:#fff;z-index:40;pointer-events:none}
+#hicon{position:absolute;z-index:31}
 </style></head>
 <body>
 <div id="stage"></div>
@@ -148,6 +160,9 @@ html+=`<div id="devs" class="a" style="left:0;top:0;width:${L.W}px;height:${L.H}
    <div class="a" style="left:${piW/2-6*pS}px;top:${12*pS}px;width:${12*pS}px;height:${12*pS}px;border-radius:50%;background:#0B0E16;z-index:9"></div></div>
  </div>
 </div></div>`;
+html+=`<div id="hcard" style="width:${L.W}px;height:${L.H}px;padding:0 ${L.W*0.06}px"><div id="htext" style="font-size:${L.tall?150:176}px"></div></div>
+<img id="hicon" src="icon.png" style="left:${L.W/2}px;top:${L.H/2}px;width:${L.tall?360:300}px;height:${L.tall?360:300}px;border-radius:${L.tall?83:69}px;box-shadow:0 0 120px rgba(61,123,255,.6)">
+<div id="hflash" style="width:${L.W}px;height:${L.H}px;opacity:0"></div>`;
 stage.innerHTML=html;
 
 // ---------- laptop internals ----------
@@ -315,7 +330,7 @@ function rise(el,v,d=24){op(el,v);(typeof el==='string'?[$(el.slice(1))]:[el])[0
 function ripple(el,t,t0,x,y,size){const k=cl((t-t0)/0.45);const s=lerp(0.2,1.6,eout(k));st(el,{left:(x-size/2)+'px',top:(y-size/2)+'px',transform:`scale(${s})`});op(el,k>0&&k<1?(1-k)*0.9:0);}
 
 const T_END=59;
-function render(t){
+function renderBase(t){
  // background drift
  st('#g1',{left:(L.W*-0.25+Math.sin(t*0.12)*80)+'px',top:(L.H*-0.35+Math.cos(t*0.1)*60)+'px'});
  st('#g2',{left:(L.W*0.45+Math.cos(t*0.09)*90)+'px',top:(L.H*0.35+Math.sin(t*0.11)*70)+'px'});
@@ -459,6 +474,68 @@ function render(t){
  rise('#eUrl',P(t,55.5,56.1,eout),20);
  op('#end',t>=54?1:0);
 }
+
+// ================= HYPE CUT =================
+const HB=60/128;
+const cardStyles=[['#3D7BFF','#fff'],['#F6F8FD','#16213A'],['#C9F0DE','#16213A'],['#16213A','#fff']];
+const lapPt=(x,y)=>[L.lap.x+lb+x*lS,L.lap.y+lb+y*lS];
+const phPt=(x,y)=>[L.ph.x+pb+x*pS,L.ph.y+pb+y*pS];
+const both=()=>{const a=lapPt(500,312),b=phPt(150,320);return L.tall?[L.W/2,(L.lap.y+L.ph.y+pfH)/2]:[(L.lap.x+L.ph.x+L.ph.w)/2,(a[1]+b[1])/2]};
+const HC=[]; // timeline
+let ci=0;
+const card=(b0,b1,text,sty)=>HC.push({t0:b0*HB,t1:b1*HB,type:'card',text,sty:sty??(ci++%4)});
+const shot=(b0,b1,src,speed,f,z)=>HC.push({t0:b0*HB,t1:b1*HB,type:'shot',src,speed,f,z});
+card(0,2,'Your Pixel.',3);card(2,4,'Your PC.',3);card(4,6,'Linked.',0);
+HC.push({t0:6*HB,t1:8*HB,type:'icon'});
+const feats=[['Link in seconds.',10.0,1.6,()=>both(),0.95],['Every PC.',13.4,1.2,()=>phPt(150,210),1.9],['Reply from your PC.',19.2,2.8,()=>lapPt(620,330),1.6],
+ ['Your screen. Live.',26.6,3.0,()=>lapPt(620,300),1.8],['One-click hotspot.',33.3,1.7,()=>lapPt(430,300),1.25],['Take calls.',39.6,1.45,()=>lapPt(800,470),2.1],['Files, both ways.',45.8,2.0,()=>both(),0.95]];
+feats.forEach((f,i)=>{const b=8+i*4;card(b,b+1,f[0]);shot(b+1,b+4,f[1],f[2],f[3],f[4]);});
+['Free.','Open source.','No account.','Encrypted.','No ads.','Pixel ready.'].forEach((w,i)=>card(36+i,37+i,w));
+HC.push({t0:42*HB,t1:44*HB,type:'icon'});
+[[12.2,()=>lapPt(500,300),1.3],[14.9,()=>phPt(150,210),2.0],[23.2,()=>lapPt(620,330),1.7],[29.5,()=>phPt(150,320),1.5],[35.7,()=>lapPt(500,250),1.6],[41.5,()=>phPt(150,300),1.6],[48.5,()=>phPt(150,90),2.2],[31.3,()=>lapPt(620,280),2.0]]
+ .forEach((m,i)=>shot(44+i,45+i,m[0],1.0,m[1],m[2]));
+const H_END_B=52, H_DUR=29;
+HC.push({t0:H_END_B*HB,t1:H_DUR,type:'end'});
+
+function renderHype(t){
+ document.body.classList.add('hype');
+ const c=HC.find(x=>t>=x.t0&&t<x.t1)||HC[HC.length-1];
+ const k=t-c.t0, len=c.t1-c.t0;
+ const hide=()=>{caps.forEach((_,i)=>op('#cap'+i,0));['#t1','#t2','#t3','#tsub','#v1','#v2','#v3'].forEach(id=>op(id,0));};
+ const hc=$('hcard'),ht=$('htext'),hi=$('hicon');
+ op(hc,0);op(hi,0);
+ if(c.type==='shot'){
+  renderBase(c.src+k*c.speed);hide();op('#end',0);
+  const devs=$('devs');op(devs,1);devs.style.transformOrigin='0 0';
+  const [fx,fy]=c.f();const idx=HC.indexOf(c);
+  const z=c.z*(1+0.10*Math.exp(-k*14))*(1+0.05*k/len);
+  const whip=(idx%2?1:-1)*L.W*0.22*Math.exp(-k*22);
+  const shake=Math.exp(-k*18)*6*Math.sin(t*90);
+  devs.style.transform=`translate(${L.W/2-fx*z+whip+shake}px,${L.H/2-fy*z+shake*0.6}px) scale(${z}) rotate(${(idx%2?1:-1)*1.2*Math.exp(-k*16)}deg)`;
+  op('#hflash',0.35*Math.exp(-k*25));
+ } else if(c.type==='end'){
+  renderBase(54.25+k);hide();op('#devs',0);
+  const s=1+0.12*Math.exp(-k*10);st('#end',{transform:`scale(${s})`,transformOrigin:'50% 30%'});
+  op('#hflash',0.8*Math.exp(-k*12));
+ } else {
+  renderBase(4.9);hide();op('#devs',0);op('#end',0);
+  op(hc,1);
+  if(c.type==='card'){
+   const [bg,fg]=cardStyles[c.sty];hc.style.background=bg;ht.style.color=fg;ht.textContent=c.text;
+   const sl=eout(cl(k/0.11));
+   ht.style.transform=`scale(${lerp(1.35,1,sl)*(1+0.04*k/len)}) translateY(${Math.exp(-k*30)*-8}px)`;ht.style.opacity=sl;
+   op('#hflash',0.25*Math.exp(-k*30));
+  } else { // icon build
+   hc.style.background='#0E1735';ht.textContent='';op(hi,1);
+   const pulse=1+0.08*Math.exp(-((k%(HB/2))*18));
+   const g=lerp(0.55,1.0,eio(cl(k/len)));
+   hi.style.transform=`translate(-50%,-50%) scale(${g*pulse}) rotate(${lerp(-8,0,eout(cl(k/len)))}deg)`;
+   op('#hflash',0);
+  }
+ }
+}
+function render(t){ if(Q.get('m')==='hype') renderHype(t); else renderBase(t); }
+
 window.render=render;window.T_END=T_END;
 render(parseFloat(Q.get('t')||'0'));
 </script>
