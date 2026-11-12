@@ -28,6 +28,8 @@ Website: https://fatalquackers.github.io/pixlink/
 | Send to PC | Share text, links, photos and files from any app to your PC | — |
 | Battery | Low battery alert on your PC | — |
 
+**Connections:** Wi-Fi, Bluetooth or both (Wi-Fi first, Bluetooth when there's no shared Wi-Fi). Pick in the phone's Pixlink settings → **Connect using**; screen sharing needs Wi-Fi.
+
 **Linking** takes seconds: scan the QR code or type the 5-digit code shown on your PC. One phone can link to **several PCs** (say, a work laptop and a home PC); it stays connected to all of them at once. Tap **Link another PC** on the phone's home screen.
 
 **Power mode** uses [Shizuku](https://shizuku.rikka.app/) and a one-time Wireless Debugging pairing. It's optional. See [docs/POWER_MODE.md](docs/POWER_MODE.md).

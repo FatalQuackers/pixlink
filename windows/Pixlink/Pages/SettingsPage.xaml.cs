@@ -186,6 +186,7 @@ public sealed partial class SettingsPage : Page
         AutoClipSwitch.IsOn = st.AutoClipboard;
         CodesSwitch.IsOn = st.CopyCodes;
         StopHiddenSwitch.IsOn = st.StopMirrorWhenHidden;
+        BluetoothSwitch.IsOn = st.AllowBluetooth;
         QuickActionsHint.Text = string.Join(", ", st.QuickActions
             .Select(id => Pixlink.Models.QuickActionItem.Catalog.FirstOrDefault(c => c.Id == id).Name)
             .Where(n => n is not null));
@@ -203,6 +204,12 @@ public sealed partial class SettingsPage : Page
         st.StopMirrorWhenHidden = StopHiddenSwitch.IsOn;
         st.Save();
         App.Window?.RefreshLayout();
+    }
+
+    private async void OnBluetoothToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loadingLayout) return;
+        await App.Session.SetAllowBluetoothAsync(BluetoothSwitch.IsOn);
     }
 
     private async void OnChooseQuickActions(object sender, RoutedEventArgs e)
@@ -236,6 +243,8 @@ public sealed partial class SettingsPage : Page
     }
 
     private void OnViewLogs(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(LogsPage));
+
+    private void OnOpenUpdates(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UpdatesPage));
 
     private void OnRunSetup(object sender, RoutedEventArgs e)
     {

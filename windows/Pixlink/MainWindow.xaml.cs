@@ -179,23 +179,80 @@ public sealed partial class MainWindow : Window
         // Don't cut off a call or a screen-mirroring session; check again every minute.
         while (Busy) await Task.Delay(TimeSpan.FromMinutes(1));
         _update = update;
-        UpdateBar.Title = "Updating Pixlink";
-        UpdateBar.IsOpen = true;
-        UpdateNowButton.Visibility = Visibility.Collapsed;
+        if (!await RunUpdateAsync(update, automatic: true)) ShowUpdate(update);
+    }
+
+    // ---------- Updating screen ----------
+    /// <summary>Shows the updating screen and installs. Returns false if it failed (Pixlink restarts on success).</summary>
+    public async Task<bool> RunUpdateAsync(Updater.Update update, bool automatic = false)
+    {
+        UpdateVersions.Text = $"{Updater.Current}  →  {update.Version}";
+        UpdatePercent.Text = "0%";
+        UpdateRing.Value = 0;
+        UpdateNote.Text = "Pixlink restarts by itself when it's done. Your phone reconnects automatically.";
+        UpdateCancel.Visibility = Visibility.Collapsed;
+        SetUpdateStage(Updater.Stage.Downloading);
+        UpdatingOverlay.Visibility = Visibility.Visible;
+        if (Ui.AnimationsEnabled)
+        {
+            ((Microsoft.UI.Xaml.Media.Animation.Storyboard)UpdatingOverlay.Resources["UpdatingIn"]).Begin();
+            ((Microsoft.UI.Xaml.Media.Animation.Storyboard)UpdatingOverlay.Resources["UpdatingLoop"]).Begin();
+        }
+        if (automatic && IsHidden) Toasts.ShowSimple("Updating Pixlink", $"Installing {update.Version}. It restarts by itself in a moment.");
         try
         {
-            var progress = new Progress<double>(p => UpdateBar.Message = $"Installing Pixlink {update.Version}… {p:P0}. Pixlink will restart by itself.");
-            await Updater.InstallAsync(update, progress); // closes and restarts Pixlink
+            var progress = new Progress<double>(p =>
+            {
+                UpdateRing.Value = p * 100;
+                UpdatePercent.Text = $"{p:P0}";
+            });
+            await Updater.InstallAsync(update, progress, stage => DispatcherQueue.TryEnqueue(() => SetUpdateStage(stage)));
+            return true; // not reached: Pixlink exits to restart
         }
         catch (Exception ex)
         {
-            // Fall back to the manual button if the automatic install fails (for example, no write access to the folder).
-            Crash.Log(ex, "Automatic update");
-            UpdateBar.Title = "Update available";
-            UpdateNowButton.Visibility = Visibility.Visible;
-            ShowUpdate(update);
+            Crash.Log(ex, automatic ? "Automatic update" : "Update");
+            UpdatePercent.Text = "Didn't finish";
+            UpdateNote.Text = $"The update couldn't install ({ex.Message}). Pixlink keeps working; try again from Settings → Updates, or download it from GitHub.";
+            UpdateCancel.Visibility = Visibility.Visible;
+            return false;
         }
     }
+
+    private void SetUpdateStage(Updater.Stage stage)
+    {
+        void Paint(Border chip, FontIcon icon, string glyph, int order)
+        {
+            var current = (int)stage;
+            var done = order < current;
+            var active = order == current;
+            chip.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[active ? "AccentFillColorDefaultBrush" : done ? "SystemFillColorSuccessBackgroundBrush" : "ControlFillColorDefaultBrush"];
+            chip.RequestedTheme = active ? ElementTheme.Dark : ElementTheme.Default;
+            icon.Glyph = done ? "\uE73E" : glyph;
+        }
+        Paint(StepDownload, StepDownloadIcon, "\uE896", 0);
+        Paint(StepInstall, StepInstallIcon, "\uE912", 1);
+        Paint(StepRestart, StepRestartIcon, "\uE777", 2);
+        if (stage == Updater.Stage.Installing) { UpdateRing.IsIndeterminate = true; UpdatePercent.Text = "Installing…"; }
+        if (stage == Updater.Stage.Restarting) { UpdateRing.IsIndeterminate = false; UpdateRing.Value = 100; UpdatePercent.Text = "Restarting…"; }
+        if (stage == Updater.Stage.Downloading) UpdateRing.IsIndeterminate = false;
+    }
+
+    private void OnHideUpdating(object sender, RoutedEventArgs e)
+    {
+        UpdatingOverlay.Visibility = Visibility.Collapsed;
+        ((Microsoft.UI.Xaml.Media.Animation.Storyboard)UpdatingOverlay.Resources["UpdatingLoop"]).Stop();
+    }
+
+    private void OnWhatsNew(object sender, RoutedEventArgs e) => ShowUpdatesPage();
+
+    public void ShowUpdatesPage()
+    {
+        SelectTab("Settings");
+        ContentFrame.Navigate(typeof(UpdatesPage));
+    }
+
+    public Updater.Update? PendingUpdate => _update;
 
     public void ShowUpdate(Updater.Update update)
     {
@@ -207,19 +264,8 @@ public sealed partial class MainWindow : Window
     private async void OnUpdateNow(object sender, RoutedEventArgs e)
     {
         if (_update is null) return;
-        UpdateNowButton.IsEnabled = false;
-        try
-        {
-            var progress = new Progress<double>(p => UpdateBar.Message = $"Downloading Pixlink {_update.Version}… {p:P0}");
-            await Updater.InstallAsync(_update, progress); // closes and restarts Pixlink
-        }
-        catch (Exception ex)
-        {
-            Crash.Log(ex);
-            UpdateBar.Severity = InfoBarSeverity.Error;
-            UpdateBar.Message = $"Update failed: {ex.Message}. You can download it from GitHub instead.";
-            UpdateNowButton.IsEnabled = true;
-        }
+        UpdateBar.IsOpen = false;
+        await RunUpdateAsync(_update);
     }
 
     private async void ShowLinkedAnimation()
@@ -478,6 +524,7 @@ public sealed partial class MainWindow : Window
     {
         BringToFront();
         await Session.OpenNotificationAsync(key);
+        if (Session.OnBluetooth) { ShowHotspot(InfoBarSeverity.Informational, "Opened on your phone. Showing its screen here needs Wi-Fi."); return; }
         if (Session.Mirror.IsStreaming) { SelectTab("Screen"); return; }
         SelectTab("Screen", "starting");
         var s = Session.Settings;

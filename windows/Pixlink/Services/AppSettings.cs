@@ -40,6 +40,9 @@ public sealed class AppSettings
     public bool SetupDone { get; set; }
     public List<string> PinnedNotificationApps { get; set; } = new();
 
+    // Connections
+    public bool AllowBluetooth { get; set; } = true;
+
     // Clipboard
     public bool AutoClipboard { get; set; } = true;
     public bool CopyCodes { get; set; } = true;

@@ -40,10 +40,16 @@ public sealed class LinkServer
         }
     }
 
-    private async Task HandleAsync(TcpClient tcp, CancellationToken ct)
+    private Task HandleAsync(TcpClient tcp, CancellationToken ct) => AcceptAsync(tcp.GetStream(), tcp, "wifi", ct);
+
+    /// <summary>
+    /// The same TLS handshake and certificate pinning for every route (Wi-Fi or Bluetooth),
+    /// so a Bluetooth connection is exactly as private as a Wi-Fi one.
+    /// </summary>
+    public async Task AcceptAsync(Stream transport, IDisposable owner, string via, CancellationToken ct)
     {
         string? phoneFp = null;
-        var ssl = new SslStream(tcp.GetStream(), false, (_, cert, _, _) =>
+        var ssl = new SslStream(transport, false, (_, cert, _, _) =>
         {
             if (cert is null) return false;
             phoneFp = Certificates.Fingerprint(cert);
@@ -63,11 +69,11 @@ public sealed class LinkServer
         }
         catch (Exception)
         {
-            tcp.Dispose();
+            owner.Dispose();
             return;
         }
 
-        var conn = new PhoneConnection(tcp, ssl, phoneFp!);
+        var conn = new PhoneConnection(owner, ssl, phoneFp!, via);
         Connected?.Invoke(conn);
         await conn.ReadLoopAsync(ct);
     }
@@ -94,19 +100,22 @@ public sealed class LinkServer
 /// <summary>One live connection from the phone.</summary>
 public sealed class PhoneConnection : IDisposable
 {
-    private readonly TcpClient _tcp;
+    private readonly IDisposable _transport;
     private readonly SslStream _ssl;
     private readonly StreamWriter _writer;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
 
     public string PhoneFingerprint { get; }
+    /// <summary>"wifi" or "bluetooth".</summary>
+    public string Via { get; }
     public event Action<Envelope>? MessageReceived;
     public event Action? Closed;
 
-    public PhoneConnection(TcpClient tcp, SslStream ssl, string fingerprint)
+    public PhoneConnection(IDisposable transport, SslStream ssl, string fingerprint, string via = "wifi")
     {
-        _tcp = tcp;
+        _transport = transport;
         _ssl = ssl;
+        Via = via;
         PhoneFingerprint = fingerprint;
         _writer = new StreamWriter(ssl, new UTF8Encoding(false)) { AutoFlush = true, NewLine = "\n" };
     }
@@ -142,6 +151,6 @@ public sealed class PhoneConnection : IDisposable
     public void Dispose()
     {
         try { _ssl.Dispose(); } catch { }
-        try { _tcp.Dispose(); } catch { }
+        try { _transport.Dispose(); } catch { }
     }
 }

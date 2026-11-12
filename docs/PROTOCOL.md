@@ -10,6 +10,12 @@ The Windows app is the **server**; the Pixel is the **client**.
 
 Discovery after pairing: the PC broadcasts `{"pixlink":1,"pcId":"…","port":47100}` over UDP to port **47102** on every local network every 3 seconds. The phone remembers the last IP; if the paired PC shows up at a new address (new Wi-Fi, or the PC joined the phone's hotspot) it switches to it and reconnects.
 
+## Bluetooth
+
+The PC also advertises an RFCOMM service (UUID `6f3c1e9a-2b7d-4c5e-9a1f-8d2b3c4e5f60`) when "Allow Bluetooth connections" is on. After `hello`, the PC sends `pc.info {bt, bluetooth}` with its Bluetooth address; the phone stores it with the pairing.
+
+The phone's **Connect using** setting picks the route: `auto` (Wi-Fi first, Bluetooth if the PC can't be reached; switches back to Wi-Fi when the PC's beacon is seen again), `wifi` or `bluetooth`. Over Bluetooth the phone bridges the RFCOMM socket to a one-time loopback port and runs the normal TLS client through it, so the encryption and certificate pinning are identical to Wi-Fi. `hello` carries `via: "wifi" | "bluetooth"`. Screen mirroring (port 47101) needs Wi-Fi.
+
 ## Several PCs
 
 A phone can be paired with any number of PCs. It keeps one control connection per PC and remembers each PC's host, port, fingerprint and name. Notifications, battery, media and other phone → PC events go to every connected PC; replies to a request go only to the PC that asked. Screen mirroring streams to the PC that asked for it.

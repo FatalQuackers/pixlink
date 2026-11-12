@@ -104,7 +104,9 @@ fun HomeScreen(
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     dialog?.let { SpecialAccessDialog(it, ctx) { dialog = null } }
+    val updating by AppUpdater.status.collectAsState()
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
@@ -171,6 +173,8 @@ fun HomeScreen(
                 }
             }
         }
+    }
+    UpdatingScreen(updating)
     }
 }
 
@@ -273,7 +277,7 @@ private fun PcCard(pc: PairedPc, state: LinkState?, onPair: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     var confirmForget by remember { mutableStateOf(false) }
     val (dot, label) = when (state) {
-        is LinkState.Connected -> Green to "Connected"
+        is LinkState.Connected -> Green to (if (state.viaBluetooth) "Connected over Bluetooth" else "Connected")
         is LinkState.Connecting -> Amber to "Connecting…"
         is LinkState.Error -> MaterialTheme.colorScheme.error to state.message
         else -> MaterialTheme.colorScheme.outline to "Not connected"

@@ -108,6 +108,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
 
             Section("Your PC can")
             SwitchRow("Ring this phone", "Find it at full volume, even on silent", ring) { ring = it; store.allowRing = it }
+            ConnectViaRow(store)
             SwitchRow("Let my PC copy to this phone", "Copy on your PC, paste here", clip) { clip = it; store.allowClipboard = it }
             var codes by remember { mutableStateOf(store.sendCodes) }
             SwitchRow("Copy sign-in codes to my PC", "Verification codes from your texts and apps, ready to paste", codes) { codes = it; store.sendCodes = it }
@@ -207,4 +208,31 @@ private fun SwitchRow(title: String, subtitle: String?, checked: Boolean, onChan
         trailingContent = { Switch(checked, onChange) },
         modifier = Modifier.clickable { onChange(!checked) },
     )
+}
+
+
+/** Wi-Fi, Bluetooth, or both (Wi-Fi first, Bluetooth when there's no shared Wi-Fi). */
+@OptIn(ExperimentalMaterial3Api::class)
+@androidx.compose.runtime.Composable
+private fun ConnectViaRow(store: app.pixlink.pairing.PairedStore) {
+    var via by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(store.connectVia) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        androidx.compose.material3.Text("Connect using", style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+        androidx.compose.material3.Text(
+            "Bluetooth works without shared Wi-Fi, but screen sharing needs Wi-Fi. Pair this phone with your PC in Bluetooth settings first.",
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        androidx.compose.material3.SingleChoiceSegmentedButtonRow(androidx.compose.ui.Modifier.fillMaxWidth().padding(top = 10.dp)) {
+            val options = listOf("auto" to "Both", "wifi" to "Wi-Fi", "bluetooth" to "Bluetooth")
+            options.forEachIndexed { i, (key, label) ->
+                androidx.compose.material3.SegmentedButton(
+                    selected = via == key,
+                    onClick = { via = key; store.connectVia = key; app.pixlink.link.LinkService.start(ctx) },
+                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(i, options.size),
+                ) { androidx.compose.material3.Text(label) }
+            }
+        }
+    }
 }

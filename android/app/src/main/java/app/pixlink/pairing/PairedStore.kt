@@ -17,6 +17,8 @@ data class PairedPc(
     val fingerprint: String,
     val name: String,
     val id: String,
+    /** The PC's Bluetooth address, if it allows Bluetooth connections. */
+    val bt: String? = null,
 )
 
 /** Small key-value store for pairing and user settings. */
@@ -52,6 +54,16 @@ class PairedStore(context: Context) {
     fun updateHost(id: String, host: String) {
         pcs = pcs.map { if (it.id == id) it.copy(host = host) else it }
     }
+
+    fun updateBluetooth(id: String, address: String?) {
+        if (pc(id)?.bt == address) return
+        pcs = pcs.map { if (it.id == id) it.copy(bt = address) else it }
+    }
+
+    /** How to reach the PCs: "auto" (Wi-Fi, then Bluetooth), "wifi" or "bluetooth". */
+    var connectVia: String
+        get() = prefs.getString("connectVia", "auto") ?: "auto"
+        set(v) = prefs.edit { putString("connectVia", v) }
 
     /** Earlier versions stored one PC in separate keys; move it into the list. */
     private fun migrateSinglePc() {

@@ -90,7 +90,7 @@ public partial class PhoneSession : ObservableObject
     {
         LinkPhase.NotPaired => "Not paired",
         LinkPhase.Connecting => "Connecting…",
-        LinkPhase.Connected => "Connected",
+        LinkPhase.Connected => OnBluetooth ? "Connected · Bluetooth" : "Connected",
         LinkPhase.Reconnecting => "Reconnecting…",
         _ => "Disconnected",
     };
@@ -157,10 +157,33 @@ public partial class PhoneSession : ObservableObject
 
         var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => PairingOpen);
         server.Connected += OnConnected;
+        _bluetooth = new BluetoothLinkServer(server);
+        if (_settings.AllowBluetooth) _ = _bluetooth.StartAsync(_cts.Token);
         _ = Mirror.RunAsync(_cts.Token);
         _ = Beacon.RunAsync(BeaconPayload, _cts.Token);
         try { await server.RunAsync(_cts.Token); }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Server stopped: {ex}"); }
+    }
+
+    // ---------- Bluetooth ----------
+    private BluetoothLinkServer? _bluetooth;
+
+    /// <summary>"Wi-Fi" or "Bluetooth": how the phone is connected right now.</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(StatusText), nameof(OnBluetooth))] private string _connectedVia = "Wi-Fi";
+    public bool OnBluetooth => ConnectedVia == "Bluetooth";
+
+    public async Task SetAllowBluetoothAsync(bool on)
+    {
+        _settings.AllowBluetooth = on;
+        _settings.Save();
+        if (on) await _bluetooth!.StartAsync(_cts.Token); else _bluetooth?.Dispose();
+    }
+
+    /// <summary>Tells the phone this PC's Bluetooth address, so it can fall back to Bluetooth later.</summary>
+    private async Task SendPcInfoAsync()
+    {
+        var bt = _settings.AllowBluetooth ? await BluetoothLinkServer.AddressAsync() : null;
+        await SendAsync(Envelope.Of("pc.info", new { bt, bluetooth = _settings.AllowBluetooth && bt is not null }));
     }
 
     // ---------- Pairing ----------
@@ -252,9 +275,11 @@ public partial class PhoneSession : ObservableObject
                 PhoneName = m.Str("phoneName") ?? PhoneName;
                 PowerMode = m.Bool("powerMode") ?? false;
                 CanControl = m.Bool("canControl") ?? PowerMode;
+                ConnectedVia = conn.Via == "bluetooth" ? "Bluetooth" : "Wi-Fi";
                 _connectedAt = DateTimeOffset.Now;
                 IsConnected = true;
-                Log.Info($"Connected to {PhoneName}");
+                Log.Info($"Connected to {PhoneName} over {ConnectedVia}");
+                _ = SendPcInfoAsync();
                 StartPing();
                 _ = SendAsync(Envelope.Of("notif.sync"));
                 _ = SendAsync(Envelope.Of("hotspot.get"));

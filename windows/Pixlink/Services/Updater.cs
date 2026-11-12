@@ -11,7 +11,10 @@ namespace Pixlink.Services;
 /// </summary>
 public static class Updater
 {
-    public sealed record Update(Version Version, string ZipUrl, string PageUrl);
+    public sealed record Update(Version Version, string ZipUrl, string PageUrl, string Notes = "", DateTimeOffset? Published = null);
+
+    /// <summary>The steps the updating screen shows.</summary>
+    public enum Stage { Downloading, Installing, Restarting }
 
     private const string Latest = "https://api.github.com/repos/FatalQuackers/pixlink/releases/latest";
     private static readonly HttpClient Http = CreateClient();
@@ -46,12 +49,42 @@ public static class Updater
             .Select(a => a!.AsObject())
             .FirstOrDefault(a => a["name"]?.GetValue<string>().EndsWith("windows-x64.zip") == true)?["browser_download_url"]?.GetValue<string>();
         if (zip is null || latest <= Current) return null;
-        return new Update(latest, zip, json["html_url"]!.GetValue<string>());
+        return new Update(latest, zip, json["html_url"]!.GetValue<string>(), Clean(json["body"]?.GetValue<string>()),
+            json["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()) : null);
+    }
+
+    /// <summary>Recent releases with their notes, newest first.</summary>
+    public static async Task<List<ReleaseInfo>> RecentReleasesAsync()
+    {
+        var arr = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/pixlink/releases?per_page=8"))!.AsArray();
+        var list = new List<ReleaseInfo>();
+        foreach (var r in arr.Select(x => x!.AsObject()))
+        {
+            if (r["draft"]?.GetValue<bool>() == true) continue;
+            var tag = r["tag_name"]!.GetValue<string>().TrimStart('v');
+            var date = r["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()).LocalDateTime.ToString("d MMMM yyyy") : "";
+            var isCurrent = Version.TryParse(tag, out var v) && new Version(v.Major, v.Minor, Math.Max(v.Build, 0)) == Current;
+            list.Add(new ReleaseInfo(tag, date, Clean(r["body"]?.GetValue<string>()), isCurrent));
+        }
+        return list;
+    }
+
+    /// <summary>Release notes as plain text: no Markdown symbols, bullets kept.</summary>
+    private static string Clean(string? md)
+    {
+        if (string.IsNullOrWhiteSpace(md)) return "Bug fixes and improvements.";
+        var lines = md.Replace("\r", "").Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0 && !l.StartsWith("<!--"))
+            .Select(l => l.StartsWith("- ") || l.StartsWith("* ") ? "•  " + l[2..] : l)
+            .Select(l => l.Replace("**", "").Replace("`", "").TrimStart('#', ' '));
+        return string.Join("\n", lines);
     }
 
     /// <summary>Downloads and installs the update, then closes Pixlink (it restarts by itself).</summary>
-    public static async Task InstallAsync(Update update, IProgress<double>? progress = null)
+    public static async Task InstallAsync(Update update, IProgress<double>? progress = null, Action<Stage>? stage = null)
     {
+        stage?.Invoke(Stage.Downloading);
         var work = Path.Combine(Path.GetTempPath(), "PixlinkUpdate");
         if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
         Directory.CreateDirectory(work);
@@ -74,7 +107,8 @@ public static class Updater
                 if (total > 0) progress?.Report((double)done / total);
             }
         }
-        ZipFile.ExtractToDirectory(zipPath, newDir);
+        stage?.Invoke(Stage.Installing);
+        await Task.Run(() => ZipFile.ExtractToDirectory(zipPath, newDir));
 
         var appDir = AppContext.BaseDirectory.TrimEnd('\\');
         var pid = Environment.ProcessId;
@@ -87,6 +121,8 @@ public static class Updater
             start "" "{appDir}\Pixlink.exe" --updated
             """);
 
+        stage?.Invoke(Stage.Restarting);
+        await Task.Delay(1200); // let the "Restarting" step show before Pixlink closes
         Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{script}\"")
         {
             CreateNoWindow = true,
@@ -95,4 +131,13 @@ public static class Updater
         });
         Environment.Exit(0);
     }
+}
+
+/// <summary>One release in the "What's new" history.</summary>
+public sealed class ReleaseInfo(string version, string date, string notes, bool isCurrent)
+{
+    public string Version { get; } = version;
+    public string Date { get; } = date;
+    public string Notes { get; } = notes;
+    public bool IsCurrent { get; } = isCurrent;
 }

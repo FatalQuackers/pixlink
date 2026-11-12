@@ -71,6 +71,11 @@ public sealed partial class ScreenPage : Page
 
     private async void OnStart(object sender, RoutedEventArgs e)
     {
+        if (Session.OnBluetooth)
+        {
+            StartHint.Text = "Screen sharing needs Wi-Fi: Bluetooth is too slow for video. Connect your phone and PC to the same Wi-Fi and try again.";
+            return;
+        }
         StartButton.IsEnabled = false;
         Waiting.IsActive = true;
         StartHint.Text = Session.PowerMode

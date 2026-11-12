@@ -10,7 +10,7 @@ sealed interface LinkState {
     data object NotPaired : LinkState
     data object Disconnected : LinkState
     data class Connecting(val pcName: String) : LinkState
-    data class Connected(val pcName: String) : LinkState
+    data class Connected(val pcName: String, val viaBluetooth: Boolean = false) : LinkState
     data class Error(val message: String) : LinkState
 }
 

@@ -54,6 +54,19 @@
                 </Grid>
             </Border>
 
+            <!-- Connections -->
+            <TextBlock Text="Connections" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Allow Bluetooth connections" />
+                        <TextBlock Style="{StaticResource Hint}" Text="Your phone can connect over Bluetooth when there's no shared Wi-Fi. Choose Wi-Fi, Bluetooth or both in the phone's Pixlink settings. Pair the phone with this PC in Windows Bluetooth settings first. Screen sharing needs Wi-Fi." />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="BluetoothSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnBluetoothToggled" />
+                </Grid>
+            </Border>
+
             <!-- Clipboard -->
             <TextBlock Text="Clipboard" Style="{StaticResource Section}" />
             <Border Style="{StaticResource Row}">
@@ -248,7 +261,10 @@
                             <TextBlock x:Name="VersionText" />
                             <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Pixlink checks for updates when it starts and every 6 hours." />
                         </StackPanel>
-                        <Button x:Name="CheckButton" Content="Check for updates" HorizontalAlignment="Right" Click="OnCheckUpdates" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button x:Name="CheckButton" Content="Check for updates" Click="OnCheckUpdates" />
+                            <Button Content="Updates and what's new" Click="OnOpenUpdates" Style="{StaticResource AccentButtonStyle}" />
+                        </StackPanel>
                     </Grid>
                     <Grid>
                         <StackPanel Margin="0,0,80,0">

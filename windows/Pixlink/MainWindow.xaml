@@ -288,7 +288,10 @@
                 </Grid.RowDefinitions>
                 <InfoBar x:Name="UpdateBar" IsOpen="False" Severity="Informational" Title="Update available" Margin="0,0,0,8">
                     <InfoBar.ActionButton>
-                        <Button x:Name="UpdateNowButton" Content="Update now" Click="OnUpdateNow" Style="{StaticResource AccentButtonStyle}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="UpdateNowButton" Content="Update now" Click="OnUpdateNow" Style="{StaticResource AccentButtonStyle}" />
+                            <Button Content="What's new" Click="OnWhatsNew" />
+                        </StackPanel>
                     </InfoBar.ActionButton>
                 </InfoBar>
                 <InfoBar x:Name="ConnectionBar" Grid.Row="1" IsOpen="False" IsClosable="True" Margin="0,0,0,8" />
@@ -358,6 +361,86 @@
 
         <!-- Not paired: pairing screen fills the window -->
         <Frame x:Name="PairingFrame" Grid.Row="1" Visibility="{x:Bind local:Ui.Collapsed(Session.IsPaired), Mode=OneWay}" />
+
+        <!-- Updating: full-window screen with progress, steps and a bit of motion -->
+        <Grid x:Name="UpdatingOverlay" Grid.RowSpan="2" Visibility="Collapsed" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Grid.Resources>
+                <Storyboard x:Key="UpdatingLoop">
+                    <DoubleAnimation Storyboard.TargetName="BlobA" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" From="-160" To="160" Duration="0:0:9" AutoReverse="True" RepeatBehavior="Forever">
+                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="BlobB" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" From="120" To="-120" Duration="0:0:11" AutoReverse="True" RepeatBehavior="Forever">
+                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="GlowScale" Storyboard.TargetProperty="ScaleX" From="0.9" To="1.18" Duration="0:0:1.4" AutoReverse="True" RepeatBehavior="Forever">
+                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="GlowScale" Storyboard.TargetProperty="ScaleY" From="0.9" To="1.18" Duration="0:0:1.4" AutoReverse="True" RepeatBehavior="Forever">
+                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" From="0.35" To="0.7" Duration="0:0:1.4" AutoReverse="True" RepeatBehavior="Forever" />
+                    <DoubleAnimation Storyboard.TargetName="UpdateLogoMove" Storyboard.TargetProperty="Y" From="-5" To="5" Duration="0:0:1.8" AutoReverse="True" RepeatBehavior="Forever">
+                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="OrbitSpin" Storyboard.TargetProperty="Angle" From="0" To="360" Duration="0:0:6" RepeatBehavior="Forever" />
+                </Storyboard>
+                <Storyboard x:Key="UpdatingIn">
+                    <DoubleAnimation Storyboard.TargetName="UpdatingOverlay" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35" />
+                    <DoubleAnimation Storyboard.TargetName="UpdatingCardScale" Storyboard.TargetProperty="ScaleX" From="0.85" To="1" Duration="0:0:0.5">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.35" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="UpdatingCardScale" Storyboard.TargetProperty="ScaleY" From="0.85" To="1" Duration="0:0:0.5">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.35" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </Grid.Resources>
+            <Ellipse x:Name="BlobA" Width="620" Height="620" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-120,-160,0,0">
+                <Ellipse.RenderTransform><TranslateTransform /></Ellipse.RenderTransform>
+                <Ellipse.Fill>
+                    <RadialGradientBrush><GradientStop Color="#553D7BFF" Offset="0" /><GradientStop Color="#003D7BFF" Offset="1" /></RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse x:Name="BlobB" Width="560" Height="560" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-100,-140">
+                <Ellipse.RenderTransform><TranslateTransform /></Ellipse.RenderTransform>
+                <Ellipse.Fill>
+                    <RadialGradientBrush><GradientStop Color="#5532C48D" Offset="0" /><GradientStop Color="#0032C48D" Offset="1" /></RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20" RenderTransformOrigin="0.5,0.5">
+                <StackPanel.RenderTransform><ScaleTransform x:Name="UpdatingCardScale" /></StackPanel.RenderTransform>
+                <Grid Width="200" Height="200" HorizontalAlignment="Center">
+                    <Ellipse x:Name="Glow" Width="150" Height="150" RenderTransformOrigin="0.5,0.5" Opacity="0.5">
+                        <Ellipse.RenderTransform><ScaleTransform x:Name="GlowScale" /></Ellipse.RenderTransform>
+                        <Ellipse.Fill>
+                            <RadialGradientBrush><GradientStop Color="#AA3D7BFF" Offset="0" /><GradientStop Color="#003D7BFF" Offset="1" /></RadialGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <ProgressRing x:Name="UpdateRing" Width="196" Height="196" IsIndeterminate="False" Maximum="100" Value="0" />
+                    <!-- A small dot orbiting the ring -->
+                    <Grid Width="196" Height="196" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform><RotateTransform x:Name="OrbitSpin" /></Grid.RenderTransform>
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource PixlinkBlueBrush}" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,-14,0,0" />
+                    </Grid>
+                    <Image Source="Assets/icon-512.png" Width="92" Height="92">
+                        <Image.RenderTransform><TranslateTransform x:Name="UpdateLogoMove" /></Image.RenderTransform>
+                    </Image>
+                </Grid>
+                <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <TextBlock Text="Updating Pixlink" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="UpdateVersions" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+                <TextBlock x:Name="UpdatePercent" Text="0%" FontSize="44" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                    <Border x:Name="StepDownload" CornerRadius="16" Padding="14,8"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon x:Name="StepDownloadIcon" Glyph="&#xE896;" FontSize="14" /><TextBlock Text="Download" /></StackPanel></Border>
+                    <Border x:Name="StepInstall" CornerRadius="16" Padding="14,8"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon x:Name="StepInstallIcon" Glyph="&#xE912;" FontSize="14" /><TextBlock Text="Install" /></StackPanel></Border>
+                    <Border x:Name="StepRestart" CornerRadius="16" Padding="14,8"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon x:Name="StepRestartIcon" Glyph="&#xE777;" FontSize="14" /><TextBlock Text="Restart" /></StackPanel></Border>
+                </StackPanel>
+                <TextBlock x:Name="UpdateNote" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Text="Pixlink restarts by itself when it's done. Your phone reconnects automatically." />
+                <Button x:Name="UpdateCancel" Content="Hide" HorizontalAlignment="Center" Click="OnHideUpdating" Visibility="Collapsed" />
+            </StackPanel>
+        </Grid>
 
         <!-- Splash on start-up -->
         <Grid x:Name="Splash" Grid.RowSpan="2" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">

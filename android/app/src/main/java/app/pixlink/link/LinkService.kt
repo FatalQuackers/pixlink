@@ -124,29 +124,52 @@ class LinkService : LifecycleService() {
             val pc = store.pc(pcId) ?: return
             LinkHub.setState(pcId, LinkState.Connecting(pc.name))
 
-            lateinit var client: LinkClient
-            client = LinkClient(
-                pc.host, pc.port, pc.fingerprint,
-                onConnected = { c ->
-                    backoffMs = 1_000L
-                    LinkHub.attach(pcId, c)
-                    sendHello(c, pcId, pc.name)
-                },
-                onMessage = MessageRouter(this, store, pcId, out = { client.send(it) })::handle,
-            )
-            try {
-                client.run() // blocks until the connection ends
-                LinkHub.lastDisconnectReason[pcId] = client.closeReason ?: "Connection closed"
-            } catch (e: Exception) {
-                LinkHub.lastDisconnectReason[pcId] = describe(e, pc.name, pc.host, pc.port)
-                Log.w(TAG, "Connection to ${pc.name} failed: ${LinkHub.lastDisconnectReason[pcId]}")
-                if (e is javax.net.ssl.SSLHandshakeException) {
-                    LinkHub.setState(pcId, LinkState.Error("${pc.name} no longer recognises your phone. Pair again."))
+            // Routes to try, in order: Wi-Fi, then Bluetooth when Wi-Fi can't reach the PC.
+            val routes = when (store.connectVia) {
+                "wifi" -> listOf(false)
+                "bluetooth" -> listOf(true)
+                else -> listOf(false, true)
+            }.filter { !it || pc.bt != null }
+
+            for (bluetooth in routes) {
+                var connected = false
+                var tunnel: BluetoothTunnel? = null
+                lateinit var client: LinkClient
+                try {
+                    val (host, port) = if (bluetooth) {
+                        tunnel = BluetoothTunnel.open(this, pc.bt!!)
+                        "127.0.0.1" to tunnel.localPort
+                    } else pc.host to pc.port
+                    client = LinkClient(
+                        host, port, pc.fingerprint,
+                        onConnected = { c ->
+                            connected = true
+                            backoffMs = 1_000L
+                            LinkHub.attach(pcId, c)
+                            sendHello(c, pcId, pc.name, bluetooth)
+                        },
+                        onMessage = MessageRouter(this, store, pcId, out = { client.send(it) })::handle,
+                    )
+                    try {
+                        client.run() // blocks until the connection ends
+                        LinkHub.lastDisconnectReason[pcId] = client.closeReason ?: "Connection closed"
+                    } finally {
+                        client.close()
+                        LinkHub.detach(pcId, client)
+                        if (!LinkHub.isConnected) status.stop()
+                    }
+                } catch (e: Exception) {
+                    LinkHub.lastDisconnectReason[pcId] =
+                        if (bluetooth) "Bluetooth: ${e.message ?: "couldn't reach ${pc.name}"}" else describe(e, pc.name, pc.host, pc.port)
+                    Log.w(TAG, "Connection to ${pc.name} failed: ${LinkHub.lastDisconnectReason[pcId]}")
+                    if (e is javax.net.ssl.SSLHandshakeException) {
+                        LinkHub.setState(pcId, LinkState.Error("${pc.name} no longer recognises your phone. Pair again."))
+                    }
+                } finally {
+                    tunnel?.close()
                 }
-            } finally {
-                client.close()
-                LinkHub.detach(pcId, client)
-                if (!LinkHub.isConnected) status.stop()
+                // A session that actually connected ended normally: start again from Wi-Fi.
+                if (connected || LinkHub.states.value[pcId] is LinkState.Error) break
             }
 
             if (!currentCoroutineContext().isActive) return
@@ -156,15 +179,16 @@ class LinkService : LifecycleService() {
         }
     }
 
-    private fun sendHello(client: LinkClient, pcId: String, pcName: String) {
+    private fun sendHello(client: LinkClient, pcId: String, pcName: String, bluetooth: Boolean = false) {
         client.send(msg(MessageTypes.HELLO) {
+            put("via", if (bluetooth) "bluetooth" else "wifi")
             put("phoneName", store.displayName)
             put("model", Build.MODEL)
             put("appVersion", BuildConfig.VERSION_NAME)
             put("powerMode", PowerMode.isReady)
             put("canControl", PowerMode.isReady || app.pixlink.mirror.ControlService.isEnabled(this@LinkService))
         })
-        LinkHub.setState(pcId, LinkState.Connected(pcName))
+        LinkHub.setState(pcId, LinkState.Connected(pcName, bluetooth))
         status.start()
         status.resend() // the newly connected PC gets battery etc. straight away
     }
@@ -258,6 +282,13 @@ class LinkService : LifecycleService() {
                         Log.i(TAG, "${pc.name} moved to $host")
                         store.updateHost(id, host)
                         wakes[id]?.trySend(Unit)
+                    }
+                    // On Bluetooth but the PC is reachable over Wi-Fi again: switch to the faster link.
+                    val st = LinkHub.states.value[id]
+                    if (st is LinkState.Connected && st.viaBluetooth && store.connectVia == "auto") {
+                        Log.i(TAG, "${pc.name} is on Wi-Fi again: switching from Bluetooth")
+                        if (host != pc.host) store.updateHost(id, host)
+                        LinkHub.client(id)?.close()
                     }
                 }
             }
