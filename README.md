@@ -6,6 +6,10 @@ Website: https://fatalquackers.github.io/pixlink/
 
 > Pixlink is an independent open-source project. It is not made by, affiliated with, or endorsed by Google or Microsoft. "Pixel" is a trademark of Google LLC.
 
+[![Watch the Pixlink trailer](website/trailer-poster.jpg)](https://fatalquackers.github.io/pixlink/#trailer)
+
+**[Watch the 1-minute trailer](https://fatalquackers.github.io/pixlink/#trailer)**
+
 ## Features
 
 | Feature | Works for everyone | Power mode adds |

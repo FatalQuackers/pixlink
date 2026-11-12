@@ -1,0 +1,465 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Pixlink trailer</title>
+<style>
+:root{--navy:#16213A;--blue:#3D7BFF;--deep:#2557D6;--sky:#E8EEF8;--mint:#C9F0DE;--slate:#4A5675;--line:#CDD7EA;--green:#1E9E63;--red:#E5484D}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;background:#fff}
+body{font-family:'Inter Display','Inter',sans-serif;color:var(--navy);-webkit-font-smoothing:antialiased}
+.a{position:absolute}
+#stage{position:absolute;left:0;top:0;overflow:hidden;background:#F6F8FD}
+.glow{position:absolute;border-radius:50%}
+.title{position:absolute;left:0;width:100%;text-align:center;font-weight:700;letter-spacing:-0.035em;line-height:1.02}
+.cap{position:absolute;text-align:center;font-weight:650;letter-spacing:-0.025em;line-height:1.08}
+/* laptop */
+.lapframe{background:#1B2132;border-radius:22px 22px 8px 8px;box-shadow:0 40px 80px -30px rgba(22,33,58,.45)}
+.lapscreen{position:relative;overflow:hidden;border-radius:6px;background:#dfe8fb}
+.lapbase{background:linear-gradient(#E4E8F0,#B8C0CF);border-radius:2px 2px 18px 18px;box-shadow:0 18px 30px -18px rgba(22,33,58,.5)}
+.lapbase:after{content:'';position:absolute;left:42%;width:16%;height:35%;top:0;background:#C9D0DC;border-radius:0 0 10px 10px}
+.phframe{background:#141824;box-shadow:0 40px 80px -30px rgba(22,33,58,.5)}
+.phscreen{position:relative;overflow:hidden;background:#F7F9FF}
+/* laptop internals (1000x625) */
+#lin{position:absolute;left:0;top:0;width:1000px;height:625px;transform-origin:0 0;font-family:'Inter','Inter Display',sans-serif}
+.wall{position:absolute;inset:0;background:radial-gradient(circle at 20% 15%,#BBD2FF 0,transparent 45%),radial-gradient(circle at 85% 80%,#C9F0DE 0,transparent 40%),linear-gradient(135deg,#DCE7FF,#EEF3FF)}
+#win{position:absolute;left:40px;top:28px;width:920px;height:548px;background:#FBFCFE;border-radius:10px;box-shadow:0 18px 40px -14px rgba(22,33,58,.35);overflow:hidden}
+.tbar{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12px;color:var(--slate);border-bottom:1px solid #EDF0F6}
+.tbar img{width:16px;height:16px;border-radius:4px}
+.tbar .dots{margin-left:auto;display:flex;gap:18px;color:#8A93A8;font-size:13px}
+.layer{position:absolute}
+.side{left:0;top:34px;width:250px;height:514px;background:#F3F6FB;border-right:1px solid #E7EBF3}
+.tile{position:absolute;width:105px;height:58px;border-radius:10px;background:#E8EDF7;padding:9px 10px;font-size:11.5px;font-weight:600;color:var(--navy)}
+.tile i{display:block;width:16px;height:16px;border-radius:5px;background:#B9C6E2;margin-bottom:6px}
+.tabs{position:absolute;left:250px;top:34px;width:670px;height:44px;border-bottom:1px solid #EDF0F6;font-size:13px;font-weight:600;color:#7C86A0}
+.tabs span{position:absolute;top:14px}
+#tabLine{position:absolute;bottom:-1px;height:3px;border-radius:3px;background:var(--blue)}
+.panel{left:250px;top:78px;width:670px;height:470px}
+.h{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.card{position:absolute;left:24px;width:622px;background:#fff;border:1px solid #E7EBF3;border-radius:12px;box-shadow:0 2px 6px rgba(22,33,58,.05);overflow:hidden}
+.av{position:absolute;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px}
+.meta{font-size:11px;color:#7C86A0}
+.ct{font-size:14px;font-weight:700}
+.cx{font-size:13px;color:#33405E}
+.bub{position:absolute;padding:8px 13px;border-radius:14px;font-size:13px;max-width:330px;white-space:nowrap}
+.btn{position:absolute;height:32px;border-radius:16px;border:1px solid #D5DCEA;background:#fff;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 14px;white-space:nowrap}
+.taskbar{position:absolute;left:0;top:585px;width:1000px;height:40px;background:rgba(243,246,252,.92);border-top:1px solid rgba(22,33,58,.08)}
+.tb-ico{position:absolute;top:9px;width:22px;height:22px;border-radius:6px}
+/* phone internals (300x640) */
+#pin{position:absolute;left:0;top:0;width:300px;height:640px;transform-origin:0 0;font-family:'Inter','Inter Display',sans-serif}
+.sbar{position:absolute;left:0;top:0;width:300px;height:26px;font-size:11px;font-weight:600;padding:7px 18px;display:flex;justify-content:space-between;z-index:5}
+.home{background:radial-gradient(circle at 30% 20%,#9DBBFF,transparent 60%),radial-gradient(circle at 80% 85%,#BDEBD5,transparent 55%),linear-gradient(160deg,#C7D8FF,#E9F0FF)}
+.appi{position:absolute;width:48px;height:48px;border-radius:16px}
+.key{position:absolute;width:76px;height:50px;border-radius:25px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;color:var(--navy)}
+.qs{position:absolute;width:128px;height:56px;border-radius:28px;background:#DEE5F4;font-size:12px;font-weight:600;padding:11px 0 0 52px;color:var(--navy)}
+.qs i{position:absolute;left:16px;top:16px;width:24px;height:24px;border-radius:50%;background:#B7C3DE}
+.qs small{display:block;font-weight:500;font-size:10.5px;color:#5A6680;margin-top:1px}
+.row{position:absolute;left:0;width:300px;height:64px;padding:14px 0 0 62px;font-size:14px;font-weight:600}
+.row i{position:absolute;left:18px;top:18px;width:28px;height:28px;border-radius:50%}
+.row small{display:block;font-size:11.5px;font-weight:500;color:#6A7590;margin-top:2px}
+.pcCard{position:absolute;left:16px;width:268px;height:74px;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(22,33,58,.07);padding:15px 0 0 64px;font-size:14px;font-weight:700}
+.pcCard small{display:block;font-weight:500;font-size:12px;color:var(--green);margin-top:3px}
+.pcCard i{position:absolute;left:16px;top:20px;width:34px;height:24px;border:3px solid var(--navy);border-radius:4px}
+.photo{position:absolute;border-radius:8px}
+#cur{position:absolute;left:0;top:0;width:22px;height:28px;z-index:50;pointer-events:none}
+.ripple{position:absolute;border-radius:50%;background:rgba(61,123,255,.28)}
+</style></head>
+<body>
+<div id="stage"></div>
+<script>
+const Q=new URLSearchParams(location.search);
+const F=Q.get('f')||'wide';
+const L=F==='wide'
+ ?{W:1920,H:1080,capY:135,capS:54,capW:1700,lap:{x:250,y:250,w:1100},ph:{x:1440,y:292,w:290},tS:112,tY:420,subS:44,tall:false}
+ :{W:1080,H:1920,capY:330,capS:66,capW:940,lap:{x:60,y:560,w:960},ph:{x:402,y:1292,w:276},tS:124,tY:660,subS:48,tall:true};
+const stage=document.getElementById('stage');
+stage.style.width=L.W+'px';stage.style.height=L.H+'px';
+document.body.style.width=L.W+'px';document.body.style.height=L.H+'px';
+
+// ---------- geometry ----------
+const lb=L.lap.w*0.022, liW=L.lap.w-2*lb, liH=liW*0.625, lS=liW/1000, lfH=liH+2*lb+lb*0.4;
+const pb=L.ph.w*0.04, piW=L.ph.w-2*pb, pS=piW/300, piH=640*pS, pfH=piH+2*pb;
+
+// ---------- small builders ----------
+const wifiSvg=(id,size)=>`<svg id="${id}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-width="2.4">
+ <path class="w3" d="M2.5 9.2a14 14 0 0 1 19 0"/><path class="w2" d="M5.8 12.6a9.2 9.2 0 0 1 12.4 0"/><path class="w1" d="M9.1 16a4.6 4.6 0 0 1 5.8 0"/><circle class="w0" cx="12" cy="19.3" r="1.4" stroke="none"/></svg>`;
+const appColors=['#3D7BFF','#1E9E63','#F2A93B','#E5484D','#8B5CF6','#0EA5B7','#2557D6','#F97316','#14B8A6','#EC4899','#64748B','#22C55E','#6366F1','#EAB308','#06B6D4','#A855F7'];
+const photoGrads=['#FDBA74,#F472B6','#93C5FD,#3D7BFF','#86EFAC,#0EA5B7','#FDE68A,#F97316','#C4B5FD,#6366F1','#A7F3D0,#1E9E63','#FBCFE8,#E5484D','#BAE6FD,#2557D6','#FEF08A,#22C55E','#DDD6FE,#EC4899','#FED7AA,#E5484D','#CFFAFE,#06B6D4'];
+
+function phoneApp(s){ // home grid -> Settings app (also used for the mirror)
+  let icons='';
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){const k=r*4+c;icons+=`<div class="appi" style="left:${30+c*66}px;top:${150+r*84}px;background:${appColors[k]}"></div>`}
+  const rows=[['Network & internet','Wi-Fi, hotspot','#3D7BFF'],['Connected devices','Bluetooth, Pixlink','#1E9E63'],['Apps','Recent apps, default apps','#F2A93B'],['Notifications','History, conversations','#8B5CF6'],['Battery','82%','#22C55E'],['Display','Dark theme, font size','#0EA5B7'],['Sound & vibration','Volume, haptics','#EC4899'],['Wallpaper & style','Colours, icons','#F97316'],['Storage','64% used','#64748B']];
+  let list='';rows.forEach((r,i)=>{list+=`<div class="row" style="top:${i*64}px"><i style="background:${r[2]}"></i>${r[0]}<small>${r[1]}</small>${i==5?`<div class="ma-tog" style="position:absolute;right:20px;top:20px;width:42px;height:24px;border-radius:12px;background:#C5CDDD"><div class="ma-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div>`:''}</div>`});
+  return `<div class="layer home ma-grid" style="inset:0">${icons}
+   <div style="position:absolute;left:22px;top:536px;width:256px;height:44px;border-radius:22px;background:rgba(255,255,255,.75)"></div></div>
+   <div class="layer ma-app" style="inset:0;background:#F7F9FF;transform-origin:122px 174px">
+     <div style="position:absolute;left:20px;top:46px;font-size:26px;font-weight:700;letter-spacing:-.02em">Settings</div>
+     <div style="position:absolute;left:0;top:96px;width:300px;height:544px;overflow:hidden"><div class="ma-list" style="position:absolute;left:0;top:0;width:300px">${list}</div></div>
+   </div>
+   <div class="ripple ma-tap" style="width:60px;height:60px"></div>
+   <div class="sbar"><span>10:24</span><span>▾ ▮</span></div>`;
+}
+function homeScreen(){
+  let dock='';for(let i=0;i<4;i++)dock+=`<div class="appi" style="left:${30+i*66}px;top:470px;background:${appColors[i*3]}"></div>`;
+  return `<div style="position:absolute;left:0;top:96px;width:300px;text-align:center;font-size:72px;font-weight:300;letter-spacing:-.04em;color:#16213A">10:24</div>
+  <div style="position:absolute;left:0;top:186px;width:300px;text-align:center;font-size:14px;font-weight:600;color:#33405E">Thursday, 12 November</div>${dock}
+  <div style="position:absolute;left:22px;top:546px;width:256px;height:44px;border-radius:22px;background:rgba(255,255,255,.75)"></div>`;
+}
+
+// ---------- DOM ----------
+let html=`
+<div class="glow" id="g1" style="width:${L.W*0.9}px;height:${L.W*0.9}px;background:radial-gradient(circle,rgba(61,123,255,.16),rgba(61,123,255,0) 65%)"></div>
+<div class="glow" id="g2" style="width:${L.W*0.8}px;height:${L.W*0.8}px;background:radial-gradient(circle,rgba(201,240,222,.55),rgba(201,240,222,0) 65%)"></div>`;
+
+// opening titles
+const tl=L.tall?[['t1','Your Pixel.',0],['t2','Your PC.',1],['t3','Linked.',2]]:[['t1','Your Pixel.',0],['t2','Your PC.',0],['t3','Linked.',0]];
+if(L.tall){ tl.forEach(([id,txt,row])=>html+=`<div class="title" id="${id}" style="top:${L.tY+row*L.tS*1.08}px;font-size:${L.tS}px">${txt}</div>`); }
+else { html+=`<div class="title" style="top:${L.tY}px;font-size:${L.tS}px"><span id="t1">Your Pixel.</span> <span id="t2">Your PC.</span> <span id="t3">Linked.</span></div>`; }
+const subTop=L.tall?L.tY+3*L.tS*1.08+40:L.tY+L.tS*1.3;
+html+=`<div class="title" id="tsub" style="top:${subTop}px;font-size:${L.subS}px;font-weight:500;color:var(--slate);letter-spacing:-.02em">Phone Link, built for Pixel.</div>`;
+
+// closing values
+const vals=[['v1','Free.'],['v2','Open source.'],['v3','Made for Pixel.']];
+if(L.tall){vals.forEach(([id,txt],i)=>html+=`<div class="title" id="${id}" style="top:${L.tY+i*L.tS*1.08}px;font-size:${L.tS}px">${txt}</div>`)}
+else{html+=`<div class="title" style="top:${L.tY+20}px;font-size:${L.tS}px">${vals.map(([id,txt])=>`<span id="${id}" style="display:inline-block">${txt}</span>`).join(' ')}</div>`}
+
+// end card
+const eY=L.tall?640:250, eI=L.tall?260:220;
+html+=`<div id="end" class="a" style="left:0;top:${eY}px;width:${L.W}px;text-align:center">
+ <img id="eIcon" src="icon.png" style="width:${eI}px;height:${eI}px;border-radius:${eI*0.23}px;box-shadow:0 30px 60px -20px rgba(37,87,214,.55)">
+ <div id="eName" style="font-size:${L.tall?120:104}px;font-weight:700;letter-spacing:-.04em;margin-top:${L.tall?40:28}px">Pixlink</div>
+ <div id="eBtn" style="display:inline-block;margin-top:${L.tall?44:26}px;background:var(--blue);color:#fff;font-size:${L.tall?46:36}px;font-weight:650;padding:${L.tall?'22px 56px':'16px 44px'};border-radius:999px;letter-spacing:-.01em">Download now</div>
+ <div id="eUrl" style="margin-top:${L.tall?36:24}px;font-size:${L.tall?36:30}px;font-weight:500;color:var(--slate);letter-spacing:-.01em">github.com/FatalQuackers/pixlink</div>
+</div>`;
+
+// captions
+const caps=[[5.5,8.85,'Everything on your phone, right on your PC.'],[9.2,16.85,'Link in seconds. Stay linked to every PC you use.'],[17.2,24.85,'Answer notifications without picking up your phone.'],[25.2,31.85,'Your phone screen, live. Click, swipe and type.'],[32.2,37.85,'No Wi-Fi? One click and you’re&nbsp;online.'],[38.2,43.85,'Take calls right from your PC.'],[44.2,49.7,'Photos and files, both ways.']];
+caps.forEach((c,i)=>html+=`<div class="cap" id="cap${i}" style="left:${(L.W-L.capW)/2}px;top:${L.capY}px;font-size:${L.capS}px;width:${L.capW}px">${c[2]}</div>`);
+
+// devices
+html+=`<div id="devs" class="a" style="left:0;top:0;width:${L.W}px;height:${L.H}px;transform-origin:50% 60%">
+<div id="lap" class="a" style="left:${L.lap.x}px;top:${L.lap.y}px;width:${L.lap.w}px">
+ <div class="lapframe" style="width:${L.lap.w}px;height:${lfH}px;padding:${lb}px">
+  <div class="lapscreen" style="width:${liW}px;height:${liH}px"><div id="lin" style="transform:scale(${lS})"></div></div>
+ </div>
+ <div class="lapbase a" style="left:${-L.lap.w*0.07}px;top:${lfH}px;width:${L.lap.w*1.14}px;height:${L.lap.w*0.028}px"></div>
+</div>
+<div id="ph" class="a" style="left:${L.ph.x}px;top:${L.ph.y}px">
+ <div class="phframe" style="width:${L.ph.w}px;height:${pfH}px;padding:${pb}px;border-radius:${L.ph.w*0.15}px">
+  <div class="phscreen" style="width:${piW}px;height:${piH}px;border-radius:${L.ph.w*0.12}px"><div id="pin" style="transform:scale(${pS})"></div>
+   <div class="a" style="left:${piW/2-6*pS}px;top:${12*pS}px;width:${12*pS}px;height:${12*pS}px;border-radius:50%;background:#0B0E16;z-index:9"></div></div>
+ </div>
+</div></div>`;
+stage.innerHTML=html;
+
+// ---------- laptop internals ----------
+const tiles=['Hotspot','Silence','Find phone','Clipboard','Mirror','Send file'];
+let tilesH='';tiles.forEach((n,i)=>tilesH+=`<div class="tile" id="tile${i}" style="left:${16+(i%2)*113}px;top:${120+Math.floor(i/2)*68}px"><i></i>${n}</div>`);
+const tabsN=['Notifications','Messages','Calls','Photos','Screen'];const tabX=[24,150,250,316,392];
+let tabsH='';tabsN.forEach((n,i)=>tabsH+=`<span id="tab${i}" style="left:${tabX[i]}px">${n}</span>`);
+let photosH='';for(let i=0;i<12;i++)photosH+=`<div class="photo pg" style="left:${24+(i%4)*157}px;top:${56+Math.floor(i/4)*130}px;width:145px;height:118px;background:linear-gradient(135deg,${photoGrads[i]})"></div>`;
+const calls=[['Mum','Mobile · Yesterday','#EC4899'],['Alex','Mobile · Tuesday','#3D7BFF'],['Dentist','Missed · Monday','#F2A93B'],['Sam','Mobile · Monday','#1E9E63']];
+let callsH='';calls.forEach((c,i)=>callsH+=`<div style="position:absolute;left:24px;top:${56+i*62}px;width:622px;height:54px;border-bottom:1px solid #EEF1F7">
+ <div class="av" style="left:0;top:8px;background:${c[2]}">${c[0][0]}</div><div style="position:absolute;left:50px;top:9px" class="ct">${c[0]}</div><div style="position:absolute;left:50px;top:29px" class="meta">${c[1]}</div></div>`);
+
+document.getElementById('lin').innerHTML=`
+<div class="wall"></div>
+<div id="win">
+ <div class="tbar"><img src="icon.png">Pixlink<span class="dots"><span>–</span><span>□</span><span>✕</span></span></div>
+ <div class="layer" id="wSplash" style="left:0;top:34px;width:920px;height:514px;text-align:center">
+   <img src="icon.png" style="width:110px;height:110px;border-radius:26px;margin-top:150px"><div style="font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:18px">Pixlink</div>
+   <div style="font-size:14px;color:var(--slate);margin-top:8px">Your Pixel, on your PC</div></div>
+ <div class="layer" id="wPair" style="left:0;top:34px;width:920px;height:514px;text-align:center">
+   <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:110px">Link your phone</div>
+   <div style="font-size:15px;color:var(--slate);margin-top:10px">On your Pixel, open Pixlink and type this code</div>
+   <div style="display:flex;gap:14px;justify-content:center;margin-top:34px">${'48217'.split('').map(d=>`<div style="width:70px;height:88px;border-radius:14px;background:#EEF2FA;font-size:46px;font-weight:700;line-height:88px">${d}</div>`).join('')}</div>
+   <div style="font-size:13px;color:#7C86A0;margin-top:26px">or scan the QR code</div></div>
+ <div class="layer" id="wPairOk" style="left:0;top:34px;width:920px;height:514px;text-align:center;background:#FBFCFE">
+   <div id="okCircle" style="width:110px;height:110px;border-radius:50%;background:var(--green);margin:150px auto 0;display:flex;align-items:center;justify-content:center">
+    <svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="okTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
+   <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:24px">Linked to Pixel 9</div></div>
+ <div class="layer" id="wMain" style="left:0;top:0;width:920px;height:548px">
+  <div class="layer side">
+   <div style="position:absolute;left:18px;top:20px;width:38px;height:70px;border:3px solid var(--navy);border-radius:9px"></div>
+   <div style="position:absolute;left:70px;top:22px;font-size:19px;font-weight:700;letter-spacing:-.01em">Pixel 9</div>
+   <div style="position:absolute;left:70px;top:48px;font-size:12px;color:var(--green);font-weight:600">● Connected</div>
+   <div style="position:absolute;left:70px;top:68px;font-size:12px;color:var(--slate)">Battery 82%</div>
+   ${tilesH}
+   <div id="drop" style="position:absolute;left:16px;top:420px;width:218px;height:76px;border:2px dashed #C3CDE0;border-radius:12px;text-align:center;font-size:12px;font-weight:600;color:#7C86A0;padding-top:16px">Drop files to send<br><span style="font-weight:500">to Pixel 9</span>
+     <div id="dropBar" style="position:absolute;left:16px;bottom:12px;width:182px;height:6px;border-radius:3px;background:#DCE3F0;overflow:hidden"><div id="dropFill" style="height:6px;width:0;background:var(--blue)"></div></div></div>
+  </div>
+  <div class="tabs">${tabsH}<div id="tabLine"></div></div>
+
+  <div class="layer panel" id="pNotif">
+   <div class="h" style="position:absolute;left:24px;top:18px">Notifications</div>
+   <div class="card" id="cSam" style="top:52px;height:72px">
+     <div class="av" style="left:16px;top:18px;background:#1E9E63">S</div>
+     <div class="meta" style="position:absolute;left:64px;top:12px">Messages · now</div>
+     <div class="ct" style="position:absolute;left:64px;top:27px">Sam</div>
+     <div class="cx" id="samLine" style="position:absolute;left:64px;top:46px">Are you still coming tonight?</div>
+     <div id="samExp" style="position:absolute;left:0;top:70px;width:622px;height:240px">
+       <div class="bub" style="left:64px;top:4px;background:#EEF2FA">Dinner at 7?</div>
+       <div class="bub" style="left:64px;top:42px;background:#EEF2FA">Are you still coming tonight?</div>
+       <div class="bub" id="myBub" style="right:20px;top:80px;background:var(--blue);color:#fff">On my way! Save me a seat.</div>
+       <div class="btn" id="bRead" style="left:64px;top:126px">✓ Mark as read</div>
+       <div class="btn" style="left:200px;top:126px">♥ Like</div>
+       <div style="position:absolute;left:64px;top:174px;width:478px;height:40px;border-radius:20px;border:1px solid #D5DCEA;background:#F8FAFD;font-size:13px;padding:11px 16px;color:#33405E" id="replyBox"><span id="replyTxt"></span><span id="caret" style="color:var(--blue)">|</span><span id="replyPh" style="color:#9AA3B8">Reply</span></div>
+       <div style="position:absolute;left:552px;top:174px;width:50px;height:40px;border-radius:20px;background:var(--blue);color:#fff;font-size:16px;text-align:center;line-height:40px" id="sendBtn">➤</div>
+     </div>
+   </div>
+   <div class="card" id="cGmail" style="top:52px;height:72px"><div class="av" style="left:16px;top:18px;background:#E5484D">G</div>
+     <div class="meta" style="position:absolute;left:64px;top:12px">Gmail · 9:58</div><div class="ct" style="position:absolute;left:64px;top:27px">Your order has shipped</div><div class="cx" style="position:absolute;left:64px;top:46px">Arriving Friday between 9 am and 1 pm</div></div>
+   <div class="card" id="cCal" style="top:136px;height:72px"><div class="av" style="left:16px;top:18px;background:#3D7BFF">C</div>
+     <div class="meta" style="position:absolute;left:64px;top:12px">Calendar · 9:40</div><div class="ct" style="position:absolute;left:64px;top:27px">Team standup</div><div class="cx" style="position:absolute;left:64px;top:46px">In 10 minutes · Meeting room 2</div></div>
+   <div class="card" id="cBank" style="top:220px;height:72px"><div class="av" style="left:16px;top:18px;background:#8B5CF6">D</div>
+     <div class="meta" style="position:absolute;left:64px;top:12px">Discord · 9:12</div><div class="ct" style="position:absolute;left:64px;top:27px">#game-dev</div><div class="cx" style="position:absolute;left:64px;top:46px">New build is up, can someone test the egg smash?</div></div>
+  </div>
+
+  <div class="layer panel" id="pScreen"><div style="position:absolute;left:230px;top:12px;width:210px;height:448px;border-radius:26px;border:5px solid #1B2132;overflow:hidden;background:#F7F9FF">
+     <div style="position:absolute;left:0;top:0;width:300px;height:640px;transform:scale(0.6667);transform-origin:0 0">${phoneApp('m')}</div></div>
+     <div style="position:absolute;left:470px;top:40px;font-size:12px;color:#7C86A0;line-height:1.6">Click to tap<br>Drag to swipe<br>Type to type</div></div>
+
+  <div class="layer panel" id="pHot"><div style="position:absolute;left:0;top:90px;width:670px;text-align:center">
+     ${wifiSvg('bigWifi',150)}<div style="font-size:22px;font-weight:700;margin-top:8px">Pixel 9 hotspot</div>
+     <div id="hotStatus" style="font-size:14px;color:var(--slate);margin-top:6px">Not connected</div></div></div>
+
+  <div class="layer panel" id="pCalls"><div class="h" style="position:absolute;left:24px;top:18px">Recent calls</div>${callsH}</div>
+
+  <div class="layer panel" id="pPhotos"><div class="h" style="position:absolute;left:24px;top:18px">Photos</div>
+     <div class="meta" style="position:absolute;left:100px;top:24px">from Pixel 9</div>${photosH}</div>
+ </div>
+</div>
+<div id="callToast" style="position:absolute;left:668px;top:392px;width:284px;height:156px;border-radius:14px;background:#fff;box-shadow:0 18px 40px -10px rgba(22,33,58,.4);border:1px solid #E7EBF3">
+  <div class="av" style="left:18px;top:18px;width:48px;height:48px;font-size:20px;background:#EC4899">M</div>
+  <div style="position:absolute;left:80px;top:20px;font-size:17px;font-weight:700">Mum</div>
+  <div id="callState" style="position:absolute;left:80px;top:44px;font-size:12.5px;color:var(--slate)">Incoming call · Pixel 9</div>
+  <div id="ansBtn" style="position:absolute;left:18px;top:94px;width:118px;height:40px;border-radius:20px;background:var(--green);color:#fff;font-size:13.5px;font-weight:700;text-align:center;line-height:40px">Answer</div>
+  <div id="decBtn" style="position:absolute;left:146px;top:94px;width:118px;height:40px;border-radius:20px;background:var(--red);color:#fff;font-size:13.5px;font-weight:700;text-align:center;line-height:40px">Decline</div>
+</div>
+<div id="dragFile" style="position:absolute;left:0;top:0;width:86px;height:96px;text-align:center">
+  <div style="width:56px;height:68px;margin:0 auto;border-radius:6px;background:#fff;border:1px solid #D5DCEA;box-shadow:0 10px 20px -8px rgba(22,33,58,.35);position:relative"><div style="position:absolute;left:10px;top:40px;width:36px;height:14px;border-radius:3px;background:var(--red);color:#fff;font-size:9px;font-weight:700;line-height:14px">PDF</div></div>
+  <div style="font-size:11px;font-weight:600;margin-top:5px">Holiday.pdf</div></div>
+<div class="taskbar">
+  ${[0,1,2,3,4].map(i=>`<div class="tb-ico" style="left:${434+i*30}px;background:${i==2?'#3D7BFF':['#9AB3E6','#7FC8A9','','#F2C46B','#B9A7EE'][i]}"></div>`).join('')}
+  <div style="position:absolute;right:58px;top:9px">${wifiSvg('trayWifi',22)}</div>
+  <div style="position:absolute;right:14px;top:12px;font-size:12px;font-weight:600;color:var(--navy)">10:24</div>
+</div>
+<div class="ripple" id="lRip" style="width:40px;height:40px"></div>
+<svg id="cur" viewBox="0 0 22 28"><path d="M2 2l0 21 5.5-5 3.6 8.2 3.6-1.6-3.6-8 7.4-.4z" fill="#16213A" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+
+// ---------- phone internals ----------
+let keys='';const kl=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+kl.forEach((k,i)=>keys+=`<div class="key" id="key${k}" style="left:${24+(i%3)*90}px;top:${352+Math.floor(i/3)*62}px">${k}</div>`);
+let qsH='';const qsN=[['Internet','Wi-Fi off'],['Bluetooth','On'],['Hotspot','Off'],['Flashlight','Off'],['Do Not Disturb','Off'],['Battery Saver','Off']];
+qsN.forEach((q,i)=>qsH+=`<div class="qs" id="qs${i}" style="left:${16+(i%2)*140}px;top:${200+Math.floor(i/2)*68}px"><i></i>${q[0]}<small id="qsS${i}">${q[1]}</small></div>`);
+let galH='';for(let i=0;i<12;i++)galH+=`<div class="photo" style="left:${12+(i%3)*94}px;top:${96+Math.floor(i/3)*94}px;width:88px;height:88px;border-radius:6px;background:linear-gradient(135deg,${photoGrads[i]})"></div>`;
+
+document.getElementById('pin').innerHTML=`
+<div class="layer home" id="pHome" style="inset:0">${homeScreen()}</div>
+<div class="layer" id="pPair" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:24px;top:62px;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2">Enter the code<br>shown on your PC</div>
+  <div style="position:absolute;left:24px;top:162px;display:flex;gap:9px">${[0,1,2,3,4].map(i=>`<div class="pbox" style="width:44px;height:58px;border-radius:12px;background:#E6ECF8;font-size:28px;font-weight:700;text-align:center;line-height:58px;border:2px solid transparent"><span id="pd${i}">${'48217'[i]}</span></div>`).join('')}</div>
+  <div id="pairMsg" style="position:absolute;left:24px;top:240px;font-size:13px;font-weight:600;color:var(--green)">✓ Linked to Work laptop</div>
+  ${keys}
+</div>
+<div class="layer" id="pPcs" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:20px;top:58px;font-size:26px;font-weight:700;letter-spacing:-.02em">Your PCs</div>
+  <div class="pcCard" id="pc1" style="top:112px"><i></i>Work laptop<small>● Connected</small></div>
+  <div class="pcCard" id="pc2" style="top:198px"><i></i>Home PC<small>● Connected</small></div>
+  <div id="linkBtn" style="position:absolute;left:16px;top:290px;width:268px;height:48px;border-radius:24px;border:2px solid var(--blue);color:var(--blue);font-size:14px;font-weight:700;text-align:center;line-height:44px">+ Link another PC</div>
+</div>
+<div class="layer" id="pApps" style="inset:0">${phoneApp('p')}</div>
+<div class="layer" id="pQS" style="inset:0;background:#EEF2FA">
+  <div style="position:absolute;left:20px;top:60px;font-size:40px;font-weight:300;letter-spacing:-.03em">10:24</div>
+  <div style="position:absolute;left:20px;top:112px;font-size:13px;color:#4A5675">Thu, 12 Nov</div>
+  <div style="position:absolute;left:16px;top:150px;width:268px;height:30px;border-radius:15px;background:#DEE5F4"><div style="width:60%;height:30px;border-radius:15px;background:#B9C9EA"></div></div>
+  ${qsH}
+</div>
+<div class="layer" id="pCall" style="inset:0;background:linear-gradient(170deg,#FCE7F3,#EEF2FA)">
+  <div style="position:absolute;left:0;top:150px;width:300px;text-align:center">
+   <div style="width:96px;height:96px;border-radius:50%;background:#EC4899;color:#fff;font-size:42px;font-weight:700;line-height:96px;margin:0 auto">M</div>
+   <div style="font-size:28px;font-weight:700;margin-top:18px;letter-spacing:-.02em">Mum</div>
+   <div id="pCallState" style="font-size:14px;color:#4A5675;margin-top:6px">Incoming call</div></div>
+  <div id="pCallBtns" style="position:absolute;left:0;top:500px;width:300px">
+   <div style="position:absolute;left:52px;width:64px;height:64px;border-radius:50%;background:var(--red)"></div>
+   <div style="position:absolute;left:184px;width:64px;height:64px;border-radius:50%;background:var(--green)"></div></div>
+  <div id="pOnPC" style="position:absolute;left:40px;top:470px;width:220px;height:40px;border-radius:20px;background:#fff;font-size:12.5px;font-weight:600;text-align:center;line-height:40px">🔊 Audio on Work laptop</div>
+</div>
+<div class="layer" id="pGal" style="inset:0;background:#F7F9FF">
+  <div style="position:absolute;left:18px;top:50px;font-size:24px;font-weight:700;letter-spacing:-.02em">Photos</div>${galH}</div>
+<div id="pHeads" style="position:absolute;left:10px;top:34px;width:280px;height:74px;border-radius:20px;background:#fff;box-shadow:0 8px 20px -6px rgba(22,33,58,.3);z-index:6">
+  <div class="av" style="left:14px;top:19px;background:#1E9E63">S</div>
+  <div style="position:absolute;left:62px;top:15px;font-size:13px;font-weight:700">Sam</div>
+  <div style="position:absolute;left:62px;top:35px;font-size:12px;color:#33405E">Are you still coming tonight?</div></div>
+<div id="pFile" style="position:absolute;left:10px;top:34px;width:280px;height:74px;border-radius:20px;background:#fff;box-shadow:0 8px 20px -6px rgba(22,33,58,.3);z-index:6">
+  <div class="av" style="left:14px;top:19px;background:var(--blue)">↓</div>
+  <div style="position:absolute;left:62px;top:15px;font-size:13px;font-weight:700">Holiday.pdf received</div>
+  <div style="position:absolute;left:62px;top:35px;font-size:12px;color:#33405E">From Work laptop · Saved to Downloads</div></div>
+<div class="ripple" id="pRip" style="width:60px;height:60px;z-index:7"></div>
+<div class="sbar" id="pStatus"><span>10:24</span><span>▾ ▮ 82%</span></div>`;
+
+// ---------- animation helpers ----------
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eout=x=>1-Math.pow(1-x,3);
+const back=x=>{const c=1.5;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const P=(t,a,b,e=eio)=>e(cl((t-a)/(b-a)));
+const lerp=(a,b,k)=>a+(b-a)*k;
+const win=(t,a,b,f=.4)=>Math.min(P(t,a,a+f,eout),1-P(t,b-f,b,eio));
+function path(t,pts){if(t<=pts[0][0])return pts[0].slice(1);
+ for(let i=1;i<pts.length;i++)if(t<=pts[i][0]){const k=eio(cl((t-pts[i-1][0])/(pts[i][0]-pts[i-1][0])));return pts[i].slice(1).map((v,j)=>lerp(pts[i-1][j+1],v,k));}
+ return pts[pts.length-1].slice(1);}
+const $=id=>document.getElementById(id);
+const all=s=>document.querySelectorAll(s);
+function st(el,o){const els=typeof el==='string'?all(el):[el];for(const e of els)for(const k in o)e.style[k]=o[k];}
+function op(el,v){const els=typeof el==='string'?(el[0]==='#'?[$(el.slice(1))]:all(el)):[el];for(const e of els){e.style.opacity=v;e.style.visibility=v<=0.001?'hidden':'visible';}}
+function rise(el,v,d=24){op(el,v);(typeof el==='string'?[$(el.slice(1))]:[el])[0].style.transform=`translateY(${(1-v)*d}px)`;}
+function ripple(el,t,t0,x,y,size){const k=cl((t-t0)/0.45);const s=lerp(0.2,1.6,eout(k));st(el,{left:(x-size/2)+'px',top:(y-size/2)+'px',transform:`scale(${s})`});op(el,k>0&&k<1?(1-k)*0.9:0);}
+
+const T_END=59;
+function render(t){
+ // background drift
+ st('#g1',{left:(L.W*-0.25+Math.sin(t*0.12)*80)+'px',top:(L.H*-0.35+Math.cos(t*0.1)*60)+'px'});
+ st('#g2',{left:(L.W*0.45+Math.cos(t*0.09)*90)+'px',top:(L.H*0.35+Math.sin(t*0.11)*70)+'px'});
+
+ // ---- S1 opening ----
+ const titleOut=1-P(t,4.3,5.0);
+ [['#t1',0.35],['#t2',1.15],['#t3',1.95]].forEach(([id,a])=>{const k=P(t,a,a+0.7,eout);const e=$(id.slice(1));e.style.display=L.tall?'block':'inline-block';op(id,k*titleOut);e.style.transform=`translateY(${(1-k)*40}px)`;e.style.filter=`blur(${(1-k)*8}px)`;});
+ rise('#tsub',P(t,2.9,3.6,eout)*titleOut,20);
+
+ // ---- devices in/out ----
+ const din=P(t,5.0,6.3,eout), dout=P(t,49.5,50.4,eio);
+ const devs=$('devs');op(devs,din*(1-dout));
+ devs.style.transform=`translateY(${(1-din)*90+dout*60}px) scale(${1+0.025*cl((t-5)/45)})`;
+
+ // captions
+ caps.forEach((c,i)=>{const v=win(t,c[0],c[1],0.5);rise('#cap'+i,v,22);});
+
+ // ---- laptop window layers ----
+ op('#wSplash',1-P(t,9.0,9.4));
+ op('#wPair',win(t,9.0,12.4,0.35));
+ const ok=win(t,12.0,17.2,0.3);op('#wPairOk',ok);
+ st('#okCircle',{transform:`scale(${lerp(0.6,1,back(cl((t-12.0)/0.5)))})`});
+ st('#okTick',{strokeDashoffset:24*(1-P(t,12.3,12.8))});
+ op('#wMain',P(t,16.9,17.3));
+ // tabs: 0 notif 17-25, 4 screen 25-32, 0 (hot uses notif tab) , 2 calls 38-44, 3 photos 44-50
+ const tabIdx=t<25?0:t<32?4:t<38?0:t<44?2:3;
+ const tw=[96,72,36,50,48];
+ const tabPos=path(t,[[24.6,tabX[0],tw[0]],[25.2,tabX[4],tw[4]],[31.7,tabX[4],tw[4]],[32.3,tabX[0],tw[0]],[37.7,tabX[0],tw[0]],[38.3,tabX[2],tw[2]],[43.7,tabX[2],tw[2]],[44.3,tabX[3],tw[3]]]);
+ st('#tabLine',{left:tabPos[0]+'px',width:tabPos[1]+'px'});
+ for(let i=0;i<5;i++)st('#tab'+i,{color:i===tabIdx?'#16213A':'#7C86A0'});
+ op('#pNotif',Math.max(win(t,16.9,25.2,0.3),0));
+ op('#pScreen',win(t,25.0,32.2,0.35));
+ op('#pHot',win(t,32.0,38.2,0.35));
+ op('#pCalls',win(t,38.0,44.2,0.35));
+ op('#pPhotos',P(t,44.0,44.35));
+
+ // ---- S4 notifications ----
+ const samIn=P(t,17.8,18.4,eout);
+ const samH=lerp(72,312,P(t,19.3,19.9));
+ op('#cSam',samIn);st('#cSam',{height:samH+'px',transform:`translateX(${(1-samIn)*50}px)`,borderColor:t>19.3&&t<25?'#BFD3FF':'#E7EBF3'});
+ const push=samIn*(samH+12);
+ [['#cGmail',52],['#cCal',136],['#cBank',220]].forEach(([id,y])=>st(id,{top:(y+push)+'px'}));
+ op('#samExp',P(t,19.5,19.9));op('#samLine',1-P(t,19.3,19.5));
+ const msg='On my way! Save me a seat.';
+ const typed=Math.floor(msg.length*cl((t-21.2)/1.4));
+ $('replyTxt').textContent=t<23.0?msg.slice(0,typed):'';
+ op('#replyPh',t<21.0||t>=23.0?1:0);op('#caret',(t>21.0&&t<23.0&&Math.floor(t*2.5)%2===0)?1:0);
+ const mb=P(t,23.05,23.4,eout);op('#myBub',mb);st('#myBub',{transform:`translateY(${(1-mb)*14}px)`});
+ st('#sendBtn',{transform:`scale(${t>22.95&&t<23.1?0.9:1})`});
+
+ // ---- S5 mirror (phone app on both) ----
+ const appOpen=P(t,27.15,27.6,eout);
+ all('.ma-app').forEach(e=>{e.style.opacity=appOpen;e.style.visibility=appOpen>0?'visible':'hidden';e.style.transform=`scale(${lerp(0.25,1,appOpen)})`;e.style.borderRadius=lerp(30,0,appOpen)+'px'});
+ const scroll=lerp(0,-150,P(t,28.4,29.8));
+ st('.ma-list',{transform:`translateY(${scroll}px)`});
+ const tog=P(t,30.9,31.15);st('.ma-tog',{background:tog>0.5?'#3D7BFF':'#C5CDDD'});st('.ma-knob',{left:lerp(3,21,tog)+'px'});
+ all('.ma-tap').forEach(e=>{ripple(e,t,27.0,122,174,60)});
+
+ // ---- S6 hotspot ----
+ const hotOn=t>=33.65;
+ st('#tile0',{background:hotOn&&t<38.3?'#3D7BFF':'#E8EDF7',color:hotOn&&t<38.3?'#fff':'#16213A'});
+ st('#tile0 i',{background:hotOn&&t<38.3?'rgba(255,255,255,.6)':'#B9C6E2'});
+ const conn=t>=35.4;
+ $('hotStatus').textContent=t<33.65?'Not connected':t<35.4?'Turning on your phone’s hotspot…':'Connected · Your PC is online';
+ st('#hotStatus',{color:conn?'#1E9E63':'#4A5675',fontWeight:conn?'600':'400'});
+ const bars=t<35.4?0:Math.min(4,Math.floor((t-35.4)/0.18)+1);
+ ['w0','w1','w2','w3'].forEach((c,i)=>{const on=t<32?true:(i<bars);all('#bigWifi .'+c).forEach(e=>{e.setAttribute('stroke',on?'#3D7BFF':'#C9D2E3');if(c==='w0')e.setAttribute('fill',on?'#3D7BFF':'#C9D2E3')});
+   all('#trayWifi .'+c).forEach(e=>{const onT=t<32||t>=38.2?true:i<bars;e.setAttribute('stroke',onT?'#16213A':'#B4BCCD');if(c==='w0')e.setAttribute('fill',onT?'#16213A':'#B4BCCD')})});
+ // phone QS hotspot tile
+ const qOn=t>=34.55;st('#qs2',{background:qOn?'#3D7BFF':'#DEE5F4',color:qOn?'#fff':'#16213A'});st('#qs2 i',{background:qOn?'rgba(255,255,255,.65)':'#B7C3DE'});
+ $('qsS2').textContent=qOn?'1 device':'Off';st('#qsS2',{color:qOn?'rgba(255,255,255,.85)':'#5A6680'});
+
+ // ---- S7 calls ----
+ const toast=win(t,38.8,44.0,0.35);op('#callToast',toast);st('#callToast',{transform:`translateY(${(1-P(t,38.8,39.3,eout))*30}px)`});
+ const ans=t>=40.45;
+ const sec=Math.max(0,Math.floor(t-40.45));
+ $('callState').textContent=ans?`On call · 00:0${Math.min(sec,9)}`:'Incoming call · Pixel 9';
+ st('#ansBtn',{background:ans?'#EEF2FA':'#1E9E63',color:ans?'#16213A':'#fff',transform:`scale(${t>40.3&&t<40.5?0.94:1})`});
+ $('ansBtn').textContent=ans?'Mute':'Answer';$('decBtn').textContent=ans?'End call':'Decline';
+ $('pCallState').textContent=ans?`00:0${Math.min(sec,9)} · on your PC`:'Incoming call';
+ op('#pCallBtns',ans?0:1);op('#pOnPC',ans?P(t,40.5,40.9):0);
+
+ // ---- S8 files ----
+ all('.pg').forEach((e,i)=>{const k=P(t,44.3+i*0.06,44.8+i*0.06,eout);e.style.opacity=t<44?0:k;e.style.transform=`scale(${lerp(0.9,1,k)})`});
+ const fp=path(t,[[45.6,1010,470],[46.0,930,450],[47.15,122,470]]);
+ const fileVis=t>=45.6&&t<47.3?1:0;
+ op('#dragFile',fileVis);st('#dragFile',{left:fp[0]+'px',top:fp[1]+'px',transform:`rotate(${t<47.15?-6:0}deg)`});
+ const overDrop=t>46.85&&t<48.6;
+ st('#drop',{borderColor:overDrop?'#3D7BFF':'#C3CDE0',background:overDrop?'#E3ECFF':'transparent',color:overDrop?'#2557D6':'#7C86A0'});
+ op('#dropBar',t>47.3&&t<48.9?1:0);st('#dropFill',{width:(182*P(t,47.35,48.3))+'px'});
+
+ // ---- cursor ----
+ const curPts=[
+  [17.0,700,560],[20.4,700,520],[20.95,560,425],[22.6,560,425],[22.9,885,425],[24.6,885,425],
+  [25.6,885,425],[26.9,606,239],[27.9,606,239],[28.35,700,420],[29.85,700,320],[30.5,700,330],[30.85,698,322],[31.8,698,322],
+  [32.3,698,322],[33.4,104,210],[37.6,104,210],
+  [38.6,500,470],[40.15,748,512],[43.8,748,512],
+  [44.4,760,300],[45.6,1010,500],[46.0,930,480],[47.15,165,505],[48.4,165,505],[49.5,300,470]];
+ const cp=path(t,curPts);
+ const press=[21.0,23.0,27.0,28.4,30.9,33.6,40.4,47.2].some(p=>t>p-0.08&&t<p+0.1);
+ st('#cur',{left:cp[0]+'px',top:cp[1]+'px',transform:`scale(${press?0.86:1})`,transformOrigin:'2px 2px'});
+ op('#cur',t>=17.0&&t<50?1:0);
+ const clicks=[[21.0,560,425],[23.0,885,425],[33.6,104,210],[40.4,748,512]];
+ let rippled=false;for(const [c,x,y] of clicks){if(t>=c&&t<c+0.45){ripple($('lRip'),t,c,x,y,40);rippled=true;}}
+ if(!rippled)op('#lRip',0);
+
+ // ---- phone layers ----
+ op('#pHome',t<9.2||(t>=16.9&&t<25.2)?1:0);
+ op('#pPair',win(t,9.0,13.4,0.3));
+ op('#pPcs',win(t,13.2,17.2,0.3));
+ op('#pApps',win(t,25.0,32.2,0.3));
+ op('#pQS',win(t,32.0,38.2,0.3));
+ op('#pCall',win(t,38.6,44.2,0.35));
+ op('#pGal',P(t,44.0,44.35));
+ // pairing digits
+ const digT=[10.2,10.55,10.9,11.25,11.6];
+ digT.forEach((d,i)=>op('#pd'+i,t>=d?1:0));
+ all('.pbox').forEach((e,i)=>{const done=t>=11.95;e.style.borderColor=done?'#1E9E63':(t>=digT[i]-0.35&&t<(digT[i+1]||11.95)?'#3D7BFF':'transparent');e.style.background=done?'#DDF5E9':'#E6ECF8'});
+ op('#pairMsg',P(t,12.0,12.3));
+ kl.forEach(k=>{if(!k)return;const idx='48217'.indexOf(k);const pr=idx>=0&&t>digT[idx]-0.12&&t<digT[idx]+0.12;st('#key'+k,{background:pr?'#C9D8FF':'transparent'})});
+ const pc2=P(t,14.35,14.8,back);op('#pc2',cl(pc2));st('#pc2',{transform:`scale(${lerp(0.85,1,pc2)})`});
+ st('#linkBtn',{top:(lerp(204,290,P(t,14.3,14.7)))+'px',background:t>13.85&&t<14.15?'#DCE7FF':'transparent'});
+ op('#pc1',P(t,13.4,13.8,eout));
+ // heads-up
+ const hu=win(t,17.95,23.35,0.35);op('#pHeads',hu);st('#pHeads',{transform:`translateY(${(1-P(t,17.95,18.35,eout))*-90}px)`});
+ const fh=win(t,48.35,50.0,0.3);op('#pFile',fh);st('#pFile',{transform:`translateY(${(1-P(t,48.35,48.7,eout))*-90}px)`});
+ // phone taps
+ const pt=[[27.0,122,174],[34.5,80,296],[40.4,216,532]];
+ let pr=false;for(const [c,x,y] of pt){if(t>=c&&t<c+0.45){ripple($('pRip'),t,c,x,y,60);pr=true;}}
+ if(!pr)op('#pRip',0);
+ st('#pStatus',{color:(t>=25&&t<32)||(t>=32&&t<38.2)?'#16213A':'#16213A'});
+
+ // ---- S9 values ----
+ const vOut=1-P(t,53.6,54.15);
+ [['#v1',50.45],['#v2',51.05],['#v3',51.65]].forEach(([id,a])=>{const k=P(t,a,a+0.65,eout);const e=$(id.slice(1));op(id,k*vOut);e.style.transform=`translateY(${(1-k)*40}px)`;e.style.filter=`blur(${(1-k)*8}px)`;});
+
+ // ---- S10 end card ----
+ const ei=P(t,54.25,54.95,back);op('#eIcon',cl(P(t,54.25,54.6)));st('#eIcon',{transform:`scale(${lerp(0.6,1,ei)})`});
+ rise('#eName',P(t,54.6,55.2,eout),30);
+ const eb=P(t,55.1,55.6,back);op('#eBtn',cl(P(t,55.1,55.4)));st('#eBtn',{transform:`scale(${lerp(0.8,1,eb)})`});
+ rise('#eUrl',P(t,55.5,56.1,eout),20);
+ op('#end',t>=54?1:0);
+}
+window.render=render;window.T_END=T_END;
+render(parseFloat(Q.get('t')||'0'));
+</script>
+</body></html>
