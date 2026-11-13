@@ -253,4 +253,9 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: website
+          name: github-pages-${{ github.run_attempt }}
+      # The artifact list can lag a few seconds behind the upload.
+      - run: sleep 15
       - uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
