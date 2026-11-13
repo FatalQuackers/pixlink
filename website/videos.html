@@ -254,8 +254,22 @@
       <h1>Videos</h1>
       <p>Watch Tethr Link in action, learn how to set it up, or download a video to share. Every video comes in widescreen and vertical.</p>
     </div>
-    <div role="tablist" aria-label="Videos"><button role="tab" id="tab-trailer" aria-controls="panel-trailer" aria-selected="true" tabindex="0">Trailer</button><button role="tab" id="tab-hype" aria-controls="panel-hype" aria-selected="false" tabindex="-1">Hype cut</button><button role="tab" id="tab-setup" aria-controls="panel-setup" aria-selected="false" tabindex="-1">Setup guide</button></div>
-    <section role="tabpanel" id="panel-trailer" aria-labelledby="tab-trailer" >
+    <div role="tablist" aria-label="Videos"><button role="tab" id="tab-reveal" aria-controls="panel-reveal" aria-selected="true" tabindex="0">Reveal</button><button role="tab" id="tab-trailer" aria-controls="panel-trailer" aria-selected="false" tabindex="-1">Trailer</button><button role="tab" id="tab-hype" aria-controls="panel-hype" aria-selected="false" tabindex="-1">Hype cut</button><button role="tab" id="tab-setup" aria-controls="panel-setup" aria-selected="false" tabindex="-1">Setup guide</button></div>
+    <section role="tabpanel" id="panel-reveal" aria-labelledby="tab-reveal" >
+      <h2>Introducing Tethr Link</h2>
+      <p class="vdesc">The reveal: Pixlink's new name, now for every Android phone and iPhone. 56 seconds, in two shapes.</p>
+      <div class="vgrid">
+        <div class="vcard">
+          <video controls preload="none" playsinline poster="videos/reveal-16x9.jpg" width="1920" height="1080"><source src="videos/reveal-16x9.mp4" type="video/mp4"></video>
+          <div class="vmeta"><div><b>Widescreen</b><span>16:9 · YouTube, websites, Discord</span></div><a class="dl" href="videos/reveal-16x9.mp4" download="Tethr-Link-reveal-16x9.mp4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Download</a></div>
+        </div>
+        <div class="vcard tall">
+          <video controls preload="none" playsinline poster="videos/reveal-9x16.jpg" width="1080" height="1920"><source src="videos/reveal-9x16.mp4" type="video/mp4"></video>
+          <div class="vmeta"><div><b>Vertical</b><span>9:16 · TikTok, Shorts, Reels</span></div><a class="dl" href="videos/reveal-9x16.mp4" download="Tethr-Link-reveal-9x16.mp4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Download</a></div>
+        </div>
+      </div>
+    </section>
+    <section role="tabpanel" id="panel-trailer" aria-labelledby="tab-trailer" hidden>
       <h2>Launch trailer</h2>
       <p class="vdesc">The calm product tour: linking, notifications, mirroring, hotspot, calls, photos and files. 59 seconds, in two shapes.</p>
       <div class="vgrid">

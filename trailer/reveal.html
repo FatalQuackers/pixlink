@@ -1,0 +1,253 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Tethr Link reveal</title>
+<style>
+:root{--blue:#3D7BFF;--teal:#2FD3B5;--ink:#05070D}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;background:#000}
+body{font-family:'Inter Display','Inter',sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:0;top:0;overflow:hidden;background:#000}
+.a{position:absolute}
+.word{position:absolute;left:0;width:100%;text-align:center;font-weight:700;letter-spacing:-0.04em;line-height:1}
+.sub{position:absolute;left:0;width:100%;text-align:center;font-weight:500;letter-spacing:-0.01em;color:#A9B3C9}
+.grad{background:linear-gradient(100deg,#fff 0%,#fff 35%,#9FC1FF 50%,#7FF0DA 60%,#fff 75%,#fff 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+#line{position:absolute;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(61,123,255,0),#7FB0FF 30%,#BFF7EC 50%,#7FB0FF 70%,rgba(61,123,255,0));box-shadow:0 0 18px #3D7BFF,0 0 40px rgba(47,211,181,.6)}
+#spark{position:absolute;border-radius:50%;background:radial-gradient(circle,#fff 0,#CFE0FF 20%,rgba(61,123,255,.6) 45%,rgba(61,123,255,0) 70%)}
+.dev{position:absolute;border:2px solid rgba(160,195,255,.9);box-shadow:0 0 24px rgba(61,123,255,.55),inset 0 0 24px rgba(61,123,255,.18)}
+.devfill{position:absolute;inset:6px;border-radius:inherit;overflow:hidden;background:linear-gradient(160deg,#16244A,#0B1328)}
+.pulse{position:absolute;width:10px;height:10px;border-radius:50%;background:#DFFBF5;box-shadow:0 0 14px #2FD3B5,0 0 30px #3D7BFF}
+.card{position:absolute;border-radius:16px;background:rgba(255,255,255,.96);color:#0B1328;box-shadow:0 20px 50px -10px rgba(0,0,0,.6);font-family:'Inter',sans-serif}
+.card b{display:block;font-weight:700}
+.card span{display:block;color:#4A5675}
+.chip{position:absolute;border-radius:50%}
+#glow{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(61,123,255,.35),rgba(47,211,181,.12) 40%,rgba(0,0,0,0) 70%)}
+#icon{position:absolute;border-radius:24%;background:linear-gradient(145deg,#4D88FF,#2557D6);box-shadow:0 30px 80px -10px rgba(61,123,255,.7),inset 0 2px 0 rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center}
+#icon svg{width:62%;height:62%}
+.old{position:absolute;left:0;width:100%;text-align:center;font-weight:600;letter-spacing:-0.02em;color:#8A93A8}
+.letter{display:inline-block}
+.mini{position:absolute;border:2px solid rgba(160,195,255,.85);box-shadow:0 0 18px rgba(61,123,255,.45)}
+.feat{position:absolute;left:0;width:100%;text-align:center;font-weight:800;letter-spacing:-0.045em;line-height:1}
+#vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.65) 100%);pointer-events:none}
+#fade{position:absolute;inset:0;background:#000;pointer-events:none}
+</style></head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+  <div id="line"></div>
+  <div id="spark"></div>
+
+  <!-- devices (outline, then filled) -->
+  <div id="phone" class="dev"><div class="devfill" id="phoneFill"></div></div>
+  <div id="laptop" class="dev"><div class="devfill" id="lapFill"></div></div>
+  <div id="lapBase" class="a"></div>
+  <div id="link" class="a"></div>
+  <div id="p1" class="pulse"></div><div id="p2" class="pulse"></div><div id="p3" class="pulse"></div>
+
+  <!-- feature props -->
+  <div id="notif" class="card"></div>
+  <div id="bubble" class="card"></div>
+  <div id="call" class="card"></div>
+  <div id="photos" class="a"></div>
+  <div id="file" class="card"></div>
+  <div id="mirror" class="a"></div>
+
+  <!-- every phone -->
+  <div id="row" class="a"></div>
+
+  <!-- words -->
+  <div id="w1" class="word"></div>
+  <div id="w2" class="sub"></div>
+  <div id="old" class="old">Pixlink</div>
+  <div id="intro" class="sub">Introducing</div>
+  <div id="name" class="word"></div>
+  <div id="icon"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="22" width="26" height="46" rx="6"/><rect x="52" y="30" width="36" height="26" rx="4"/><path d="M46 74h46"/><path d="M40 45h12" stroke-dasharray="4 5"/></svg></div>
+  <div id="feat" class="feat"></div>
+  <div id="tag" class="sub"></div>
+  <div id="url" class="sub"></div>
+
+  <div id="vignette"></div>
+  <div id="fade"></div>
+</div>
+<script>
+const Q=new URLSearchParams(location.search);
+const F=Q.get('f')||'wide';
+const W=F==='wide'?1920:1080, H=F==='wide'?1080:1920;
+const tall=F!=='wide';
+const S=tall?1.0:1.0;
+const $=id=>document.getElementById(id);
+const stage=$('stage'); stage.style.width=W+'px'; stage.style.height=H+'px';
+
+// ---------- easing ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const io=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;          // ease in-out cubic
+const out=t=>1-Math.pow(1-t,3);
+const outBack=t=>{const c1=1.5,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)};
+const prog=(t,a,b)=>clamp((t-a)/(b-a));
+// fade in over [a,a+d], hold, fade out over [b-d2,b]
+const win=(t,a,b,d=.6,d2=.6)=>Math.min(out(prog(t,a,a+d)),1-io(prog(t,b-d2,b)));
+function css(el,o){for(const k in o)el.style[k]=o[k];}
+
+// ---------- layout ----------
+const CX=W/2, CY=H/2;
+const big=tall?118:150, mid=tall?64:70, small=tall?34:30;
+const phoneW=tall?230:200, phoneH=phoneW*2.05;
+const lapW=tall?560:620, lapH=lapW*0.62;
+const gap=tall?0:180;
+// wide: phone left, laptop right; tall: laptop top, phone bottom
+const phonePos=tall?{x:CX-phoneW/2,y:CY+140}:{x:CX-gap/2-phoneW-lapW*0.18,y:CY-phoneH/2+30};
+const lapPos=tall?{x:CX-lapW/2,y:CY-lapH-220}:{x:CX+gap/2-lapW*0.18,y:CY-lapH/2-10};
+
+// phone screen content (simple home)
+$('phoneFill').innerHTML='<div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,#3D7BFF55,transparent 60%),radial-gradient(circle at 80% 85%,#2FD3B544,transparent 55%)"></div>'+
+  Array.from({length:12},(_,i)=>`<i style="position:absolute;left:${16+(i%4)*24}%;top:${30+Math.floor(i/4)*14}%;width:15%;aspect-ratio:1;border-radius:28%;background:hsl(${210+i*23},70%,${55+(i%3)*8}%)"></i>`).join('');
+$('lapFill').innerHTML='<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1A2B57,#0E1A38)"></div><div style="position:absolute;left:6%;top:9%;width:88%;height:80%;border-radius:10px;background:#F4F7FD"></div>'+
+  '<div style="position:absolute;left:6%;top:9%;width:24%;height:80%;border-radius:10px 0 0 10px;background:#E6ECF7"></div>';
+css($('lapBase'),{background:'linear-gradient(#5A6680,#262E45)',borderRadius:'2px 2px 16px 16px'});
+
+// cards
+$('notif').innerHTML='<div style="display:flex;gap:14px;align-items:center;padding:16px 18px"><i style="width:44px;height:44px;border-radius:12px;background:#25D366;flex:none"></i><div><b style="font-size:19px">Mum</b><span style="font-size:16px">Dinner at 7? 🍝</span></div></div>';
+$('bubble').innerHTML='<div style="padding:16px 22px;font-size:20px;font-weight:600">On my way! 🚗</div>';
+$('call').innerHTML='<div style="padding:18px 20px"><b style="font-size:20px">Alex is calling</b><span style="font-size:15px;margin-top:2px">Mobile</span><div style="display:flex;gap:10px;margin-top:14px"><i style="flex:1;height:38px;border-radius:19px;background:#1E9E63"></i><i style="flex:1;height:38px;border-radius:19px;background:#E5484D"></i></div></div>';
+$('photos').innerHTML=Array.from({length:6},(_,i)=>`<i style="position:absolute;left:${(i%3)*34}%;top:${Math.floor(i/3)*52}%;width:31%;height:48%;border-radius:12px;background:linear-gradient(${i*60}deg,hsl(${20+i*50},75%,62%),hsl(${200+i*20},70%,45%))"></i>`).join('');
+$('file').innerHTML='<div style="display:flex;gap:14px;align-items:center;padding:16px 18px"><i style="width:40px;height:50px;border-radius:8px;background:#3D7BFF;flex:none"></i><div><b style="font-size:18px">Holiday.mp4</b><span style="font-size:15px">Sent to your PC</span></div></div>';
+$('mirror').innerHTML=$('phoneFill').innerHTML;
+css($('mirror'),{borderRadius:'16px',overflow:'hidden',border:'2px solid #0B1328'});
+
+// every-phone row: different shapes (punch hole, notch, wide, tall)
+const shapes=[{w:.46,r:.16,cut:'dot'},{w:.5,r:.2,cut:'notch'},{w:.44,r:.1,cut:'dot'},{w:.48,r:.18,cut:'pill'},{w:.47,r:.14,cut:'dot'}];
+const miniH=tall?230:250;
+$('row').innerHTML=shapes.map((s,i)=>`<div class="mini" id="m${i}" style="height:${miniH}px;width:${miniH*s.w}px;border-radius:${miniH*s.r*.5}px">`+
+  (s.cut==='notch'?`<i style="position:absolute;left:30%;top:0;width:40%;height:7%;border-radius:0 0 10px 10px;background:rgba(160,195,255,.85)"></i>`:
+   s.cut==='pill'?`<i style="position:absolute;left:38%;top:3%;width:24%;height:4%;border-radius:8px;background:rgba(160,195,255,.85)"></i>`:
+   `<i style="position:absolute;left:46%;top:3%;width:8%;aspect-ratio:1;border-radius:50%;background:rgba(160,195,255,.85)"></i>`)+`</div>`).join('');
+
+const NAME='Tethr Link';
+// "Tethr" in white, "Link" fading from blue to teal; a soft glow behind every letter.
+const tint=i=>{if(i<6)return '#FFFFFF';const k=(i-6)/3;const c1=[159,193,255],c2=[127,240,218];return `rgb(${c1.map((v,j)=>Math.round(v+(c2[j]-v)*k)).join(',')})`};
+$('name').innerHTML=[...NAME].map((c,i)=>`<span class="letter" style="color:${tint(i)};text-shadow:0 0 40px rgba(61,123,255,.55)">${c===' '?'&nbsp;':c}</span>`).join('');
+const letters=[...document.querySelectorAll('#name .letter')];
+
+const FEATS=[['Notifications.','notif'],['Messages.','bubble'],['Calls.','call'],['Photos.','photos'],['Files.','file'],['Your screen.','mirror']];
+
+function render(t){
+  // ---------- glow + vignette ----------
+  const g=tall?1200:1400;
+  css($('glow'),{width:g+'px',height:g+'px',left:(CX-g/2)+'px',top:(CY-g/2+(t>17&&t<20?0:0))+'px',
+    opacity:(0.25*win(t,0.5,13,2,2)+0.9*win(t,17.2,21.5,.4,1.6)+0.35*win(t,21,38,1,1)+0.8*win(t,46,56,1,1)).toFixed(3),
+    transform:`scale(${(1+0.08*Math.sin(t*0.8)).toFixed(3)})`});
+
+  // ---------- A: spark → line ----------
+  const sp=win(t,0.8,6.2,0.8,0.8);
+  const sps=40+60*out(prog(t,0.8,2))+30*Math.sin(t*3)*sp;
+  css($('spark'),{width:sps+'px',height:sps+'px',left:(CX-sps/2)+'px',top:(CY-sps/2-(tall?0:0))+'px',opacity:(sp*(1-0.6*prog(t,4,6))).toFixed(3)});
+  const lw=io(prog(t,2,4.6))*(tall?W*0.84:W*0.7);
+  const lineOn=win(t,2,6.6,.3,.8);
+  css($('line'),{width:lw+'px',left:(CX-lw/2)+'px',top:(CY-1)+'px',opacity:lineOn.toFixed(3)});
+  css($('w1'),{fontSize:mid+'px',top:(CY+(tall?90:70))+'px',opacity:win(t,3.4,6,0.7,0.6).toFixed(3),
+    transform:`translateY(${(14*(1-out(prog(t,3.4,4.4)))).toFixed(1)}px)`});
+  $('w1').textContent='Your phone. Your PC.';
+
+  // ---------- B: devices draw in, linked ----------
+  const devOn=win(t,6,21.3,1,.8)+win(t,21.3,38.4,.01,.8);
+  const draw=out(prog(t,6,8));
+  const fill=io(prog(t,20.2,21.6));
+  const devVis=clamp(devOn);
+  // phone
+  css($('phone'),{left:phonePos.x+'px',top:phonePos.y+'px',width:phoneW+'px',height:phoneH+'px',borderRadius:(phoneW*0.17)+'px',
+    opacity:devVis.toFixed(3),clipPath:`inset(${(100-draw*100).toFixed(1)}% 0 0 0 round ${phoneW*0.17}px)`});
+  css($('laptop'),{left:lapPos.x+'px',top:lapPos.y+'px',width:lapW+'px',height:lapH+'px',borderRadius:'18px 18px 6px 6px',
+    opacity:devVis.toFixed(3),clipPath:`inset(0 0 ${(100-draw*100).toFixed(1)}% 0)`});
+  css($('lapBase'),{left:(lapPos.x-lapW*0.06)+'px',top:(lapPos.y+lapH)+'px',width:(lapW*1.12)+'px',height:'18px',opacity:(devVis*draw).toFixed(3)});
+  $('phoneFill').style.opacity=fill.toFixed(3); $('lapFill').style.opacity=fill.toFixed(3);
+  // link between them
+  const a=tall?{x:CX,y:phonePos.y}:{x:phonePos.x+phoneW,y:phonePos.y+phoneH/2};
+  const b=tall?{x:CX,y:lapPos.y+lapH+18}:{x:lapPos.x,y:lapPos.y+lapH/2};
+  const lk=io(prog(t,7.6,9));
+  if(tall){css($('link'),{left:(a.x-1)+'px',top:(b.y)+'px',width:'2px',height:((a.y-b.y)*lk)+'px',background:'linear-gradient(#7FB0FF,#BFF7EC)'});}
+  else{css($('link'),{left:a.x+'px',top:(a.y-1)+'px',height:'2px',width:((b.x-a.x)*lk)+'px',background:'linear-gradient(90deg,#7FB0FF,#BFF7EC)'});}
+  css($('link'),{boxShadow:'0 0 14px #3D7BFF',opacity:(devVis*(1-0.85*fill)).toFixed(3)});
+  ['p1','p2','p3'].forEach((id,i)=>{
+    const ph=((t*0.55+i/3)%1); const on=win(t,8.6,20,.4,.5)*(1-fill);
+    const x=lerp(a.x,b.x,ph), y=lerp(a.y,b.y,ph);
+    css($(id),{left:(x-5)+'px',top:(y-5)+'px',opacity:(on*Math.sin(ph*Math.PI)).toFixed(3)});
+  });
+  css($('w2'),{fontSize:(small+6)+'px',top:(tall?CY+40-phoneH*0:CY+phoneH/2+80)+'px',opacity:win(t,9.4,12.8,.6,.6).toFixed(3)});
+  if(tall) $('w2').style.top=(lapPos.y-90)+'px';
+  $('w2').textContent='Always in touch.';
+
+  // ---------- C: old name dissolves, new name reveals ----------
+  const devFadeForReveal=1-win(t,13,20.6,.8,.8);
+  ['phone','laptop','lapBase','link'].forEach(id=>$(id).style.opacity=(parseFloat($(id).style.opacity||0)*devFadeForReveal).toFixed(3));
+  ['p1','p2','p3'].forEach(id=>$(id).style.opacity=(parseFloat($(id).style.opacity||0)*devFadeForReveal).toFixed(3));
+  const oldOn=win(t,13.6,16.4,.8,.9);
+  css($('old'),{fontSize:(mid+10)+'px',top:(CY-mid/2)+'px',opacity:oldOn.toFixed(3),
+    filter:`blur(${(10*prog(t,15.5,16.4)).toFixed(1)}px)`,transform:`translateY(${(-30*io(prog(t,15.5,16.4))).toFixed(1)}px) scale(${(1+0.15*prog(t,15.5,16.4)).toFixed(3)})`,letterSpacing:(-0.02+0.25*prog(t,15.5,16.4))+'em'});
+  const introOn=win(t,16.6,20.6,.5,.6);
+  css($('intro'),{fontSize:(small+4)+'px',top:(CY-big*0.95)+'px',opacity:introOn.toFixed(3),letterSpacing:'0.02em'});
+  const nameOn=win(t,17.4,20.6,.01,.7);
+  css($('name'),{fontSize:(big*1.12)+'px',top:(CY-big*0.42)+'px',opacity:nameOn.toFixed(3)});
+  if(t<17.4||(t>20.6&&t<46.6)) $('name').style.opacity='0';
+  letters.forEach((el,i)=>{const p=out(prog(t,17.4+i*0.07,18.2+i*0.07));
+    el.style.transform=`translateY(${((1-p)*60).toFixed(1)}px)`; el.style.opacity=p.toFixed(3); el.style.filter=`blur(${((1-p)*8).toFixed(1)}px)`;});
+  const iconS=tall?190:170;
+  const iconOn=Math.max(win(t,18.6,20.6,.01,.6),win(t,46.2,56,.01,1));
+  const iconP=Math.max(outBack(prog(t,18.6,19.4)),outBack(prog(t,46.2,47.1)));
+  const iconY=t<30?CY+big*0.85:CY-(tall?300:250);
+  css($('icon'),{width:iconS+'px',height:iconS+'px',left:(CX-iconS/2)+'px',top:(iconY)+'px',opacity:iconOn.toFixed(3),transform:`scale(${(0.4+0.6*iconP).toFixed(3)}) rotate(${((1-clamp(iconP))*-14).toFixed(1)}deg)`});
+
+  // ---------- D: features ----------
+  const fStart=21.6, fLen=2.75;
+  const fi=Math.floor((t-fStart)/fLen);
+  const inFeat=t>=fStart&&t<fStart+FEATS.length*fLen;
+  const featEl=$('feat');
+  FEATS.forEach(([,id])=>$(id).style.opacity='0');
+  if(inFeat){
+    const lt=t-fStart-fi*fLen;
+    const [word,id]=FEATS[fi];
+    featEl.textContent=word;
+    const wOn=Math.min(out(clamp(lt/0.35)),1-io(clamp((lt-(fLen-0.35))/0.35)));
+    css(featEl,{fontSize:(tall?100:120)+'px',top:(tall?lapPos.y-170:110)+'px',opacity:wOn.toFixed(3),transform:`scale(${(1.08-0.08*out(clamp(lt/0.5))).toFixed(3)})`});
+    // prop flies from phone to laptop screen
+    const el=$(id); const fly=io(clamp((lt-0.25)/1.3)); const pOn=Math.min(out(clamp(lt/0.3)),1-io(clamp((lt-(fLen-0.3))/0.3)));
+    const from={x:phonePos.x+phoneW/2,y:phonePos.y+phoneH*0.35};
+    const to={x:lapPos.x+lapW*0.58,y:lapPos.y+lapH*0.42};
+    const sizes={notif:[340,80],bubble:[260,60],call:[300,120],photos:[300,180],file:[320,82],mirror:[150,300]};
+    const [w,h]=sizes[id];
+    const sc=lerp(0.62,1,fly);
+    const x=lerp(from.x,to.x,fly)-w/2, y=lerp(from.y,to.y,fly)-h/2-Math.sin(fly*Math.PI)*(tall?120:90);
+    css(el,{left:x+'px',top:y+'px',width:w+'px',height:h+'px',opacity:pOn.toFixed(3),transform:`scale(${sc.toFixed(3)})`});
+  } else featEl.style.opacity='0';
+
+  // ---------- E: every phone ----------
+  const rowOn=win(t,38.6,46.2,.6,.8);
+  const rowEl=$('row');
+  const mw=shapes.map(s=>miniH*s.w); const sp2=tall?26:46; const total=mw.reduce((a,b)=>a+b,0)+sp2*(shapes.length-1);
+  let x0=CX-total/2;
+  const rowY=tall?CY-miniH/2+80:CY-miniH/2+40;
+  shapes.forEach((s,i)=>{const p=outBack(prog(t,39+i*0.18,39.7+i*0.18));
+    css($('m'+i),{left:x0+'px',top:(rowY+(1-clamp(p))*60)+'px',opacity:(rowOn*clamp(p)).toFixed(3),transform:`scale(${(0.7+0.3*clamp(p)).toFixed(3)})`});
+    x0+=mw[i]+sp2;});
+  css($('tag'),{fontSize:(tall?70:76)+'px',fontWeight:'700',color:'#fff',letterSpacing:'-0.035em',top:(tall?rowY-190:rowY-150)+'px',opacity:rowOn.toFixed(3)});
+  $('tag').textContent=t<42.4?'Every Android.':'Every iPhone.';
+  if(t>=42.4&&t<46.2) $('tag').style.opacity=(rowOn*out(prog(t,42.4,42.9))).toFixed(3);
+  css($('url'),{fontSize:(small+8)+'px',top:(rowY+miniH+60)+'px',opacity:win(t,40.4,46.2,.6,.8).toFixed(3),color:'#A9B3C9'});
+  $('url').textContent='One PC. Free and open source.';
+
+  // ---------- F: final lockup ----------
+  if(t>=46){
+    css($('name'),{opacity:win(t,46.6,56,.01,1).toFixed(3),top:(CY-big*0.2+(tall?20:30))+'px'});
+    letters.forEach((el,i)=>{const p=out(prog(t,46.6+i*0.05,47.3+i*0.05));
+      el.style.transform=`translateY(${((1-p)*40).toFixed(1)}px)`; el.style.opacity=p.toFixed(3); el.style.filter='none';});
+    css($('tag'),{fontSize:(small+10)+'px',fontWeight:'500',color:'#C9D2E6',letterSpacing:'-0.01em',top:(CY+big*0.95+(tall?40:50))+'px',opacity:win(t,48,56,.6,1).toFixed(3)});
+    $('tag').textContent='Your phone, on your PC.';
+    css($('url'),{fontSize:(small)+'px',top:(CY+big*0.95+(tall?120:116))+'px',opacity:win(t,49,56,.6,1).toFixed(3),color:'#7FB0FF'});
+    $('url').textContent='fatalquackers.github.io/pixlink';
+  }
+
+  // ---------- global fades ----------
+  css($('fade'),{opacity:(1-out(prog(t,0,0.6))+io(prog(t,55,56.5))).toFixed(3)});
+}
+render(+(Q.get('t')||0));
+</script>
+</body></html>

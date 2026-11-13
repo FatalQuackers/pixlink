@@ -1,0 +1,9 @@
+node_modules/
+r*/
+!reveal*
+shot_*
+*.wav
+wide/
+tall/
+hwide/
+htall/
