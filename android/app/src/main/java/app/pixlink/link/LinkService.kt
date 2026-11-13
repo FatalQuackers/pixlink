@@ -48,6 +48,7 @@ class LinkService : LifecycleService() {
     private val wakes = ConcurrentHashMap<String, Channel<Unit>>()
     private var pairJob: Job? = null
     @Volatile private var beaconSocket: java.net.DatagramSocket? = null
+    private var isForeground = false
 
     override fun onCreate() {
         super.onCreate()
@@ -77,13 +78,26 @@ class LinkService : LifecycleService() {
 
         // Keep the status-bar notification in step with the connections.
         lifecycleScope.launch {
-            LinkHub.states.collect { refreshNotification() }
+            LinkHub.states.collect {
+                refreshNotification()
+                runCatching { app.pixlink.widget.PixlinkWidget.update(this@LinkService) }
+            }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        startForeground(NOTIF_ID, buildNotification("Connecting…"), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+        // Quiet mode runs without the notification (Android keeps us alive as the PC's companion app).
+        // Started with startForegroundService (normal mode, or quiet mode wasn't allowed) → must show it.
+        val foreground = intent?.getBooleanExtra(EXTRA_FOREGROUND, true) ?: !app.pixlink.companion.QuietMode.isActive(this)
+        if (foreground) {
+            startForeground(NOTIF_ID, buildNotification("Connecting…"), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+            isForeground = true
+            refreshNotification()
+        } else if (isForeground) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            isForeground = false
+        }
 
         when (intent?.action) {
             ACTION_PAIR -> intent.getStringExtra(EXTRA_PAIR_URI)?.let(PairingInfo::parse)?.let(::startPairing)
@@ -314,6 +328,7 @@ class LinkService : LifecycleService() {
     // ---------- Status bar notification ----------
 
     private fun refreshNotification() {
+        if (!isForeground) return // quiet mode: no notification at all
         val connected = LinkHub.states.value.values.filterIsInstance<LinkState.Connected>().map { it.pcName }
         // No "searching…" noise: while nothing is connected the notification just says Pixlink is ready.
         val text = if (connected.isNotEmpty()) "Connected to ${connected.joinToString()}" else "Ready. Connects when your PC is nearby."
@@ -347,24 +362,35 @@ class LinkService : LifecycleService() {
         private const val ACTION_PAIR = "app.pixlink.PAIR"
         private const val EXTRA_PAIR_URI = "uri"
 
+        private const val EXTRA_FOREGROUND = "foreground"
+
         /** Starts (or refreshes) connections to every paired PC. */
-        fun start(context: Context) {
-            context.startForegroundService(Intent(context, LinkService::class.java))
+        fun start(context: Context) = launch(context, Intent(context, LinkService::class.java))
+
+        /** Restarts the service, e.g. to switch quiet mode on or off. */
+        fun restart(context: Context) {
+            stop(context)
+            start(context)
+        }
+
+        /** Quiet mode: a plain service with no notification. Otherwise (or if Android says no): a foreground service. */
+        private fun launch(context: Context, intent: Intent) {
+            if (app.pixlink.companion.QuietMode.isActive(context) &&
+                runCatching { context.startService(Intent(intent).putExtra(EXTRA_FOREGROUND, false)) }.isSuccess) return
+            context.startForegroundService(intent.putExtra(EXTRA_FOREGROUND, true))
         }
 
         /** Pairs with a new PC (from a QR code, a typed code or a pasted link). */
         fun pair(context: Context, uri: String) {
             LinkHub.setPairing(LinkState.Connecting(PairingInfo.parse(uri)?.pcName ?: "your PC"))
-            context.startForegroundService(
-                Intent(context, LinkService::class.java).setAction(ACTION_PAIR).putExtra(EXTRA_PAIR_URI, uri)
-            )
+            launch(context, Intent(context, LinkService::class.java).setAction(ACTION_PAIR).putExtra(EXTRA_PAIR_URI, uri))
         }
 
         /** Forgets one PC and drops its connection. */
         fun forget(context: Context, pcId: String) {
             PairedStore(context).remove(pcId)
             LinkHub.clearState(pcId)
-            context.startForegroundService(Intent(context, LinkService::class.java))
+            launch(context, Intent(context, LinkService::class.java))
         }
 
         fun stop(context: Context) {

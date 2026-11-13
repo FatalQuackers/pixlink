@@ -19,6 +19,8 @@ data class PairedPc(
     val id: String,
     /** The PC's Bluetooth address, if it allows Bluetooth connections. */
     val bt: String? = null,
+    /** The PC lets this phone find it over Bluetooth (for running without the always-on notification). */
+    val wake: Boolean = false,
 )
 
 /** Small key-value store for pairing and user settings. */
@@ -54,6 +56,38 @@ class PairedStore(context: Context) {
     fun updateHost(id: String, host: String) {
         pcs = pcs.map { if (it.id == id) it.copy(host = host) else it }
     }
+
+    fun updateWake(id: String, wake: Boolean) {
+        val list = pcs
+        if (list.firstOrNull { it.id == id }?.wake == wake) return
+        pcs = list.map { if (it.id == id) it.copy(wake = wake) else it }
+    }
+
+    /** Opt-in: run without the always-on notification, woken by Bluetooth when a PC is nearby. */
+    var quietMode: Boolean
+        get() = prefs.getBoolean("quietMode", false)
+        set(v) = prefs.edit { putBoolean("quietMode", v) }
+
+    /** The Companion Device association made for quiet mode (-1 = none) and the PC's Bluetooth address. */
+    var companionAssociation: Int
+        get() = prefs.getInt("companionAssociation", -1)
+        set(v) = prefs.edit { putInt("companionAssociation", v) }
+    var companionAddress: String?
+        get() = prefs.getString("companionAddress", null)
+        set(v) = prefs.edit { putString("companionAddress", v) }
+
+    /** App theme: "system", "light" or "dark", and the accent colour name ("dynamic" = wallpaper colours). */
+    var theme: String
+        get() = prefs.getString("theme", "system") ?: "system"
+        set(v) { prefs.edit { putString("theme", v) }; _themeVersion.value++ }
+    var accent: String
+        get() = prefs.getString("accent", "dynamic") ?: "dynamic"
+        set(v) { prefs.edit { putString("accent", v) }; _themeVersion.value++ }
+
+    /** The build whose "What's new" screen has been shown. */
+    var whatsNewSeen: Int
+        get() = prefs.getInt("whatsNewSeen", 0)
+        set(v) = prefs.edit { putInt("whatsNewSeen", v) }
 
     fun updateBluetooth(id: String, address: String?) {
         if (pc(id)?.bt == address) return
@@ -162,6 +196,9 @@ class PairedStore(context: Context) {
         private val json = Json { ignoreUnknownKeys = true }
         private val _paired = MutableStateFlow<List<PairedPc>>(emptyList())
         @Volatile private var loaded = false
+        private val _themeVersion = MutableStateFlow(0)
+        /** Bumps whenever the theme or accent changes, so the UI can redraw. */
+        val themeVersion: StateFlow<Int> = _themeVersion.asStateFlow()
 
         /** The paired PCs, live — the UI collects this so it updates the moment pairing changes. */
         val paired: StateFlow<List<PairedPc>> = _paired.asStateFlow()

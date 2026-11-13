@@ -69,7 +69,127 @@ public sealed partial class MainWindow : Window
         if (Ui.AnimationsEnabled) ((Microsoft.UI.Xaml.Media.Animation.Storyboard)Splash.Resources["SplashIn"]).Begin();
         await Task.Delay(Environment.GetCommandLineArgs().Contains("--background") ? 0 : 1300);
         var outro = (Microsoft.UI.Xaml.Media.Animation.Storyboard)Splash.Resources["SplashOut"];
-        outro.Completed += (_, _) => Splash.Visibility = Visibility.Collapsed;
+        outro.Completed += (_, _) => { Splash.Visibility = Visibility.Collapsed; ShowWhatsNewIfNeeded(); };
+        outro.Begin();
+    }
+
+    // ---------- What's new (once after each update) ----------
+    private static string ThisBuild => $"{Updater.Current}.{Updater.CurrentBuild}";
+
+    private void ShowWhatsNewIfNeeded()
+    {
+        var st = Session.Settings;
+        if (st.WhatsNewSeen == ThisBuild) return;
+        if (!st.SetupDone && !Session.IsPaired) { st.WhatsNewSeen = ThisBuild; st.Save(); return; } // fresh install
+        var path = Path.Combine(AppContext.BaseDirectory, "whatsnew.md");
+        if (!File.Exists(path)) return;
+        var lines = File.ReadAllLines(path).Select(l => l.Trim()).TakeWhile(l => !l.StartsWith("## Install"))
+            .Where(l => l.Length > 0 && !l.StartsWith("<!--") && !l.StartsWith("# ")).ToList();
+        if (lines.Count == 0) return;
+
+        WhatsNewVersion.Text = $"Pixlink {Updater.Current}";
+        WhatsNewList.Children.Clear();
+        var delay = 300;
+        foreach (var raw in lines)
+        {
+            var heading = raw.StartsWith('#');
+            var text = System.Text.RegularExpressions.Regex.Replace(raw.TrimStart('#', '-', '*', ' ').Replace("**", "").Replace("`", ""), @"\[(.+?)\]\(.+?\)", "$1");
+            FrameworkElement row = heading
+                ? new TextBlock { Text = text, Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"], Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["PixlinkBlueBrush"], Margin = new Thickness(0, 6, 0, 0) }
+                : new Grid
+                {
+                    ColumnSpacing = 12,
+                    ColumnDefinitions = { new ColumnDefinition { Width = GridLength.Auto }, new ColumnDefinition() },
+                    Children =
+                    {
+                        new Microsoft.UI.Xaml.Shapes.Ellipse { Width = 8, Height = 8, Margin = new Thickness(0, 7, 0, 0), VerticalAlignment = VerticalAlignment.Top, Fill = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["PixlinkBlueBrush"] },
+                        WithColumn(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap }, 1),
+                    },
+                };
+            WhatsNewList.Children.Add(row);
+            if (Ui.AnimationsEnabled) AnimateIn(row, delay);
+            delay += 80;
+        }
+        WhatsNewOverlay.Visibility = Visibility.Visible;
+        if (Ui.AnimationsEnabled)
+        {
+            ((Microsoft.UI.Xaml.Media.Animation.Storyboard)WhatsNewOverlay.Resources["WhatsNewIn"]).Begin();
+            BurstConfetti();
+        }
+    }
+
+    private static FrameworkElement WithColumn(FrameworkElement e, int col) { Grid.SetColumn(e, col); return e; }
+
+    /// <summary>Each line fades and slides up, one after another.</summary>
+    private static void AnimateIn(FrameworkElement e, int delayMs)
+    {
+        e.Opacity = 0;
+        var move = new Microsoft.UI.Xaml.Media.TranslateTransform { Y = 14 };
+        e.RenderTransform = move;
+        var sb = new Microsoft.UI.Xaml.Media.Animation.Storyboard();
+        var fade = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation { To = 1, Duration = TimeSpan.FromMilliseconds(320), BeginTime = TimeSpan.FromMilliseconds(delayMs) };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(fade, e);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(fade, "Opacity");
+        var slide = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            To = 0, Duration = TimeSpan.FromMilliseconds(420), BeginTime = TimeSpan.FromMilliseconds(delayMs),
+            EasingFunction = new Microsoft.UI.Xaml.Media.Animation.CubicEase { EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseOut },
+        };
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(slide, move);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(slide, "Y");
+        sb.Children.Add(fade);
+        sb.Children.Add(slide);
+        sb.Begin();
+    }
+
+    /// <summary>A one-off burst of confetti from behind the card.</summary>
+    private void BurstConfetti()
+    {
+        ConfettiCanvas.Children.Clear();
+        var rnd = new Random();
+        string[] colors = { "#3D7BFF", "#32C48D", "#FFC107", "#E91E63", "#9C27B0" };
+        double w = Math.Max(ConfettiCanvas.ActualWidth, 600), h = Math.Max(ConfettiCanvas.ActualHeight, 500);
+        var sb = new Microsoft.UI.Xaml.Media.Animation.Storyboard();
+        for (var i = 0; i < 46; i++)
+        {
+            var c = colors[i % colors.Length];
+            var color = Microsoft.UI.ColorHelper.FromArgb(255, Convert.ToByte(c[1..3], 16), Convert.ToByte(c[3..5], 16), Convert.ToByte(c[5..7], 16));
+            var piece = new Microsoft.UI.Xaml.Shapes.Rectangle { Width = 6 + rnd.Next(6), Height = 10 + rnd.Next(8), RadiusX = 2, RadiusY = 2, Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(color) };
+            var t = new Microsoft.UI.Xaml.Media.CompositeTransform();
+            piece.RenderTransform = t;
+            Canvas.SetLeft(piece, w / 2);
+            Canvas.SetTop(piece, h * 0.32);
+            ConfettiCanvas.Children.Add(piece);
+            var angle = rnd.NextDouble() * Math.PI * 2;
+            var dist = 180 + rnd.NextDouble() * 320;
+            var dur = TimeSpan.FromMilliseconds(1400 + rnd.Next(900));
+            void Add(string prop, double to, Microsoft.UI.Xaml.Media.Animation.EasingFunctionBase ease)
+            {
+                var a = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation { To = to, Duration = dur, EasingFunction = ease };
+                Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(a, t);
+                Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(a, prop);
+                sb.Children.Add(a);
+            }
+            var outEase = new Microsoft.UI.Xaml.Media.Animation.CubicEase { EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseOut };
+            Add("TranslateX", Math.Cos(angle) * dist, outEase);
+            Add("TranslateY", Math.Sin(angle) * dist + 260, new Microsoft.UI.Xaml.Media.Animation.QuadraticEase { EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseIn });
+            Add("Rotation", rnd.Next(-540, 540), outEase);
+            var fade = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation { To = 0, Duration = dur, BeginTime = TimeSpan.FromMilliseconds(400) };
+            Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(fade, piece);
+            Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(fade, "Opacity");
+            sb.Children.Add(fade);
+        }
+        sb.Completed += (_, _) => ConfettiCanvas.Children.Clear();
+        sb.Begin();
+    }
+
+    private void OnWhatsNewDone(object sender, RoutedEventArgs e)
+    {
+        Session.Settings.WhatsNewSeen = ThisBuild;
+        Session.Settings.Save();
+        if (!Ui.AnimationsEnabled) { WhatsNewOverlay.Visibility = Visibility.Collapsed; return; }
+        var outro = (Microsoft.UI.Xaml.Media.Animation.Storyboard)WhatsNewOverlay.Resources["WhatsNewOut"];
+        outro.Completed += (_, _) => { WhatsNewOverlay.Visibility = Visibility.Collapsed; WhatsNewCardScale.ScaleX = WhatsNewCardScale.ScaleY = 1; };
         outro.Begin();
     }
 

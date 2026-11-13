@@ -442,6 +442,56 @@
             </StackPanel>
         </Grid>
 
+        <!-- What's new: once after every update -->
+        <Grid x:Name="WhatsNewOverlay" Grid.RowSpan="2" Visibility="Collapsed" Background="{ThemeResource SmokeFillColorDefaultBrush}">
+            <Grid.Resources>
+                <Storyboard x:Key="WhatsNewIn">
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewOverlay" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewCardScale" Storyboard.TargetProperty="ScaleX" From="0.8" To="1" Duration="0:0:0.55">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.4" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewCardScale" Storyboard.TargetProperty="ScaleY" From="0.8" To="1" Duration="0:0:0.55">
+                        <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.4" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewLogoSpin" Storyboard.TargetProperty="Angle" From="-30" To="0" Duration="0:0:0.9">
+                        <DoubleAnimation.EasingFunction><ElasticEase EasingMode="EaseOut" Oscillations="2" Springiness="5" /></DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewGlowScale" Storyboard.TargetProperty="ScaleX" From="0.6" To="1.25" Duration="0:0:1.6" RepeatBehavior="Forever" />
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewGlowScale" Storyboard.TargetProperty="ScaleY" From="0.6" To="1.25" Duration="0:0:1.6" RepeatBehavior="Forever" />
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewGlow" Storyboard.TargetProperty="Opacity" From="0.6" To="0" Duration="0:0:1.6" RepeatBehavior="Forever" />
+                </Storyboard>
+                <Storyboard x:Key="WhatsNewOut">
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewCardScale" Storyboard.TargetProperty="ScaleX" To="1.06" Duration="0:0:0.3" />
+                    <DoubleAnimation Storyboard.TargetName="WhatsNewCardScale" Storyboard.TargetProperty="ScaleY" To="1.06" Duration="0:0:0.3" />
+                </Storyboard>
+            </Grid.Resources>
+            <Canvas x:Name="ConfettiCanvas" IsHitTestVisible="False" />
+            <Border Style="{StaticResource PanelCardStyle}" Width="480" MaxHeight="620" Padding="32,28" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    RenderTransformOrigin="0.5,0.5" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                <Border.RenderTransform><ScaleTransform x:Name="WhatsNewCardScale" /></Border.RenderTransform>
+                <Grid RowSpacing="16">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Grid Width="120" Height="120" HorizontalAlignment="Center">
+                        <Ellipse x:Name="WhatsNewGlow" Width="120" Height="120" Fill="{StaticResource PixlinkBlueBrush}" RenderTransformOrigin="0.5,0.5" Opacity="0">
+                            <Ellipse.RenderTransform><ScaleTransform x:Name="WhatsNewGlowScale" /></Ellipse.RenderTransform>
+                        </Ellipse>
+                        <Image Source="Assets/icon-512.png" Width="84" Height="84" RenderTransformOrigin="0.5,0.5">
+                            <Image.RenderTransform><RotateTransform x:Name="WhatsNewLogoSpin" /></Image.RenderTransform>
+                        </Image>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Spacing="4" HorizontalAlignment="Center">
+                        <TextBlock Text="What's new" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="WhatsNewVersion" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="WhatsNewList" Spacing="10" />
+                    </ScrollViewer>
+                    <Button Grid.Row="3" Content="Continue" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="OnWhatsNewDone" />
+                </Grid>
+            </Border>
+        </Grid>
+
         <!-- Splash on start-up -->
         <Grid x:Name="Splash" Grid.RowSpan="2" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
             <Grid.Resources>

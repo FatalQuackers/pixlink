@@ -23,3 +23,6 @@ BundleArtifacts/
 # OS
 .DS_Store
 Thumbs.db
+android/app/src/main/assets/whatsnew.md
+windows/Pixlink/whatsnew.md
+ios/whatsnew.txt

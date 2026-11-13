@@ -28,6 +28,10 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -65,6 +69,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -75,6 +80,8 @@ import app.pixlink.clipboard.ClipboardSync
 import app.pixlink.link.LinkHub
 import app.pixlink.link.LinkService
 import app.pixlink.link.LinkState
+import app.pixlink.link.msg
+import kotlinx.serialization.json.put
 import app.pixlink.pairing.PairedPc
 import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
@@ -93,6 +100,7 @@ fun HomeScreen(
     onSettings: () -> Unit,
     onGrantPermissions: () -> Unit,
     onGrantSms: () -> Unit = {},
+    onActivity: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val states by LinkHub.states.collectAsState()
@@ -112,7 +120,10 @@ fun HomeScreen(
         topBar = {
             LargeTopAppBar(
                 title = { Text("Pixlink", fontWeight = FontWeight.SemiBold) },
-                actions = { IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") } },
+                actions = {
+                    IconButton(onClick = onActivity) { Icon(Icons.Outlined.History, "Activity") }
+                    IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") }
+                },
                 scrollBehavior = scroll,
             )
         },
@@ -124,13 +135,11 @@ fun HomeScreen(
             val connected = pcs.filter { states[it.id] is LinkState.Connected }
             StatusHero(pcs, connected, onPair)
 
-            if (connected.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(onClick = { ctx.startActivity(Intent(ctx, app.pixlink.clipboard.ClipboardSendActivity::class.java)) }) {
-                        Icon(Icons.Outlined.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Send clipboard to PC")
-                    }
-                }
-            }
+            androidx.compose.animation.AnimatedVisibility(
+                connected.isNotEmpty(),
+                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically(),
+            ) { PcActions() }
 
             // Updates install by themselves; this card only shows progress or a step that needs you.
             val updateStatus by AppUpdater.status.collectAsState()
@@ -265,6 +274,56 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
             }
             if (status is AppUpdater.Status.Downloading) {
                 LinearProgressIndicator(progress = { status.progress }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+            }
+        }
+    }
+}
+
+/** Quick things to do with the connected PC. */
+@Composable
+private fun PcActions() {
+    val ctx = LocalContext.current
+    var ringing by remember { mutableStateOf(false) }
+    var lockSent by remember { mutableStateOf(false) }
+    LaunchedEffect(ringing) { if (ringing) { kotlinx.coroutines.delay(30_000); ringing = false } }
+    LaunchedEffect(lockSent) { if (lockSent) { kotlinx.coroutines.delay(2_500); lockSent = false } }
+
+    @Composable
+    fun Action(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, active: Boolean = false, modifier: Modifier, onClick: () -> Unit) {
+        val scale by androidx.compose.animation.core.animateFloatAsState(if (active) 1.04f else 1f, label = "press")
+        Card(
+            onClick = onClick,
+            colors = CardDefaults.cardColors(
+                containerColor = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+            modifier = modifier.scale(scale),
+        ) {
+            Column(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(icon, null)
+                Spacer(Modifier.size(6.dp))
+                Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            }
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Action(Icons.Outlined.ContentPaste, "Clipboard", modifier = Modifier.weight(1f)) {
+                ctx.startActivity(Intent(ctx, app.pixlink.clipboard.ClipboardSendActivity::class.java))
+            }
+            Action(Icons.Outlined.UploadFile, "Send files", modifier = Modifier.weight(1f)) {
+                (ctx as? app.pixlink.MainActivity)?.pickFilesToSend()
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Action(Icons.Outlined.NotificationsActive, if (ringing) "Stop ringing" else "Find my PC", active = ringing, modifier = Modifier.weight(1f)) {
+                ringing = !ringing
+                LinkHub.send(msg("pc.ring") { put("ring", ringing) })
+            }
+            Action(Icons.Outlined.Lock, if (lockSent) "Locked" else "Lock PC", active = lockSent, modifier = Modifier.weight(1f)) {
+                lockSent = true
+                LinkHub.send(msg("pc.lock"))
             }
         }
     }

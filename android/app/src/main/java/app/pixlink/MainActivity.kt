@@ -27,6 +27,8 @@ import app.pixlink.pairing.PairedStore
 import app.pixlink.power.PowerMode
 import android.net.Uri
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import app.pixlink.pairing.PairingInfo
 import app.pixlink.ui.AppFilterScreen
 import app.pixlink.ui.CodeEntryScreen
@@ -40,7 +42,25 @@ import app.pixlink.ui.SettingsScreen
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val ACTION_SEND_FILES = "app.pixlink.SEND_FILES"
+    }
+
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+
+    /** "Send files" (home screen, widget): pick files, then hand them to the share screen. */
+    private val filePicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isEmpty()) return@registerForActivityResult
+        startActivity(
+            Intent(this, app.pixlink.share.ShareActivity::class.java)
+                .setAction(Intent.ACTION_SEND_MULTIPLE)
+                .setType("*/*")
+                .putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+        )
+    }
+
+    fun pickFilesToSend() = filePicker.launch(arrayOf("*/*"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +72,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             PixlinkTheme {
                 Surface(Modifier.fillMaxSize()) {
+                    var whatsNew by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(app.pixlink.ui.WhatsNew.shouldShow(this@MainActivity)) }
                     if (!PixlinkApp.isSupportedDevice) NotSupported() else AppNav()
+                    // After an update: the changelog, once.
+                    androidx.compose.animation.AnimatedVisibility(
+                        whatsNew,
+                        enter = androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 1.08f),
+                    ) {
+                        app.pixlink.ui.WhatsNewScreen(onDone = { app.pixlink.ui.WhatsNew.markSeen(this@MainActivity); whatsNew = false })
+                    }
                 }
             }
         }
@@ -81,6 +110,7 @@ class MainActivity : ComponentActivity() {
     /** A pixlink://pair link opened from any QR scanner app, or "stop ringing" from the notification. */
     private fun handleDeepLink(intent: Intent?) {
         if (intent?.action == PhoneRinger.ACTION_STOP) { PhoneRinger.stop(this); return }
+        if (intent?.action == ACTION_SEND_FILES) { intent.action = null; pickFilesToSend(); return }
         val data = intent?.data?.toString() ?: return
         if (data.startsWith("pixlink://pair")) LinkService.pair(this, data)
     }
@@ -127,10 +157,12 @@ class MainActivity : ComponentActivity() {
                     onPair = { nav.navigate("pair") },
                     onPowerMode = { nav.navigate("power") },
                     onSettings = { nav.navigate("settings") },
+                    onActivity = { nav.navigate("activity") },
                     onGrantPermissions = ::requestCorePermissions,
                     onGrantSms = ::requestSmsPermissions,
                 )
             }
+            composable("activity") { app.pixlink.ui.ActivityScreen(onBack = { nav.popBackStack() }) }
             composable("pair") {
                 PairScreen(
                     onScanned = { uri ->

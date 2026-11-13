@@ -188,7 +188,7 @@ public partial class PhoneSession : ObservableObject
     private async Task SendPcInfoAsync()
     {
         var bt = _settings.AllowBluetooth ? await BluetoothLinkServer.AddressAsync() : null;
-        await SendAsync(Envelope.Of("pc.info", new { bt, bluetooth = _settings.AllowBluetooth && bt is not null }));
+        await SendAsync(Envelope.Of("pc.info", new { bt, bluetooth = _settings.AllowBluetooth && bt is not null, phoneWake = _settings.AllowPhoneWake }));
     }
 
     // ---------- Pairing ----------
@@ -291,6 +291,12 @@ public partial class PhoneSession : ObservableObject
                 _ = SendAsync(Envelope.Of("notif.sync"));
                 _ = SendAsync(Envelope.Of("hotspot.get"));
                 _ = SendAsync(Envelope.Of("media.get"));
+                break;
+            case "pc.ring":
+                if (m.Bool("ring") == false) FindMyPc.Stop(); else FindMyPc.Ring(PhoneName);
+                break;
+            case "pc.lock":
+                FindMyPc.Lock(PhoneName);
                 break;
             case "status":
                 Battery = m.Int("battery") ?? -1;
@@ -435,8 +441,18 @@ public partial class PhoneSession : ObservableObject
                 CheckLowBattery();
             });
         }
-        if (IsIPhone && IsPaired) _ = IPhoneBt.StartAsync(_settings.PcId);
+        IPhoneBt.ReadNotifications = IsIPhone;
+        if (IsPaired && (IsIPhone || _settings.AllowPhoneWake)) _ = IPhoneBt.StartAsync(_settings.PcId);
         else IPhoneBt.Stop();
+    }
+
+    /// <summary>Opt-in: lets a Pixel find this PC over Bluetooth and drop its always-on notification.</summary>
+    public void SetAllowPhoneWake(bool allow)
+    {
+        _settings.AllowPhoneWake = allow;
+        _settings.Save();
+        StartIPhoneBluetooth();
+        _ = SendPcInfoAsync();
     }
 
     partial void OnIsIPhoneChanged(bool value) { if (_ui is not null) StartIPhoneBluetooth(); }

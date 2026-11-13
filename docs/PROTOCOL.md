@@ -16,6 +16,15 @@ The PC also advertises an RFCOMM service (UUID `6f3c1e9a-2b7d-4c5e-9a1f-8d2b3c4e
 
 The phone's **Connect using** setting picks the route: `auto` (Wi-Fi first, Bluetooth if the PC can't be reached; switches back to Wi-Fi when the PC's beacon is seen again), `wifi` or `bluetooth`. Over Bluetooth the phone bridges the RFCOMM socket to a one-time loopback port and runs the normal TLS client through it, so the encryption and certificate pinning are identical to Wi-Fi. `hello` carries `via: "wifi" | "bluetooth"`. Screen mirroring (port 47101) needs Wi-Fi.
 
+## Find my PC, Lock PC
+
+- `pc.ring {ring: true|false}` (phone → PC): the PC shows a looping alarm pop-up and flashes its window; `false` stops it.
+- `pc.lock` (phone → PC): locks Windows.
+
+## Quiet mode (Pixel without the always-on notification)
+
+Opt-in on both sides. The PC (Settings → Connections → Let my Pixel find this PC over Bluetooth) advertises the same Bluetooth LE service iPhones use and sends `phoneWake: true` in `pc.info`. The phone makes a Companion Device Manager association with it (Android's own confirmation dialog), reads the PC id characteristic (which pairs them) to check it's the right PC, and calls `startObservingDevicePresence`. Android then binds `PixlinkCompanionService` whenever the PC is nearby, which keeps Pixlink running and lets it use the network without a foreground service, so no notification. If Android refuses a background start, Pixlink falls back to the normal foreground service.
+
 ## iPhone
 
 Pixlink for iPhone speaks the same protocol, with these differences:

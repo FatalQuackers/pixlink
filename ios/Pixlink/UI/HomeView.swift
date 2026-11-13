@@ -9,6 +9,8 @@ struct HomeView: View {
     @State private var pickingFiles = false
     @State private var confirmForget = false
     @State private var showingFeatures = false
+    @State private var showingWhatsNew = false
+    @State private var ringingPC = false
     @AppStorage("seenFeatures") private var seenFeatures = false
 
     var body: some View {
@@ -31,6 +33,17 @@ struct HomeView: View {
                         HStack(spacing: 12) {
                             ActionTile(title: "Send clipboard", icon: "doc.on.clipboard", disabled: !link.isConnected) { link.sendClipboard() }
                             ActionTile(title: "Received files", icon: "folder", disabled: false) { openReceivedFolder() }
+                        }
+                        HStack(spacing: 12) {
+                            ActionTile(title: ringingPC ? "Stop ringing" : "Find my PC", icon: "bell.and.waves.left.and.right", disabled: !link.isConnected) {
+                                ringingPC.toggle()
+                                link.send(Envelope("pc.ring", ["ring": ringingPC]))
+                                link.activity = ringingPC ? "Ringing \(link.pc?.name ?? "your PC")…" : nil
+                            }
+                            ActionTile(title: "Lock PC", icon: "lock", disabled: !link.isConnected) {
+                                link.send(Envelope("pc.lock"))
+                                link.activity = "Locked \(link.pc?.name ?? "your PC")"
+                            }
                         }
                     }
 
@@ -74,7 +87,11 @@ struct HomeView: View {
                     .ignoresSafeArea()
             }
             .sheet(isPresented: $showingFeatures) { FeaturesSheet() }
-            .onAppear { if !seenFeatures { seenFeatures = true; showingFeatures = true } }
+            .sheet(isPresented: $showingWhatsNew) { WhatsNewView() }
+            .onAppear {
+                if WhatsNew.shouldShow(paired: true) && seenFeatures { showingWhatsNew = true }
+                else if !seenFeatures { seenFeatures = true; WhatsNew.markSeen(); showingFeatures = true }
+            }
             .fileImporter(isPresented: $pickingFiles, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
                 if case let .success(urls) = result { Task { await link.sendFiles(urls) } }
             }

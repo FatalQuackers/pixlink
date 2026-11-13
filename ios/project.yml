@@ -20,6 +20,10 @@ targets:
     sources:
       - path: Pixlink
       - path: Shared
+      # What's new: CI copies notes/<version>.md here before building.
+      - path: whatsnew.txt
+        optional: true
+        buildPhase: resources
     entitlements:
       path: Pixlink/Pixlink.entitlements
       properties:

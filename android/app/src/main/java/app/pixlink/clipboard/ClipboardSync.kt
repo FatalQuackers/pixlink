@@ -23,6 +23,7 @@ object ClipboardSync {
 
     fun fromPc(context: Context, text: String) {
         lastFromPc = text
+        app.pixlink.activity.ActivityLog.add(context, app.pixlink.activity.ActivityLog.Entry(app.pixlink.activity.ActivityLog.Kind.ClipboardReceived, "Copied from your PC", text))
         Handler(Looper.getMainLooper()).post {
             context.getSystemService(ClipboardManager::class.java)
                 .setPrimaryClip(ClipData.newPlainText("From your PC", text))
@@ -37,6 +38,7 @@ object ClipboardSync {
         if (quiet && (text == lastFromPc || text == lastSent)) return false
         lastSent = text
         LinkHub.send(msg("clipboard.text") { put("text", text); put("auto", quiet) })
+        app.pixlink.activity.ActivityLog.add(context, app.pixlink.activity.ActivityLog.Entry(app.pixlink.activity.ActivityLog.Kind.ClipboardSent, "Clipboard sent to your PC", text))
         return true
     }
 

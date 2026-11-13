@@ -66,6 +66,17 @@
                     <ToggleSwitch x:Name="BluetoothSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnBluetoothToggled" />
                 </Grid>
             </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Let my Pixel find this PC over Bluetooth" />
+                        <TextBlock Style="{StaticResource Hint}" Text="Your Pixel can then hide its always-on notification and wake up whenever it's near this PC. Turn on Hide the always-on notification in Pixlink's settings on the phone too. Needs Bluetooth on this PC." />
+                        <TextBlock x:Name="PhoneWakeStatus" Style="{StaticResource Hint}" Visibility="Collapsed" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="PhoneWakeSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnPhoneWakeToggled" />
+                </Grid>
+            </Border>
 
             <!-- Clipboard -->
             <TextBlock Text="Clipboard" Style="{StaticResource Section}" />

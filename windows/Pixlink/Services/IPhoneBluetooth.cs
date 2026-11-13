@@ -52,6 +52,12 @@ public sealed class IPhoneBluetooth
     private readonly Dictionary<uint, byte> _categories = new();
     private bool _opening;
 
+    /// <summary>
+    /// True for iPhones (read notifications over ANCS). Pixels use the same service only to know when
+    /// this PC is nearby, so they can run without an always-on notification.
+    /// </summary>
+    public bool ReadNotifications { get; set; }
+
     public async Task StartAsync(string pcId)
     {
         _pcId = pcId;
@@ -144,6 +150,7 @@ public sealed class IPhoneBluetooth
 
     private async Task OpenAncsAsync(string deviceId)
     {
+        if (!ReadNotifications) return;
         if (_opening || (_device is not null && _notificationSource is not null && _device.DeviceId == deviceId)) return;
         _opening = true;
         try

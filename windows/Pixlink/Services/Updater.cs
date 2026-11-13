@@ -37,7 +37,12 @@ public static class Updater
         }
     }
 
-    /// <summary>Returns the newer release, or null if this is the latest. Throws if offline.</summary>
+    /// <summary>This build's build number (the CI run; 0 for local builds). A rebuild of the same version has a higher one.</summary>
+    public static int CurrentBuild => Math.Max(typeof(Updater).Assembly.GetName().Version?.Revision ?? 0, 0);
+
+    private static int BuildOf(string? body) =>
+        System.Text.RegularExpressions.Regex.Match(body ?? "", @"<!--\s*build:(\d+)\s*-->") is { Success: true } m ? int.Parse(m.Groups[1].Value) : 0;
+
     /// <summary>Early updates: also take pre-releases, which everyone else gets a day later.</summary>
     public static bool Early => App.Session.Settings.EarlyUpdates;
 
@@ -65,7 +70,8 @@ public static class Updater
         var zip = json["assets"]?.AsArray()
             .Select(a => a!.AsObject())
             .FirstOrDefault(a => a["name"]?.GetValue<string>().EndsWith("windows-x64.zip") == true)?["browser_download_url"]?.GetValue<string>();
-        if (zip is null || latest <= Current) return null;
+        var build = BuildOf(json["body"]?.GetValue<string>());
+        if (zip is null || latest < Current || (latest == Current && build <= CurrentBuild)) return null;
         return new Update(latest, zip, json["html_url"]!.GetValue<string>(), Clean(json["body"]?.GetValue<string>()),
             json["published_at"] is { } p ? DateTimeOffset.Parse(p.GetValue<string>()) : null,
             json["prerelease"]?.GetValue<bool>() == true);

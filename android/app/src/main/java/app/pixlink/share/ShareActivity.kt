@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.widget.Toast
+import app.pixlink.activity.ActivityLog
 import app.pixlink.files.FileBridge
 import app.pixlink.link.LinkHub
 import app.pixlink.link.LinkState
@@ -62,6 +63,8 @@ class ShareActivity : Activity() {
                         val (name, size) = describe(uri)
                         contentResolver.openInputStream(uri)?.let {
                             files.streamOut(UUID.randomUUID().toString(), name, it, size) { env -> LinkHub.sendTo(pcId, env) }
+                            ActivityLog.add(app, ActivityLog.Entry(
+                                ActivityLog.Kind.FileSent, name, uri.toString()))
                         }
                     }
                 }
@@ -69,6 +72,7 @@ class ShareActivity : Activity() {
             }
             !text.isNullOrBlank() -> {
                 pcIds.forEach { LinkHub.sendTo(it, msg("share.text") { put("text", text) }) }
+                ActivityLog.add(this, ActivityLog.Entry(ActivityLog.Kind.TextShared, "Text shared to your PC", text))
                 Toast.makeText(this, "Copied to your PC's clipboard", Toast.LENGTH_SHORT).show()
             }
         }

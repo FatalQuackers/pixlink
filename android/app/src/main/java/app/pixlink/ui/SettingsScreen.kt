@@ -89,6 +89,9 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                 )
             }
 
+            Section("Look")
+            LookSettings()
+
             Section("Notifications")
             SwitchRow("Send notifications to my PC", null, mirror) { mirror = it; store.mirrorNotifications = it }
             ListItem(
@@ -105,6 +108,9 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                 "Your PC shows \"New notification\" for notifications marked private",
                 hide,
             ) { hide = it; store.hideContent = it }
+
+            Section("Always-on notification")
+            QuietModeSettings()
 
             Section("Your PC can")
             SwitchRow("Ring this phone", "Find it at full volume, even on silent", ring) { ring = it; store.allowRing = it }

@@ -28,6 +28,8 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.1" />
+    <!-- What's new: CI copies notes/<version>.md here before building. -->
+    <None Include="whatsnew.md" Condition="Exists('whatsnew.md')" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

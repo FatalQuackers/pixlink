@@ -187,6 +187,8 @@ public sealed partial class SettingsPage : Page
         CodesSwitch.IsOn = st.CopyCodes;
         StopHiddenSwitch.IsOn = st.StopMirrorWhenHidden;
         BluetoothSwitch.IsOn = st.AllowBluetooth;
+        PhoneWakeSwitch.IsOn = st.AllowPhoneWake;
+        UpdatePhoneWakeStatus();
         QuickActionsHint.Text = string.Join(", ", st.QuickActions
             .Select(id => Pixlink.Models.QuickActionItem.Catalog.FirstOrDefault(c => c.Id == id).Name)
             .Where(n => n is not null));
@@ -210,6 +212,21 @@ public sealed partial class SettingsPage : Page
     {
         if (_loadingLayout) return;
         await App.Session.SetAllowBluetoothAsync(BluetoothSwitch.IsOn);
+    }
+
+    private async void OnPhoneWakeToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loadingLayout) return;
+        App.Session.SetAllowPhoneWake(PhoneWakeSwitch.IsOn);
+        await Task.Delay(1500); // let Bluetooth start, then say if it couldn't
+        UpdatePhoneWakeStatus();
+    }
+
+    private void UpdatePhoneWakeStatus()
+    {
+        var unsupported = App.Session.Settings.AllowPhoneWake && App.Session.IPhoneBtState == Pixlink.Services.IPhoneBluetooth.LinkState.NotSupported;
+        PhoneWakeStatus.Text = "This PC's Bluetooth can't do this (it needs Bluetooth 4.0+ with LE peripheral support). A USB Bluetooth adapter fixes it.";
+        PhoneWakeStatus.Visibility = unsupported ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void OnChooseQuickActions(object sender, RoutedEventArgs e)

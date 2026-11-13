@@ -19,6 +19,7 @@ object UpdateChecker {
 
     data class Update(val version: String, val apkUrl: String, val pageUrl: String)
 
+    private val BUILD_MARKER = Regex("<!--\\s*build:(\\d+)\\s*-->")
     private const val LATEST = "https://api.github.com/repos/FatalQuackers/pixlink/releases/latest"
 
     private val _available = MutableStateFlow<Update?>(null)
@@ -60,7 +61,10 @@ object UpdateChecker {
             ?.firstOrNull { it["name"]?.jsonPrimitive?.content?.endsWith(".apk") == true }
             ?.get("browser_download_url")?.jsonPrimitive?.content ?: page
 
-        val update = if (isNewer(latest, currentVersion)) Update(latest, apk, page) else null
+        // A rebuild of the same version (fixes shipped without a new number) has a higher build number.
+        val build = BUILD_MARKER.find(json["body"]?.jsonPrimitive?.content ?: "")?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        val sameVersionRebuild = !isNewer(currentVersion, latest) && !isNewer(latest, currentVersion) && build > BuildConfig.VERSION_CODE
+        val update = if (isNewer(latest, currentVersion) || sameVersionRebuild) Update(latest, apk, page) else null
         _available.value = update
         update
     }

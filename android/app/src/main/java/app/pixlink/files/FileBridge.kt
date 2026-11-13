@@ -160,7 +160,10 @@ class FileBridge(private val context: Context) {
         val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
         incoming[transferId] = context.contentResolver.openOutputStream(uri)!!
         pendingUris[transferId] = uri
+        incomingNames[transferId] = name
     }
+
+    private val incomingNames = ConcurrentHashMap<String, String>()
 
     private val pendingUris = ConcurrentHashMap<String, Uri>()
 
@@ -173,6 +176,8 @@ class FileBridge(private val context: Context) {
             incoming.remove(id)
             pendingUris.remove(id)?.let { uri ->
                 context.contentResolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
+                app.pixlink.activity.ActivityLog.add(context, app.pixlink.activity.ActivityLog.Entry(
+                    app.pixlink.activity.ActivityLog.Kind.FileReceived, incomingNames.remove(id) ?: "File", uri.toString()))
             }
             out(msg("file.done") { put("transferId", id) })
         }

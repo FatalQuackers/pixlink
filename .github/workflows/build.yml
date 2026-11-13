@@ -56,6 +56,8 @@ jobs:
       - name: Build release APK
         run: |
           V="${VERSION#v}"
+          # What's new screen: ship this version's notes inside the app.
+          if [ -f "${{ github.workspace }}/notes/$VERSION.md" ]; then mkdir -p app/src/main/assets && cp "${{ github.workspace }}/notes/$VERSION.md" app/src/main/assets/whatsnew.md; fi
           ./gradlew assembleRelease --stacktrace -PversionCode=${{ github.run_number }} -PversionName="$V" $SIGN_ARGS
       - uses: actions/upload-artifact@v4
         with:
@@ -75,6 +77,8 @@ jobs:
         # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
         run: |
           $v = "$env:VERSION".TrimStart('v')
+          # What's new screen: ship this version's notes inside the app.
+          if (Test-Path "notes/$env:VERSION.md") { Copy-Item "notes/$env:VERSION.md" windows/Pixlink/whatsnew.md }
           # Package downloads occasionally fail on the build servers; try the restore a few times.
           for ($i = 1; $i -le 3; $i++) {
             msbuild windows/Pixlink/Pixlink.csproj /t:Restore /p:Configuration=Release /p:Platform=x64 /v:minimal
@@ -82,7 +86,7 @@ jobs:
             Write-Host "Restore failed (attempt $i), retrying…"; Start-Sleep -Seconds 15
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          msbuild windows/Pixlink/Pixlink.csproj /p:Configuration=Release /p:Platform=x64 /p:Version=$v /v:minimal
+          msbuild windows/Pixlink/Pixlink.csproj /p:Configuration=Release /p:Platform=x64 /p:Version=$v /p:AssemblyVersion="$v.${{ github.run_number }}" /p:FileVersion="$v.${{ github.run_number }}" /v:minimal
       - name: Find the app folder
         shell: pwsh
         run: |
@@ -120,6 +124,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate the Xcode project
         run: |
+          # What's new screen: ship this version's notes inside the app.
+          if [ -f "../notes/$VERSION.md" ]; then cp "../notes/$VERSION.md" whatsnew.txt; fi
           brew install xcodegen
           xcodegen generate
       - name: Build
@@ -162,6 +168,8 @@ jobs:
       - name: Release notes
         run: |
           if [ -f "${{ github.workspace }}/notes/${{ inputs.tag || github.ref_name }}.md" ]; then cp "notes/${{ inputs.tag || github.ref_name }}.md" release-notes.md; else echo "Bug fixes and improvements." > release-notes.md; fi
+          # The build number lets installed apps spot a rebuild of the same version.
+          printf '\n<!-- build:%s -->\n' "${{ github.run_number }}" >> release-notes.md
       - name: Package files
         run: |
           cp dist/pixlink-android/*.apk Pixlink-android.apk

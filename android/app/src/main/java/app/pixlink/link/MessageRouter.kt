@@ -79,7 +79,10 @@ class MessageRouter(
             "notif.action" -> NotificationBridge.action(m.str("key")!!, m.int("actionIndex")!!)
             "notif.sync" -> NotificationBridge.syncAll(out)
             "notif.open" -> NotificationBridge.open(m.str("key")!!)
-            "pc.info" -> pcId?.let { store.updateBluetooth(it, m.str("bt")?.takeIf { _ -> m.bool("bluetooth") == true }) }
+            "pc.info" -> pcId?.let {
+                store.updateBluetooth(it, m.str("bt")?.takeIf { _ -> m.bool("bluetooth") == true })
+                store.updateWake(it, m.bool("phoneWake") == true)
+            }
 
             // Power mode extras (the PC shows "needs Power mode" when it's off)
             "power.lock" -> if (PowerMode.isReady) PowerMode.exec("input keyevent 26")
