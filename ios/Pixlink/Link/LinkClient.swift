@@ -135,8 +135,8 @@ final class LinkClient: ObservableObject {
     private static func describe(_ error: NWError) -> String {
         switch error {
         case .tls: return "Your PC didn't accept this iPhone. Forget the PC and pair again."
-        case .posix(let code) where code == .ECONNREFUSED: return "Pixlink isn't running on your PC."
-        default: return "Can't reach your PC. Check both are on the same Wi-Fi and Pixlink is open on the PC."
+        case .posix(let code) where code == .ECONNREFUSED: return "Tethr Link isn't running on your PC."
+        default: return "Can't reach your PC. Check both are on the same Wi-Fi and Tethr Link is open on the PC."
         }
     }
 
@@ -255,7 +255,7 @@ final class LinkClient: ObservableObject {
             guard let info = pendingPair,
                   let p12 = Data(base64Encoded: m.str("identityP12") ?? ""),
                   let password = m.str("identityPassword") else {
-                failPairing("Your PC needs the latest Pixlink to link an iPhone. Update it and try again.")
+                failPairing("Your PC needs the latest Tethr Link to link an iPhone. Update it and try again.")
                 return
             }
             SharedStore.saveIdentity(p12: p12, password: password)
@@ -287,7 +287,7 @@ final class LinkClient: ObservableObject {
         case "file.put":
             files.begin(m)
         case "file.chunk":
-            if let name = files.chunk(m) { activity = "Received \(name). It's in Files → On My iPhone → Pixlink." }
+            if let name = files.chunk(m) { activity = "Received \(name). It's in Files → On My iPhone → Tethr Link." }
         case "clipboard.set":
             if let text = m.str("text") {
                 UIPasteboard.general.string = text

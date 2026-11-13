@@ -48,7 +48,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Keep running in the tray when closed" />
-                        <TextBlock Text="Closing the window hides Pixlink by the clock so notifications keep coming. Right-click the tray icon to quit." Style="{StaticResource Hint}" />
+                        <TextBlock Text="Closing the window hides Tethr Link by the clock so notifications keep coming. Right-click the tray icon to quit." Style="{StaticResource Hint}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="TraySwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
                 </Grid>
@@ -61,7 +61,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Allow Bluetooth connections" />
-                        <TextBlock Style="{StaticResource Hint}" Text="Your phone can connect over Bluetooth when there's no shared Wi-Fi. Choose Wi-Fi, Bluetooth or both in the phone's Pixlink settings. Pair the phone with this PC in Windows Bluetooth settings first. Screen sharing needs Wi-Fi." />
+                        <TextBlock Style="{StaticResource Hint}" Text="Your phone can connect over Bluetooth when there's no shared Wi-Fi. Choose Wi-Fi, Bluetooth or both in the phone's Tethr Link settings. Pair the phone with this PC in Windows Bluetooth settings first. Screen sharing needs Wi-Fi." />
                     </StackPanel>
                     <ToggleSwitch x:Name="BluetoothSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnBluetoothToggled" />
                 </Grid>
@@ -70,8 +70,8 @@
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel Spacing="2">
-                        <TextBlock Text="Let my Pixel find this PC over Bluetooth" />
-                        <TextBlock Style="{StaticResource Hint}" Text="Your Pixel can then hide its always-on notification and wake up whenever it's near this PC. Turn on Hide the always-on notification in Pixlink's settings on the phone too. Needs Bluetooth on this PC." />
+                        <TextBlock Text="Let my phone find this PC over Bluetooth" />
+                        <TextBlock Style="{StaticResource Hint}" Text="Your Android phone can then hide its always-on notification and wake up whenever it's near this PC. Turn on Hide the always-on notification in Tethr Link's settings on the phone too. Needs Bluetooth on this PC." />
                         <TextBlock x:Name="PhoneWakeStatus" Style="{StaticResource Hint}" Visibility="Collapsed" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="PhoneWakeSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnPhoneWakeToggled" />
@@ -85,7 +85,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Sync clipboard automatically" />
-                        <TextBlock Text="Copy on this PC, paste on your phone. To send from the phone, tap &quot;Send clipboard&quot; in Pixlink's notification or its quick settings tile." Style="{StaticResource Hint}" />
+                        <TextBlock Text="Copy on this PC, paste on your phone. To send from the phone, tap &quot;Send clipboard&quot; in Tethr Link's notification or its quick settings tile." Style="{StaticResource Hint}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="AutoClipSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
                 </Grid>
@@ -107,7 +107,7 @@
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Stop sharing when Pixlink is minimized" />
+                        <TextBlock Text="Stop sharing when Tethr Link is minimized" />
                         <TextBlock Text="Saves your phone's battery when you're not looking" Style="{StaticResource Hint}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="StopHiddenSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnLayoutToggled" />
@@ -149,7 +149,7 @@
             <Border Style="{StaticResource Row}">
                 <Grid>
                     <StackPanel Margin="0,0,80,0">
-                        <TextBlock Text="Start Pixlink when I sign in to Windows" />
+                        <TextBlock Text="Start Tethr Link when I sign in to Windows" />
                         <TextBlock Text="So your phone connects without opening the app" Style="{StaticResource Hint}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="StartupSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
@@ -270,7 +270,7 @@
                     <Grid>
                         <StackPanel Margin="0,0,170,0">
                             <TextBlock x:Name="VersionText" />
-                            <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Pixlink checks for updates when it starts and every 6 hours." />
+                            <TextBlock x:Name="UpdateStatus" Style="{StaticResource Hint}" Text="Tethr Link checks for updates when it starts and every 6 hours." />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                             <Button x:Name="CheckButton" Content="Check for updates" Click="OnCheckUpdates" />
@@ -280,7 +280,7 @@
                     <Grid>
                         <StackPanel Margin="0,0,80,0">
                             <TextBlock Text="Install updates automatically" />
-                            <TextBlock Text="New versions install by themselves and Pixlink restarts (never during a call or screen mirroring)" Style="{StaticResource Hint}" />
+                            <TextBlock Text="New versions install by themselves and Tethr Link restarts (never during a call or screen mirroring)" Style="{StaticResource Hint}" />
                         </StackPanel>
                         <ToggleSwitch x:Name="AutoUpdateSwitch" HorizontalAlignment="Right" OnContent="" OffContent="" Toggled="OnToggle" MinWidth="0" />
                     </Grid>
@@ -306,7 +306,7 @@
             </Border>
 
             <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,20,0,0">
-                <HyperlinkButton Content="Pixlink on GitHub" NavigateUri="https://github.com/FatalQuackers/pixlink" />
+                <HyperlinkButton Content="Tethr Link on GitHub" NavigateUri="https://github.com/FatalQuackers/pixlink" />
                 <HyperlinkButton Content="Report a problem" NavigateUri="https://github.com/FatalQuackers/pixlink/issues" />
                 <HyperlinkButton Content="Open crash log folder" Click="OnOpenLogs" />
             </StackPanel>

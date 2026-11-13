@@ -119,7 +119,7 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Pixlink", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Tethr Link", fontWeight = FontWeight.SemiBold) },
                 actions = {
                     IconButton(onClick = onActivity) { Icon(Icons.Outlined.History, "Activity") }
                     IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") }
@@ -196,9 +196,9 @@ private fun SectionTitle(text: String) {
 @Composable
 private fun StatusHero(pcs: List<PairedPc>, connected: List<PairedPc>, onPair: () -> Unit) {
     val (color, title, detail) = when {
-        pcs.isEmpty() -> Triple(MaterialTheme.colorScheme.outline, "Not linked yet", "Open Pixlink on your Windows PC, then scan its QR code or type its 5-digit code.")
+        pcs.isEmpty() -> Triple(MaterialTheme.colorScheme.outline, "Not linked yet", "Open Tethr Link on your Windows PC, then scan its QR code or type its 5-digit code.")
         connected.isNotEmpty() -> Triple(Green, "Connected", connected.joinToString { it.name })
-        else -> Triple(Amber, "Not connected", "Pixlink connects by itself when your PC is on the same Wi-Fi with Pixlink open.")
+        else -> Triple(Amber, "Not connected", "Tethr Link connects by itself when your PC is on the same Wi-Fi with Tethr Link open.")
     }
     val tint by animateColorAsState(color, label = "hero")
     Card(
@@ -244,12 +244,12 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val (title, detail, action) = when (status) {
-        is AppUpdater.Status.Downloading -> Triple("Updating Pixlink", "Downloading ${status.version}… ${(status.progress * 100).toInt()}%", null)
-        is AppUpdater.Status.Installing -> Triple("Updating Pixlink", "Installing ${status.version}. Pixlink restarts by itself.", null)
+        is AppUpdater.Status.Downloading -> Triple("Updating Tethr Link", "Downloading ${status.version}… ${(status.progress * 100).toInt()}%", null)
+        is AppUpdater.Status.Installing -> Triple("Updating Tethr Link", "Installing ${status.version}. Tethr Link restarts by itself.", null)
         is AppUpdater.Status.WaitingForConfirm -> Triple("One tap to finish updating", "Tap Update on the Android prompt. Future updates install by themselves.", null)
         AppUpdater.Status.NeedsPermission -> Triple(
             "Turn on automatic updates",
-            "Allow Pixlink to install updates once, and new versions install by themselves.",
+            "Allow Tethr Link to install updates once, and new versions install by themselves.",
             "Allow" to {
                 ctx.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}")))
             },
@@ -259,7 +259,7 @@ private fun UpdateCard(status: AppUpdater.Status, available: UpdateChecker.Updat
             status.apkUrl?.let { url -> "Download" to { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } },
         )
         AppUpdater.Status.Idle -> if (available != null) Triple(
-            "Update available", "Pixlink ${available.version} (you have ${UpdateChecker.currentVersion})",
+            "Update available", "Tethr Link ${available.version} (you have ${UpdateChecker.currentVersion})",
             "Install" to { scope.launch { AppUpdater.install(ctx, available) }; Unit },
         ) else return
     }

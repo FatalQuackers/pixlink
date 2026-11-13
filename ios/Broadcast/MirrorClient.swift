@@ -33,7 +33,7 @@ final class MirrorClient {
                 self.stateLock.lock(); self.ready = true; self.stateLock.unlock()
                 self.watchForClose()
             case .failed, .waiting:
-                self.finish("Couldn't reach your PC. Open Pixlink on your PC, check both are on the same Wi-Fi, then try again.")
+                self.finish("Couldn't reach your PC. Open Tethr Link on your PC, check both are on the same Wi-Fi, then try again.")
             default:
                 break
             }

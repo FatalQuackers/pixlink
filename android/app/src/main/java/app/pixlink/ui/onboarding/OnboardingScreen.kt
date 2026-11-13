@@ -157,7 +157,7 @@ private fun WelcomePage() {
     ) {
         LinkIllustration()
         Text(
-            "Your Pixel,\non your PC",
+            "Your phone,\non your PC",
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -227,11 +227,11 @@ private fun PermissionsPage(onGrantPermissions: () -> Unit) {
     Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("A few permissions", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Text(
-            "Pixlink only uses these to send things to your own PC. You can change them anytime.",
+            "Tethr Link only uses these to send things to your own PC. You can change them anytime.",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(4.dp))
-        PermissionRow(Icons.Outlined.Notifications, "Notification access", "To show notifications and reply to texts. You'll find Pixlink in the list.", notifAccess) {
+        PermissionRow(Icons.Outlined.Notifications, "Notification access", "To show notifications and reply to texts. You'll find Tethr Link in the list.", notifAccess) {
             dialog = true
         }
         PermissionRow(Icons.Outlined.Call, "Calls and contacts", "To call from your PC", core, onGrantPermissions)
@@ -270,7 +270,7 @@ private fun LinkPage(onScan: () -> Unit, onEnterCode: () -> Unit) {
         SearchingPulse(size = 120.dp)
         Text("Link your PC", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Text(
-            "Open Pixlink on your Windows PC. It shows a QR code and a 5-digit code. Use either one.",
+            "Open Tethr Link on your Windows PC. It shows a QR code and a 5-digit code. Use either one.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

@@ -181,14 +181,14 @@ jobs:
           cp dist/pixlink-windows-setup/Pixlink-Setup-x64.exe Pixlink-Setup-x64.exe
           if [ -f dist/pixlink-ios/Pixlink-iOS.ipa ]; then cp dist/pixlink-ios/Pixlink-iOS.ipa Pixlink-iOS.ipa; fi
           # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
-          printf 'Pixlink portable\r\n\r\nPixlink keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
+          printf 'Tethr Link portable\r\n\r\nTethr Link keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
           (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
       # Rebuild of an existing version: replace its files (re-creating the release if it was deleted).
       - if: inputs.tag
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}
-          name: Pixlink ${{ env.TAG }}
+          name: Tethr Link ${{ env.TAG }}
           overwrite_files: true
           make_latest: true
           prerelease: false
@@ -205,7 +205,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Pixlink ${{ github.ref_name }}
+          name: Tethr Link ${{ github.ref_name }}
           # Every new version starts as early access (a pre-release); promote.yml makes it a normal
           # release for everyone 24 hours later. Put [stable] in the release title to skip early access.
           prerelease: ${{ !contains(github.event.release.name || '', '[stable]') }}

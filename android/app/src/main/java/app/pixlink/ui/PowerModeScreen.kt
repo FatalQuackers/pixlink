@@ -83,7 +83,7 @@ fun PowerModeScreen(onBack: () -> Unit) {
             }
 
             if (state == State.NeedsPermission || state == State.Connecting || state == State.Ready) Step(
-                4, "Allow Pixlink", done = state == State.Ready,
+                4, "Allow Tethr Link", done = state == State.Ready,
             ) {
                 Button(onClick = PowerMode::requestPermission, enabled = state == State.NeedsPermission) { Text("Grant") }
             }

@@ -7,22 +7,22 @@
 
 [Setup]
 AppId={{8F3C2B1A-6D4E-4C7B-9A21-5E0F1C2D3B4A}
-AppName=Pixlink
+AppName=Tethr Link
 AppVersion={#AppVersion}
-AppVerName=Pixlink {#AppVersion}
-AppPublisher=Pixlink (open source)
+AppVerName=Tethr Link {#AppVersion}
+AppPublisher=Tethr Link (open source)
 AppPublisherURL=https://fatalquackers.github.io/pixlink
 AppSupportURL=https://github.com/FatalQuackers/pixlink/issues
 AppUpdatesURL=https://github.com/FatalQuackers/pixlink/releases
 DefaultDirName={localappdata}\Programs\Pixlink
-DefaultGroupName=Pixlink
+DefaultGroupName=Tethr Link
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=.
 OutputBaseFilename=Pixlink-Setup-x64
 SetupIconFile=..\Pixlink\Assets\Pixlink.ico
 UninstallDisplayIcon={app}\Pixlink.exe
-UninstallDisplayName=Pixlink
+UninstallDisplayName=Tethr Link
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
@@ -34,20 +34,20 @@ RestartApplications=no
 
 [Tasks]
 Name: desktopicon; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"
-Name: startup; Description: "&Start Pixlink when I sign in to Windows"; GroupDescription: "Startup:"
+Name: startup; Description: "&Start Tethr Link when I sign in to Windows"; GroupDescription: "Startup:"
 
 [Files]
 Source: "{#AppDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Pixlink"; Filename: "{app}\Pixlink.exe"; Comment: "Your Pixel, on your PC"
-Name: "{userdesktop}\Pixlink"; Filename: "{app}\Pixlink.exe"; Tasks: desktopicon
+Name: "{userprograms}\Tethr Link"; Filename: "{app}\Pixlink.exe"; Comment: "Your phone, on your PC"
+Name: "{userdesktop}\Tethr Link"; Filename: "{app}\Pixlink.exe"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Pixlink"; ValueData: """{app}\Pixlink.exe"" --background"; Tasks: startup
 
 [Run]
-Filename: "{app}\Pixlink.exe"; Description: "Open Pixlink"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Pixlink.exe"; Description: "Open Tethr Link"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM Pixlink.exe /F"; Flags: runhidden; RunOnceId: "StopPixlink"

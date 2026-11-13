@@ -150,7 +150,7 @@ fun WhatsNewScreen(onDone: () -> Unit) {
                 }
                 Text("What's new", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 Text(
-                    "Pixlink ${BuildConfig.VERSION_NAME}",
+                    "Tethr Link ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),

@@ -11,11 +11,11 @@
     <ScrollViewer>
         <StackPanel MaxWidth="640" Padding="24,40" Spacing="8" HorizontalAlignment="Center">
             <Image Source="/Assets/icon-512.png" Width="64" Height="64" HorizontalAlignment="Left" />
-            <TextBlock Text="Make Pixlink yours" Style="{StaticResource TitleLargeTextBlockStyle}" Margin="0,12,0,0" />
+            <TextBlock Text="Make Tethr Link yours" Style="{StaticResource TitleLargeTextBlockStyle}" Margin="0,12,0,0" />
             <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,0,16"
                        Text="A few choices to finish setting up. You can change any of these later in Settings." />
 
-            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Startup" Header="Start Pixlink when I sign in to Windows" /></Border>
+            <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Startup" Header="Start Tethr Link when I sign in to Windows" /></Border>
             <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Tray" Header="Keep running in the tray when I close the window" /></Border>
             <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Toasts" Header="Show my phone's notifications as Windows pop-ups" /></Border>
             <Border Style="{StaticResource Row}"><ToggleSwitch x:Name="Sound" Header="Play a sound with pop-ups" /></Border>
@@ -34,7 +34,7 @@
             </Border>
 
             <TextBlock TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       Text="Tip: on your phone, open Pixlink and turn on Screen control to click and type on your phone from here." />
+                       Text="Tip: on your phone, open Tethr Link and turn on Screen control to click and type on your phone from here." />
             <Button Content="Done" Style="{StaticResource AccentButtonStyle}" Click="OnDone" HorizontalAlignment="Right" MinWidth="140" Margin="0,12,0,0" />
         </StackPanel>
     </ScrollViewer>

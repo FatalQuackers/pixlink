@@ -57,7 +57,7 @@ fun QuietModeSettings() {
             val error = QuietMode.finish(ctx, info)
             busy = false
             on = error == null
-            message = error ?: "On. Pixlink wakes up whenever your PC is nearby."
+            message = error ?: "On. Tethr Link wakes up whenever your PC is nearby."
         }
     }
 
@@ -78,7 +78,7 @@ fun QuietModeSettings() {
     }
 
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) associate() else { busy = false; message = "Pixlink needs the Nearby devices permission for this." }
+        if (granted) associate() else { busy = false; message = "Tethr Link needs the Nearby devices permission for this." }
     }
 
     fun turnOn() {
@@ -86,7 +86,7 @@ fun QuietModeSettings() {
         when {
             !QuietMode.isSupported(ctx) -> message = "This phone doesn't support it. You can still hide the notification below."
             store.pcs.none { it.wake } -> message =
-                "First, on your PC open Pixlink → Settings → Connections and turn on Let my Pixel find this PC over Bluetooth. Then try again (with the PC connected)."
+                "First, on your PC open Tethr Link → Settings → Connections and turn on Let my phone find this PC over Bluetooth. Then try again (with the PC connected)."
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ->
                 permission.launch(Manifest.permission.BLUETOOTH_CONNECT)
             else -> associate()
@@ -96,7 +96,7 @@ fun QuietModeSettings() {
     ListItem(
         headlineContent = { Text("Hide the always-on notification") },
         supportingContent = {
-            Text("Pixlink runs without it and wakes up whenever your PC is nearby, using Bluetooth. Your PC needs Bluetooth and this turned on in its settings too.")
+            Text("Tethr Link runs without it and wakes up whenever your PC is nearby, using Bluetooth. Your PC needs Bluetooth and this turned on in its settings too.")
         },
         trailingContent = {
             if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)

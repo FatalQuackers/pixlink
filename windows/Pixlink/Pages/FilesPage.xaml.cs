@@ -41,7 +41,7 @@ public sealed partial class FilesPage : Page
         PowerBar.IsOpen = !power && !Session.IsIPhone; // iPhones only share Pixlink's own folder
         FileList.ItemsSource = roots;
         EmptyText.Text = roots.Count == 0
-            ? "Nothing shared yet. On your phone, open Pixlink → Settings → Add a folder, or turn on Power mode."
+            ? "Nothing shared yet. On your phone, open Tethr Link → Settings → Add a folder, or turn on Power mode."
             : "";
     }
 

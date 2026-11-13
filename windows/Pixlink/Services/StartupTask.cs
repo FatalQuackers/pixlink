@@ -2,7 +2,7 @@ using Microsoft.Win32;
 
 namespace Pixlink.Services;
 
-/// <summary>"Start Pixlink when I sign in": a value under HKCU\...\Run (no admin needed).</summary>
+/// <summary>"Start Tethr Link when I sign in": a value under HKCU\...\Run (no admin needed).</summary>
 public static class StartupTask
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";

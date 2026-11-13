@@ -1,4 +1,4 @@
-# Contributing to Pixlink
+# Contributing to Tethr Link
 
 Thanks for helping! A few ground rules:
 

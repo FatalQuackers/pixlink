@@ -32,7 +32,7 @@ public sealed partial class MainWindow : Window
             if (Session.IsIPhone)
                 ShowConnection(InfoBarSeverity.Informational,
                     "iPhone linked. Photos, files, clipboard and screen casting work over Wi-Fi, and notifications and call alerts come over Bluetooth. " +
-                    "Apple doesn't let other devices reply to messages, read texts, carry call audio or control an iPhone, so those stay Pixel-only.");
+                    "Apple doesn't let other devices reply to messages, read texts, carry call audio or control an iPhone, so those stay Android-only.");
         });
         Session.Reconnected += () => DispatcherQueue.TryEnqueue(() => ShowConnection(InfoBarSeverity.Success, $"Reconnected to {Session.PhoneName}"));
 
@@ -41,7 +41,7 @@ public sealed partial class MainWindow : Window
             if (e.PropertyName == nameof(PhoneSession.IsPaired) && !Session.IsPaired)
                 PairingFrame.Navigate(typeof(PairingPage));
             if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Disconnected)
-                ShowConnection(InfoBarSeverity.Warning, $"{Session.PhoneName} is disconnected. Check it's on the same Wi-Fi with Pixlink open.");
+                ShowConnection(InfoBarSeverity.Warning, $"{Session.PhoneName} is disconnected. Check it's on the same Wi-Fi with Tethr Link open.");
             if (e.PropertyName == nameof(PhoneSession.Phase) && Session.Phase == PhoneSession.LinkPhase.Connected && ConnectionBar.Severity == InfoBarSeverity.Warning)
                 ConnectionBar.IsOpen = false;
             if (e.PropertyName is nameof(PhoneSession.IsIPhone) or nameof(PhoneSession.IPhoneBtState)) ApplyPlatform();
@@ -87,7 +87,7 @@ public sealed partial class MainWindow : Window
             .Where(l => l.Length > 0 && !l.StartsWith("<!--") && !l.StartsWith("# ")).ToList();
         if (lines.Count == 0) return;
 
-        WhatsNewVersion.Text = $"Pixlink {Updater.Current}";
+        WhatsNewVersion.Text = $"Tethr Link {Updater.Current}";
         WhatsNewList.Children.Clear();
         var delay = 300;
         foreach (var raw in lines)
@@ -216,7 +216,7 @@ public sealed partial class MainWindow : Window
         if (!_trayHintShown)
         {
             _trayHintShown = true;
-            Toasts.ShowSimple("Pixlink is still running", "It's in the system tray by the clock, so notifications keep coming. Right-click the icon to quit.");
+            Toasts.ShowSimple("Tethr Link is still running", "It's in the system tray by the clock, so notifications keep coming. Right-click the icon to quit.");
         }
     }
 
@@ -321,7 +321,7 @@ public sealed partial class MainWindow : Window
         UpdateVersions.Text = $"{Updater.Current}  →  {update.Version}";
         UpdatePercent.Text = "0%";
         UpdateRing.Value = 0;
-        UpdateNote.Text = "Pixlink restarts by itself when it's done. Your phone reconnects automatically.";
+        UpdateNote.Text = "Tethr Link restarts by itself when it's done. Your phone reconnects automatically.";
         UpdateCancel.Visibility = Visibility.Collapsed;
         SetUpdateStage(Updater.Stage.Downloading);
         UpdatingOverlay.Visibility = Visibility.Visible;
@@ -330,7 +330,7 @@ public sealed partial class MainWindow : Window
             ((Microsoft.UI.Xaml.Media.Animation.Storyboard)UpdatingOverlay.Resources["UpdatingIn"]).Begin();
             ((Microsoft.UI.Xaml.Media.Animation.Storyboard)UpdatingOverlay.Resources["UpdatingLoop"]).Begin();
         }
-        if (automatic && IsHidden) Toasts.ShowSimple("Updating Pixlink", $"Installing {update.Version}. It restarts by itself in a moment.");
+        if (automatic && IsHidden) Toasts.ShowSimple("Updating Tethr Link", $"Installing {update.Version}. It restarts by itself in a moment.");
         try
         {
             var progress = new Progress<double>(p =>
@@ -345,7 +345,7 @@ public sealed partial class MainWindow : Window
         {
             Crash.Log(ex, automatic ? "Automatic update" : "Update");
             UpdatePercent.Text = "Didn't finish";
-            UpdateNote.Text = $"The update couldn't install ({ex.Message}). Pixlink keeps working; try again from Settings → Updates, or download it from GitHub.";
+            UpdateNote.Text = $"The update couldn't install ({ex.Message}). Tethr Link keeps working; try again from Settings → Updates, or download it from GitHub.";
             UpdateCancel.Visibility = Visibility.Visible;
             return false;
         }
@@ -389,7 +389,7 @@ public sealed partial class MainWindow : Window
     public void ShowUpdate(Updater.Update update)
     {
         _update = update;
-        UpdateBar.Message = $"Pixlink {update.Version} is ready (you have {Updater.Current}).";
+        UpdateBar.Message = $"Tethr Link {update.Version} is ready (you have {Updater.Current}).";
         UpdateBar.IsOpen = true;
     }
 
@@ -460,7 +460,7 @@ public sealed partial class MainWindow : Window
             IPhoneBluetooth.LinkState.Connected => "You're all caught up",
             IPhoneBluetooth.LinkState.NeedsPermission => "Almost there. On your iPhone, open Settings → Bluetooth, tap (i) next to this PC and turn on Share System Notifications.",
             IPhoneBluetooth.LinkState.NotSupported => "This PC's Bluetooth can't receive iPhone notifications. A Bluetooth 4.0+ USB adapter fixes that. Photos, files, clipboard and casting still work.",
-            _ => "To see your iPhone's notifications here, open Pixlink on your iPhone and tap Set up notifications. Accept the pairing request on both.",
+            _ => "To see your iPhone's notifications here, open Tethr Link on your iPhone and tap Set up notifications. Accept the pairing request on both.",
         };
     }
 
@@ -502,12 +502,12 @@ public sealed partial class MainWindow : Window
         if ((sender as FrameworkElement)?.Tag is not QuickActionItem q) return;
         if (!Session.IsConnected && q.Id is not ("photos" or "messages"))
         {
-            ShowHotspot(InfoBarSeverity.Warning, $"Connect {Session.PhoneName} first. It connects by itself when it's on the same Wi-Fi with Pixlink open.");
+            ShowHotspot(InfoBarSeverity.Warning, $"Connect {Session.PhoneName} first. It connects by itself when it's on the same Wi-Fi with Tethr Link open.");
             return;
         }
         if (q.NeedsPower && !Session.PowerMode)
         {
-            ShowHotspot(InfoBarSeverity.Warning, $"{q.Name} needs Power mode. Open Pixlink on your phone and tap Power mode to turn it on.");
+            ShowHotspot(InfoBarSeverity.Warning, $"{q.Name} needs Power mode. Open Tethr Link on your phone and tap Power mode to turn it on.");
             return;
         }
         switch (q.Id)
@@ -577,7 +577,7 @@ public sealed partial class MainWindow : Window
                     break;
                 case PhoneSession.HotspotOutcome.TurnOnOnPhone:
                     _hotspotOn = false;
-                    ShowHotspot(InfoBarSeverity.Warning, "Couldn't find the hotspot. Switch it on from the Pixlink notification on your phone, then click Hotspot again. Turn on Power mode on the phone to skip this step.");
+                    ShowHotspot(InfoBarSeverity.Warning, "Couldn't find the hotspot. Switch it on from the Tethr Link notification on your phone, then click Hotspot again. Turn on Power mode on the phone to skip this step.");
                     break;
                 default:
                     _hotspotOn = false;
@@ -598,7 +598,7 @@ public sealed partial class MainWindow : Window
     /// <summary>Asks once for the phone's hotspot name and password; the phone remembers them.</summary>
     public async Task<bool> AskHotspotDetailsAsync()
     {
-        var name = new TextBox { Header = "Hotspot name", PlaceholderText = "e.g. Pixel 9", Text = Session.HotspotSsid ?? "" };
+        var name = new TextBox { Header = "Hotspot name", PlaceholderText = "e.g. My phone", Text = Session.HotspotSsid ?? "" };
         var pass = new PasswordBox { Header = "Hotspot password", Password = Session.HotspotPassword ?? "" };
         var panel = new StackPanel { Spacing = 12, Width = 340 };
         panel.Children.Add(new TextBlock

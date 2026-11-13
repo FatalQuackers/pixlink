@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Pixlink</string>
+    <string name="app_name">Tethr Link</string>
     <string name="channel_link">Connection</string>
     <string name="channel_mirror">Screen mirroring</string>
-    <string name="control_service_description">Lets you tap, swipe, scroll and type on your phone from your PC while you mirror its screen. Pixlink only acts on what you do in the Pixlink window on your PC, and never reads your screen on its own.</string>
+    <string name="control_service_description">Lets you tap, swipe, scroll and type on your phone from your PC while you mirror its screen. Tethr Link only acts on what you do in the Tethr Link window on your PC, and never reads your screen on its own.</string>
     <string name="widget_description">Connection status, and send your clipboard or files to your PC or find it</string>
 </resources>

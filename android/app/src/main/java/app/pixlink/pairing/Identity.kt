@@ -31,7 +31,7 @@ object Identity {
             KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
                 .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
                 .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA384, KeyProperties.DIGEST_NONE)
-                .setCertificateSubject(X500Principal("CN=Pixlink Phone"))
+                .setCertificateSubject(X500Principal("CN=Tethr Link Phone"))
                 .build()
         )
         gen.generateKeyPair()

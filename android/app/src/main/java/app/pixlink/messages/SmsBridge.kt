@@ -20,6 +20,28 @@ import kotlinx.serialization.json.putJsonArray
 object SmsBridge {
     private fun allowed(ctx: Context, p: String) = ctx.checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED
 
+    private var observer: android.database.ContentObserver? = null
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val notify = Runnable { app.pixlink.link.LinkHub.send(app.pixlink.link.msg("sms.changed")) }
+
+    /** Tells the PCs whenever a text arrives or is sent, so their Messages tab updates live. */
+    fun startWatching(ctx: Context) {
+        if (observer != null || !allowed(ctx, Manifest.permission.READ_SMS)) return
+        val o = object : android.database.ContentObserver(handler) {
+            override fun onChange(selfChange: Boolean) {
+                handler.removeCallbacks(notify)
+                handler.postDelayed(notify, 700) // a text often changes several rows at once
+            }
+        }
+        runCatching { ctx.contentResolver.registerContentObserver(Uri.parse("content://sms"), true, o) }
+            .onSuccess { observer = o }
+    }
+
+    fun stopWatching(ctx: Context) {
+        observer?.let { runCatching { ctx.contentResolver.unregisterContentObserver(it) } }
+        observer = null
+    }
+
     fun threads(ctx: Context, request: Envelope, limit: Int): Envelope {
         if (!allowed(ctx, Manifest.permission.READ_SMS)) return request.reply("sms.threads") { put("error", "permission") }
         data class T(val id: Long, val address: String, val body: String, val date: Long)

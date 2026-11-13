@@ -80,7 +80,7 @@ public sealed class IPhoneBluetooth
             {
                 CharacteristicProperties = GattCharacteristicProperties.Read,
                 ReadProtectionLevel = GattProtectionLevel.EncryptionRequired,
-                UserDescription = "Pixlink PC",
+                UserDescription = "Tethr Link PC",
             });
             pcIdChar.Characteristic.ReadRequested += OnPcIdRead;
 

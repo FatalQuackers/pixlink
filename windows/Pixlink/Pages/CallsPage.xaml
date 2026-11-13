@@ -47,7 +47,7 @@
                 <FontIcon Glyph="&#xE945;" FontSize="28" HorizontalAlignment="Left" />
                 <TextBlock Text="Call history needs Power mode" Style="{StaticResource BodyStrongTextBlockStyle}" />
                 <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           Text="Open Pixlink on your phone → Power mode to turn it on. You can still call anyone from Contacts or the dial pad." />
+                           Text="Open Tethr Link on your phone → Power mode to turn it on. You can still call anyone from Contacts or the dial pad." />
             </StackPanel>
 
             <ListView x:Name="ContactList" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnContactClick" Visibility="Collapsed">

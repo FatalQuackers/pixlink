@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Set up Pixlink</title>
+<html><head><meta charset="utf-8"><title>Set up Tethr Link</title>
 <style>
 :root{--navy:#16213A;--blue:#3D7BFF;--deep:#2557D6;--sky:#E8EEF8;--mint:#C9F0DE;--slate:#4A5675;--line:#CDD7EA;--green:#1E9E63;--red:#E5484D}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -41,17 +41,17 @@ document.body.style.width=W+'px';document.body.style.height=H+'px';
 
 const STEPS=[
  {title:'Install on your Pixel',items:[
-   'Open the latest release and tap Pixlink‑android.apk',
+   'Open the latest release and tap Tethr Link‑android.apk',
    'Allow your browser to install unknown apps',
    'Tap Install, then Install anyway if Play Protect asks',
-   'Open Pixlink and allow notification access']},
+   'Open Tethr Link and allow notification access']},
  {title:'Install on your PC',items:[
-   'Download Pixlink‑windows‑x64.zip from the latest release',
+   'Download Tethr Link‑windows‑x64.zip from the latest release',
    'Right-click the zip, choose Extract All, pick a folder',
    'Open Pixlink.exe. If SmartScreen appears, click More info, then Run anyway',
    'Tick Private networks in Windows Firewall and click Allow']},
  {title:'Link them',items:[
-   'Pixlink on your PC shows a QR code and a 5‑digit code',
+   'Tethr Link on your PC shows a QR code and a 5‑digit code',
    'On your Pixel, tap Enter 5‑digit code (or Scan QR code)',
    'Type the code. That’s it, you’re linked']}];
 const STEP_T=[[5.5,28],[28,48.5],[48.5,61]];
@@ -65,7 +65,7 @@ let html=`<div class="glow" id="g1" style="width:${W*0.9}px;height:${W*0.9}px;ba
 // intro
 const introY=TALL?160:250;
 html+=`<div id="intro" class="a" style="left:${TX.x}px;top:${introY}px;width:${TX.w}px">
- <div id="iT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;line-height:1">Set up Pixlink</div>
+ <div id="iT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;line-height:1">Set up Tethr Link</div>
  <div id="iS" style="font-size:${TALL?40:36}px;font-weight:500;color:var(--slate);margin-top:18px;letter-spacing:-.02em">It takes about 5 minutes.</div>
  <div id="iN" style="margin-top:${TALL?50:56}px;font-size:${TALL?32:28}px;font-weight:650;letter-spacing:-.01em">You need</div>
  ${['A Pixel on Android 13 or newer','A Windows 10 or 11 PC','Both on the same Wi-Fi'].map((s,i)=>`<div class="iR" id="iR${i}" style="margin-top:16px;font-size:${TALL?32:28}px;font-weight:500;display:flex;gap:16px;align-items:center;color:#33405E"><span style="width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none"></span>${s}</div>`).join('')}
@@ -82,7 +82,7 @@ STEPS.forEach((s,si)=>{
 html+=`<div id="outro" class="a" style="left:0;top:${TALL?560:240}px;width:${W}px;text-align:center">
  <div id="oC" style="width:${TALL?170:150}px;height:${TALL?170:150}px;border-radius:50%;background:var(--green);margin:0 auto;display:flex;align-items:center;justify-content:center"><svg width="${TALL?90:80}" height="${TALL?90:80}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="oTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
  <div id="oT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;margin-top:40px">You’re all set.</div>
- <div id="oS" style="font-size:${TALL?38:34}px;font-weight:500;color:var(--slate);margin:20px auto 0;max-width:${TALL?900:1200}px;letter-spacing:-.02em">Pixlink updates itself from now on. Want screen control and the hotspot switch? Turn on Power mode in Settings.</div>
+ <div id="oS" style="font-size:${TALL?38:34}px;font-weight:500;color:var(--slate);margin:20px auto 0;max-width:${TALL?900:1200}px;letter-spacing:-.02em">Tethr Link updates itself from now on. Want screen control and the hotspot switch? Turn on Power mode in Settings.</div>
  <div id="oU" style="font-size:${TALL?34:30}px;font-weight:600;color:var(--blue);margin-top:${TALL?50:40}px">github.com/FatalQuackers/pixlink</div>
 </div>`;
 // devices
@@ -98,7 +98,7 @@ const kl=['1','2','3','4','5','6','7','8','9','','0','⌫'];
 document.getElementById('pin').innerHTML=`
 <div class="layer" id="pBrowser" style="inset:0;background:#fff">
   <div style="position:absolute;left:12px;top:32px;width:276px;height:34px;border-radius:17px;background:#EEF2FA;font-size:11px;padding:10px 14px;color:#4A5675">🔒 github.com/FatalQuackers/pixlink/releases</div>
-  <div style="position:absolute;left:18px;top:86px;font-size:22px;font-weight:700;letter-spacing:-.02em">Pixlink v1.0.2</div>
+  <div style="position:absolute;left:18px;top:86px;font-size:22px;font-weight:700;letter-spacing:-.02em">Tethr Link v1.0.2</div>
   <div style="position:absolute;left:196px;top:91px;font-size:11px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 8px">Latest</div>
   <div class="gl" style="left:18px;top:128px;width:250px"></div><div class="gl" style="left:18px;top:146px;width:210px"></div><div class="gl" style="left:18px;top:164px;width:236px"></div>
   <div style="position:absolute;left:18px;top:200px;font-size:15px;font-weight:700">Assets</div>
@@ -122,7 +122,7 @@ document.getElementById('pin').innerHTML=`
 </div>
 <div class="layer" id="pInst" style="inset:0"><div class="dim"></div>
   <div style="position:absolute;left:0;top:388px;width:300px;height:252px;border-radius:28px 28px 0 0;background:#F3F6FC;padding:24px">
-   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Pixlink</span></div>
+   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Tethr Link</span></div>
    <div id="pInstQ" style="font-size:13.5px;color:#33405E;margin-top:16px">Do you want to install this app?</div>
    <div id="pInstBar" style="position:absolute;left:24px;top:120px;width:252px;height:6px;border-radius:3px;background:#DCE3F0;overflow:hidden"><div id="pInstFill" style="width:0;height:6px;background:var(--blue)"></div></div>
    <span style="position:absolute;left:120px;top:186px;font-size:13.5px;font-weight:700;color:var(--deep)">Cancel</span>
@@ -139,14 +139,14 @@ document.getElementById('pin').innerHTML=`
 </div>
 <div class="layer" id="pDone" style="inset:0"><div class="dim"></div>
   <div style="position:absolute;left:0;top:388px;width:300px;height:252px;border-radius:28px 28px 0 0;background:#F3F6FC;padding:24px">
-   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Pixlink</span></div>
+   <div style="display:flex;gap:12px;align-items:center"><img src="icon.png" style="width:40px;height:40px;border-radius:10px"><span style="font-size:17px;font-weight:700">Tethr Link</span></div>
    <div style="font-size:13.5px;color:var(--green);font-weight:600;margin-top:16px">✓ App installed.</div>
    <span style="position:absolute;left:126px;top:186px;font-size:13.5px;font-weight:700;color:var(--deep)">Done</span>
    <span id="pOpenApp" style="position:absolute;left:190px;top:176px;padding:10px 20px;border-radius:20px;background:var(--blue);color:#fff;font-size:13.5px;font-weight:700">Open</span></div>
 </div>
 <div class="layer" id="pPerm" style="inset:0;background:#F7F9FF">
   <div style="position:absolute;left:20px;top:64px;font-size:26px;font-weight:700;letter-spacing:-.02em">A few permissions</div>
-  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Pixlink needs these to show your phone on your PC.</div>
+  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Tethr Link needs these to show your phone on your PC.</div>
   ${[['pR1','Notification access','Show and reply to notifications'],['pR2','Calls, contacts & photos','Calls, Messages and Photos tabs']].map((r,i)=>`<div id="${r[0]}" style="position:absolute;left:14px;top:${160+i*90}px;width:272px;height:78px;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(22,33,58,.07);padding:16px 0 0 18px">
     <div style="font-size:14px;font-weight:700">${r[1]}</div><div style="font-size:11.5px;color:#6A7590;margin-top:4px">${r[2]}</div>
     <div id="${r[0]}c" style="position:absolute;right:16px;top:25px;width:28px;height:28px;border-radius:50%;background:#E6ECF8;color:#fff;font-size:15px;font-weight:700;text-align:center;line-height:28px">›</div></div>`).join('')}
@@ -154,20 +154,20 @@ document.getElementById('pin').innerHTML=`
 </div>
 <div class="layer" id="pNL" style="inset:0;background:#F7F9FF">
   <div style="position:absolute;left:18px;top:52px;width:260px;font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.15">Notification read, reply &amp; control</div>
-  <div style="position:absolute;left:12px;top:136px;width:276px;height:60px;border-radius:16px;background:#E6ECF8;font-size:14px;font-weight:600;padding:20px 16px 0 54px">Pixlink
+  <div style="position:absolute;left:12px;top:136px;width:276px;height:60px;border-radius:16px;background:#E6ECF8;font-size:14px;font-weight:600;padding:20px 16px 0 54px">Tethr Link
     <img src="icon.png" style="position:absolute;left:14px;top:15px;width:30px;height:30px;border-radius:8px">
     <div id="pNTog" style="position:absolute;right:14px;top:18px;width:44px;height:24px;border-radius:12px;background:#9AA6BF"><div id="pNKnob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div></div>
   <div style="position:absolute;left:12px;top:206px;width:276px;height:60px;border-radius:16px;background:#E6ECF8;opacity:.6"></div>
 </div>
 <div class="layer" id="pAllow" style="inset:0"><div class="dim"></div>
   <div style="position:absolute;left:20px;top:210px;width:260px;height:220px;border-radius:24px;background:#F3F6FC;padding:22px;text-align:center">
-   <div style="font-size:15px;font-weight:700;line-height:1.3">Allow <b>Pixlink</b> to access your contacts?</div>
+   <div style="font-size:15px;font-weight:700;line-height:1.3">Allow <b>Tethr Link</b> to access your contacts?</div>
    <div id="pAllowB" style="position:absolute;left:20px;top:96px;width:220px;height:42px;border-radius:21px;background:#DCE5F7;font-size:13.5px;font-weight:700;line-height:42px;color:var(--deep)">Allow</div>
    <div style="position:absolute;left:20px;top:148px;width:220px;height:42px;border-radius:21px;background:#E8EDF7;font-size:13.5px;font-weight:700;line-height:42px;color:var(--deep)">Don’t allow</div></div>
 </div>
 <div class="layer" id="pLink" style="inset:0;background:#F7F9FF">
   <div style="position:absolute;left:20px;top:64px;font-size:26px;font-weight:700;letter-spacing:-.02em">Link your PC</div>
-  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Open Pixlink on your PC. It shows a QR code and a 5-digit code.</div>
+  <div style="position:absolute;left:20px;top:102px;width:260px;font-size:12.5px;color:#4A5675;line-height:1.4">Open Tethr Link on your PC. It shows a QR code and a 5-digit code.</div>
   <div style="position:absolute;left:70px;top:170px;width:160px;height:110px;border:6px solid var(--navy);border-radius:10px"></div><div style="position:absolute;left:50px;top:280px;width:200px;height:12px;border-radius:0 0 8px 8px;background:var(--navy)"></div>
   <div style="position:absolute;left:14px;top:450px;width:272px;height:50px;border-radius:25px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:50px">Scan QR code</div>
   <div id="pEnter" style="position:absolute;left:14px;top:512px;width:272px;height:50px;border-radius:25px;border:2px solid var(--blue);color:var(--blue);font-size:14px;font-weight:700;text-align:center;line-height:46px">Enter 5-digit code</div>
@@ -190,9 +190,9 @@ const winT=(t)=>`<div class="wt"><span style="width:14px;height:14px;border-radi
 document.getElementById('lin').innerHTML=`
 <div class="layer" style="inset:0;background:radial-gradient(circle at 20% 15%,#BBD2FF 0,transparent 45%),radial-gradient(circle at 85% 80%,#C9F0DE 0,transparent 40%),linear-gradient(135deg,#DCE7FF,#EEF3FF)"></div>
 <div class="win" id="lBrowser" style="left:50px;top:24px;width:900px;height:550px">
-  <div class="wt" style="background:#E9EEF7"><span style="background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;margin-top:6px">Release Pixlink v1.0.2</span><span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
+  <div class="wt" style="background:#E9EEF7"><span style="background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;margin-top:6px">Release Tethr Link v1.0.2</span><span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
   <div style="height:40px;border-bottom:1px solid #EDF0F6;padding:8px 14px"><div style="height:24px;border-radius:12px;background:#EEF2FA;font-size:12px;color:#4A5675;padding:5px 14px">🔒 github.com/FatalQuackers/pixlink/releases/latest</div></div>
-  <div style="position:absolute;left:60px;top:100px;font-size:30px;font-weight:700;letter-spacing:-.02em">Pixlink v1.0.2</div>
+  <div style="position:absolute;left:60px;top:100px;font-size:30px;font-weight:700;letter-spacing:-.02em">Tethr Link v1.0.2</div>
   <div style="position:absolute;left:290px;top:108px;font-size:12px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 9px">Latest</div>
   <div class="gl" style="left:60px;top:160px;width:520px"></div><div class="gl" style="left:60px;top:180px;width:460px"></div><div class="gl" style="left:60px;top:200px;width:500px"></div>
   <div style="position:absolute;left:60px;top:240px;font-size:17px;font-weight:700">Assets</div>
@@ -235,10 +235,10 @@ document.getElementById('lin').innerHTML=`
   <div style="position:absolute;left:360px;top:380px;width:110px;height:34px;background:#fff;color:#0F5FBF;font-size:13.5px;font-weight:600;text-align:center;line-height:34px">Don’t run</div>
 </div>
 <div class="win" id="lPx" style="left:90px;top:36px;width:820px;height:528px">
-  <div class="wt"><img src="icon.png" style="width:16px;height:16px;border-radius:4px">Pixlink<span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
+  <div class="wt"><img src="icon.png" style="width:16px;height:16px;border-radius:4px">Tethr Link<span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
   <div style="position:absolute;left:80px;top:120px;width:260px;height:260px;padding:10px;background:#fff;border-radius:14px;border:1px solid #E3E8F2"><div style="position:relative;width:240px;height:240px">${qr}</div></div>
   <div style="position:absolute;left:400px;top:126px;font-size:28px;font-weight:700;letter-spacing:-.02em">Link your phone</div>
-  <div style="position:absolute;left:400px;top:170px;width:360px;font-size:14px;color:#4A5675;line-height:1.45">On your Pixel, open Pixlink and type this code, or scan the QR code.</div>
+  <div style="position:absolute;left:400px;top:170px;width:360px;font-size:14px;color:#4A5675;line-height:1.45">On your Pixel, open Tethr Link and type this code, or scan the QR code.</div>
   <div style="position:absolute;left:400px;top:236px;display:flex;gap:10px">${'48217'.split('').map(d=>`<div style="width:58px;height:74px;border-radius:12px;background:#EEF2FA;font-size:38px;font-weight:700;text-align:center;line-height:74px">${d}</div>`).join('')}</div>
   <div id="lLinked" class="layer" style="left:0;top:34px;width:820px;height:494px;background:#FBFCFE;text-align:center">
     <div id="lOk" style="width:110px;height:110px;border-radius:50%;background:var(--green);margin:130px auto 0;display:flex;align-items:center;justify-content:center"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="lTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
@@ -248,8 +248,8 @@ document.getElementById('lin').innerHTML=`
 <div id="lFw" class="win" style="left:230px;top:100px;width:540px;height:420px">
   ${winT('Windows Security Alert')}
   <div style="height:64px;background:#F3F6FB;border-bottom:1px solid #E7EBF3;display:flex;align-items:center;gap:14px;padding:0 24px;font-size:15px;font-weight:600"><span style="width:30px;height:34px;background:#F2A93B;clip-path:polygon(50% 0,100% 18%,100% 55%,50% 100%,0 55%,0 18%)"></span>Windows Defender Firewall has blocked some features of this app</div>
-  <div style="position:absolute;left:24px;top:120px;font-size:12.5px;line-height:1.7;color:#33405E">Name: Pixlink<br>Path: C:\\Users\\You\\Documents\\Pixlink\\Pixlink.exe</div>
-  <div style="position:absolute;left:24px;top:182px;font-size:13px;font-weight:600">Allow Pixlink to communicate on these networks:</div>
+  <div style="position:absolute;left:24px;top:120px;font-size:12.5px;line-height:1.7;color:#33405E">Name: Tethr Link<br>Path: C:\\Users\\You\\Documents\\Pixlink\\Pixlink.exe</div>
+  <div style="position:absolute;left:24px;top:182px;font-size:13px;font-weight:600">Allow Tethr Link to communicate on these networks:</div>
   <div style="position:absolute;left:30px;top:214px;font-size:13px"><span class="chk" id="lPriv"><span id="lPrivT" style="position:absolute;left:1px;top:-4px;color:#fff;font-size:12px;font-weight:700">✓</span></span>Private networks, such as my home or work network</div>
   <div style="position:absolute;left:30px;top:246px;font-size:13px"><span class="chk"></span>Public networks, such as those in airports and cafés</div>
   <div id="lAllow" class="wbtn" style="left:290px;top:366px;width:120px;background:var(--blue);color:#fff;border-color:var(--blue)">Allow access</div>
@@ -364,7 +364,7 @@ function render(t){
  const dl=P(t,30.3,30.6,eout);op('lDl',t>=30.3&&t<32.2?dl:0);st('lDl',{transform:`translateY(${(1-dl)*-10}px)`});
  op('lExp',t>=32.1&&t<43.9?P(t,32.1,32.4):0);
  const inDocs=t>=38.0;op('lFilesZip',inDocs?0:1);op('lFilesExe',inDocs?1:0);
- $('lExpT').textContent=inDocs?'Documents › Pixlink':'Downloads';
+ $('lExpT').textContent=inDocs?'Documents › Tethr Link':'Downloads';
  st('lNavD',{fontWeight:inDocs?'400':'700'});st('lNavDoc',{fontWeight:inDocs?'700':'400'});
  st('lZipRow',{background:t>=34.2&&t<38?'#DCE7FF':'transparent'});
  st('lExeRow',{background:t>=39.5&&t<44?'#DCE7FF':'transparent'});

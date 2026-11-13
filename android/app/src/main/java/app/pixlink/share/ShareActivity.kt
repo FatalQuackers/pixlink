@@ -29,7 +29,7 @@ class ShareActivity : Activity() {
             .map { (id, s) -> id to (s as LinkState.Connected).pcName }
         when (connected.size) {
             0 -> {
-                Toast.makeText(this, "Pixlink isn't connected to a PC", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Tethr Link isn't connected to a PC", Toast.LENGTH_LONG).show()
                 finish()
             }
             1 -> share(listOf(connected.first().first))

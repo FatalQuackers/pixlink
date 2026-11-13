@@ -33,7 +33,7 @@ class PixlinkWidget : AppWidgetProvider() {
             val states = LinkHub.states.value
             val connected = pcs.filter { states[it.id] is LinkState.Connected }
             val title = when {
-                pcs.isEmpty() -> "Pixlink"
+                pcs.isEmpty() -> "Tethr Link"
                 connected.isNotEmpty() -> connected.joinToString { it.name }
                 else -> pcs.first().name
             }

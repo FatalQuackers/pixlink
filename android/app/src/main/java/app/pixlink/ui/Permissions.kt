@@ -115,9 +115,9 @@ fun SpecialAccessDialog(kind: SpecialAccess, ctx: Context, onDismiss: () -> Unit
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Step("1", if (kind == SpecialAccess.Notifications)
-                    "On the next screen, find Pixlink. If you see a list, scroll down until you reach it."
-                else "On the next screen, tap Pixlink. If you see a list, scroll down to \"Downloaded apps\" or \"Installed apps\" and tap Pixlink there.")
-                Step("2", "Turn Pixlink on, then tap Allow.")
+                    "On the next screen, find Tethr Link. If you see a list, scroll down until you reach it."
+                else "On the next screen, tap Tethr Link. If you see a list, scroll down to \"Downloaded apps\" or \"Installed apps\" and tap Tethr Link there.")
+                Step("2", "Turn Tethr Link on, then tap Allow.")
                 Step("3", "Greyed out, or Android says \"Restricted setting\"? Tap \"Open app info\" below, tap ⋮ at the top right, choose \"Allow restricted settings\", then try again.")
                 Text(
                     "Android does this for every app installed outside the Play Store.",

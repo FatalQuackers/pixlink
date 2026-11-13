@@ -121,8 +121,8 @@ class NotificationBridge : NotificationListenerService() {
         }
     }
 
-    private fun sendIconOnce(pkg: String, out: (Envelope) -> Unit) {
-        if (!iconsSent.add(pkg)) return
+    private fun sendIconOnce(pkg: String, out: (Envelope) -> Unit, force: Boolean = false) {
+        if (!iconsSent.add(pkg) && !force) return
         val icon = runCatching { packageManager.getApplicationIcon(pkg) }.getOrNull() ?: return
         val bmp = icon.toBitmap(96, 96, Bitmap.Config.ARGB_8888)
         val bytes = ByteArrayOutputStream()
@@ -174,8 +174,10 @@ class NotificationBridge : NotificationListenerService() {
         /** Sends every current notification to the PC that asked (when it connects). */
         fun syncAll(out: (Envelope) -> Unit) {
             val svc = instance ?: return
+            // A PC that just connected (or restarted) has none of the app icons yet: send them all again.
+            val sent = mutableSetOf<String>()
             svc.activeNotifications?.filter(svc::shouldMirror)?.forEach {
-                svc.sendIconOnce(it.packageName, out)
+                if (sent.add(it.packageName)) svc.sendIconOnce(it.packageName, out, force = true)
                 out(svc.toMessage(it))
             }
         }

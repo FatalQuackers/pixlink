@@ -57,7 +57,7 @@ public static class Tray
             _data = new NOTIFYICONDATA
             {
                 cbSize = Marshal.SizeOf<NOTIFYICONDATA>(), hWnd = hwnd, uID = 1, uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP,
-                uCallbackMessage = WM_APP_TRAY, hIcon = icon, szTip = "Pixlink", szInfo = "", szInfoTitle = "",
+                uCallbackMessage = WM_APP_TRAY, hIcon = icon, szTip = "Tethr Link", szInfo = "", szInfoTitle = "",
             };
             _created = Shell_NotifyIcon(NIM_ADD, ref _data);
         }
@@ -94,9 +94,9 @@ public static class Tray
     private static void ShowMenu(IntPtr hWnd)
     {
         var menu = CreatePopupMenu();
-        AppendMenu(menu, 0, IDM_OPEN, "Open Pixlink");
+        AppendMenu(menu, 0, IDM_OPEN, "Open Tethr Link");
         AppendMenu(menu, 0x800 /*MF_SEPARATOR*/, 0, "");
-        AppendMenu(menu, 0, IDM_QUIT, "Quit Pixlink");
+        AppendMenu(menu, 0, IDM_QUIT, "Quit Tethr Link");
         GetCursorPos(out var p);
         SetForegroundWindow(hWnd);
         TrackPopupMenu(menu, 0, p.X, p.Y, 0, hWnd, IntPtr.Zero);

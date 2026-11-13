@@ -22,7 +22,7 @@ enum InstallInfo {
         return max(0, Calendar.current.dateComponents([.day], from: Date(), to: expiry).day ?? 0)
     }
 
-    /// Schedules "Refresh Pixlink" for a day before it expires (asks for notification permission once).
+    /// Schedules "Refresh Tethr Link" for a day before it expires (asks for notification permission once).
     static func scheduleReminder() {
         guard let expiry else { return }
         let fireDate = expiry.addingTimeInterval(-24 * 3600)
@@ -31,8 +31,8 @@ enum InstallInfo {
         center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
             guard granted else { return }
             let content = UNMutableNotificationContent()
-            content.title = "Refresh Pixlink"
-            content.body = "Pixlink stops opening tomorrow. Open AltStore or SideStore and tap Refresh, or reinstall it with Sideloadly."
+            content.title = "Refresh Tethr Link"
+            content.body = "Tethr Link stops opening tomorrow. Open AltStore or SideStore and tap Refresh, or reinstall it with Sideloadly."
             content.sound = .default
             let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
             let request = UNNotificationRequest(identifier: "refresh", content: content,

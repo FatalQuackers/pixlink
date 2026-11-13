@@ -69,7 +69,7 @@ struct HomeView: View {
                 .padding(16)
                 .animation(.default, value: link.activity)
             }
-            .navigationTitle("Pixlink")
+            .navigationTitle("Tethr Link")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -255,12 +255,12 @@ private struct NotificationsCard: View {
 
     private var subtitle: String {
         switch bluetooth.state {
-        case .off: return "See notifications and answer or decline calls on your PC. Uses Bluetooth, works even when Pixlink is closed."
+        case .off: return "See notifications and answer or decline calls on your PC. Uses Bluetooth, works even when Tethr Link is closed."
         case .bluetoothOff: return "Bluetooth is off."
-        case .notAllowed: return "Pixlink needs Bluetooth permission for this."
-        case .searching: return "Looking for your PC… Keep Pixlink open on the PC, with Bluetooth on."
+        case .notAllowed: return "Tethr Link needs Bluetooth permission for this."
+        case .searching: return "Looking for your PC… Keep Tethr Link open on the PC, with Bluetooth on."
         case .connecting: return "Connecting over Bluetooth…"
-        case .connected: return "On. Your PC shows your notifications, even when Pixlink is closed."
+        case .connected: return "On. Your PC shows your notifications, even when Tethr Link is closed."
         case .wrongPC: return "Found a different PC."
         }
     }
@@ -273,7 +273,7 @@ private struct NotificationHelp: View {
         NavigationStack {
             List {
                 Section("Setting up") {
-                    HelpRow(n: 1, text: "Keep Pixlink open on your PC, with Bluetooth on.")
+                    HelpRow(n: 1, text: "Keep Tethr Link open on your PC, with Bluetooth on.")
                     HelpRow(n: 2, text: "When your iPhone asks to pair with your PC, tap Pair. Windows may also ask: accept there too.")
                     HelpRow(n: 3, text: "If your iPhone asks to allow your PC to receive notifications, tap Allow.")
                 }
@@ -310,7 +310,7 @@ private struct ExpiryCard: View {
     var body: some View {
         if let days = InstallInfo.daysLeft, days <= 3 {
             VStack(alignment: .leading, spacing: 6) {
-                Label(days == 0 ? "Pixlink expires today" : "Pixlink expires in \(days) day\(days == 1 ? "" : "s")",
+                Label(days == 0 ? "Tethr Link expires today" : "Tethr Link expires in \(days) day\(days == 1 ? "" : "s")",
                       systemImage: "clock.badge.exclamationmark")
                     .font(.headline)
                     .foregroundStyle(.orange)
@@ -338,12 +338,12 @@ struct FeaturesSheet: View {
                     Feature(icon: "doc.on.clipboard", color: .green, title: "Clipboard", detail: "Send it with one tap. Text copied on your PC can be sent to your iPhone.")
                     Feature(icon: "rectangle.on.rectangle", color: .green, title: "Screen casting", detail: "Show your screen on your PC. View only: Apple doesn't let other devices control an iPhone.")
                     Feature(icon: "bell.badge", color: .green, title: "Notifications and call alerts", detail: "Over Bluetooth, like Phone Link. Clear them or answer and decline calls from your PC.")
-                    Feature(icon: "battery.75", color: .green, title: "Battery and Find my phone", detail: "Battery level shows on your PC. Find my phone rings while Pixlink is open.")
+                    Feature(icon: "battery.75", color: .green, title: "Battery and Find my phone", detail: "Battery level shows on your PC. Find my phone rings while Tethr Link is open.")
                 } header: { Text("Works on iPhone") }
 
                 Section {
-                    Feature(icon: "moon.zzz", color: .orange, title: "Running in the background", detail: "iOS pauses apps soon after you leave them. Notifications and battery keep working over Bluetooth. Photos, files and clipboard need Pixlink open.")
-                    Feature(icon: "clock", color: .orange, title: "Free installs last 7 days", detail: "With a free Apple ID, refresh Pixlink weekly. AltStore or SideStore can do it automatically. Pixlink reminds you the day before.")
+                    Feature(icon: "moon.zzz", color: .orange, title: "Running in the background", detail: "iOS pauses apps soon after you leave them. Notifications and battery keep working over Bluetooth. Photos, files and clipboard need Tethr Link open.")
+                    Feature(icon: "clock", color: .orange, title: "Free installs last 7 days", detail: "With a free Apple ID, refresh Tethr Link weekly. AltStore or SideStore can do it automatically. Tethr Link reminds you the day before.")
                 } header: { Text("Works, with a catch") }
 
                 Section {
@@ -352,10 +352,10 @@ struct FeaturesSheet: View {
                     Feature(icon: "cursorarrow.click", color: .red, title: "Controlling your iPhone", detail: "Not allowed on iPhone. Casting is view only.")
                     Feature(icon: "personalhotspot", color: .red, title: "Hotspot switch", detail: "Turn on Personal Hotspot on the iPhone. Your PC joins it like any Wi-Fi.")
                 } header: { Text("Not possible on iPhone") } footer: {
-                    Text("These are Apple rules, not Pixlink ones. A Pixel gets everything.")
+                    Text("These are Apple rules, not Tethr Link ones. An Android phone gets everything.")
                 }
             }
-            .navigationTitle("Pixlink on iPhone")
+            .navigationTitle("Tethr Link on iPhone")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Got it") { dismiss() } } }
         }

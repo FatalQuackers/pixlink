@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.sp
 import app.pixlink.R
 import app.pixlink.update.AppUpdater
 
-/** Full-screen "Updating Pixlink" with a progress ring, a gently floating logo and the steps. */
+/** Full-screen "Updating Tethr Link" with a progress ring, a gently floating logo and the steps. */
 @Composable
 fun UpdatingScreen(status: AppUpdater.Status) {
     val visible = status is AppUpdater.Status.Downloading || status is AppUpdater.Status.Installing
@@ -99,7 +99,7 @@ fun UpdatingScreen(status: AppUpdater.Status) {
                         Image(painterResource(R.drawable.ic_launcher_foreground), null, Modifier.size(96.dp))
                     }
                 }
-                Text("Updating Pixlink", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+                Text("Updating Tethr Link", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
                 Text("Installing version $version", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(if (step == 0) "${(progress * 100).toInt()}%" else "Installing…", fontSize = 40.sp, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -108,7 +108,7 @@ fun UpdatingScreen(status: AppUpdater.Status) {
                     StepChip("Restart", done = false, active = false)
                 }
                 Text(
-                    "Pixlink restarts by itself and reconnects to your PC.",
+                    "Tethr Link restarts by itself and reconnects to your PC.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium,
                 )
             }

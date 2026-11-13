@@ -70,7 +70,7 @@
                     <StackPanel>
                         <TextBlock Text="Install updates automatically" />
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
-                                   Text="Pixlink checks when it starts and every 6 hours, and never updates during a call or while sharing your screen. Your phone updates itself too." />
+                                   Text="Tethr Link checks when it starts and every 6 hours, and never updates during a call or while sharing your screen. Your phone updates itself too." />
                     </StackPanel>
                     <ToggleSwitch x:Name="AutoSwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnAutoToggled" />
                 </Grid>
@@ -87,7 +87,7 @@
                             </Border>
                         </StackPanel>
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
-                                   Text="New versions arrive a day before everyone else. They're tested less, so you might hit a bug first. Turn it on for your phone too in Pixlink's settings." />
+                                   Text="New versions arrive a day before everyone else. They're tested less, so you might hit a bug first. Turn it on for your phone too in Tethr Link's settings." />
                     </StackPanel>
                     <ToggleSwitch x:Name="EarlySwitch" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" Toggled="OnEarlyToggled" />
                 </Grid>
@@ -106,7 +106,7 @@
                         <Border Style="{StaticResource PanelCardStyle}" Padding="20" Margin="0,0,0,12">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" FontSize="18"><Run Text="Pixlink " /><Run Text="{x:Bind Version}" /></TextBlock>
+                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" FontSize="18"><Run Text="Tethr Link " /><Run Text="{x:Bind Version}" /></TextBlock>
                                     <Border CornerRadius="10" Padding="8,2" Background="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center" Visibility="{x:Bind IsCurrent}">
                                         <TextBlock Text="Installed" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
                                     </Border>

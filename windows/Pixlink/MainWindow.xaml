@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Pixlink"
     xmlns:models="using:Pixlink.Models"
-    Title="Pixlink">
+    Title="Tethr Link">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -116,7 +116,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                 <Image Source="Assets/Pixlink.png" Width="18" Height="18" />
-                <TextBlock Text="Pixlink" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+                <TextBlock Text="Tethr Link" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
         <Border x:Name="StatusPill" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="110,0,0,0"
@@ -427,7 +427,7 @@
                     </Image>
                 </Grid>
                 <StackPanel Spacing="6" HorizontalAlignment="Center">
-                    <TextBlock Text="Updating Pixlink" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                    <TextBlock Text="Updating Tethr Link" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
                     <TextBlock x:Name="UpdateVersions" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
                 </StackPanel>
                 <TextBlock x:Name="UpdatePercent" Text="0%" FontSize="44" FontWeight="SemiBold" HorizontalAlignment="Center" />
@@ -437,7 +437,7 @@
                     <Border x:Name="StepRestart" CornerRadius="16" Padding="14,8"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon x:Name="StepRestartIcon" Glyph="&#xE777;" FontSize="14" /><TextBlock Text="Restart" /></StackPanel></Border>
                 </StackPanel>
                 <TextBlock x:Name="UpdateNote" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           Text="Pixlink restarts by itself when it's done. Your phone reconnects automatically." />
+                           Text="Tethr Link restarts by itself when it's done. Your phone reconnects automatically." />
                 <Button x:Name="UpdateCancel" Content="Hide" HorizontalAlignment="Center" Click="OnHideUpdating" Visibility="Collapsed" />
             </StackPanel>
         </Grid>
@@ -513,7 +513,7 @@
                     <Image.RenderTransform><ScaleTransform x:Name="SplashLogoScale" /></Image.RenderTransform>
                 </Image>
                 <StackPanel x:Name="SplashName" Spacing="10">
-                    <TextBlock Text="Pixlink" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                    <TextBlock Text="Tethr Link" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
                     <ProgressRing IsActive="True" Width="22" Height="22" />
                 </StackPanel>
             </StackPanel>

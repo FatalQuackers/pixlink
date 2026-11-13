@@ -35,7 +35,7 @@ public partial class App : Application
                 Window.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter p) p.Minimize();
             _ = Session.StartAsync(Window.DispatcherQueue);
             if (Environment.GetCommandLineArgs().Contains("--updated"))
-                Toasts.ShowSimple("Pixlink updated", $"You're now on Pixlink {Updater.Current}.");
+                Toasts.ShowSimple("Tethr Link updated", $"You're now on Tethr Link {Updater.Current}.");
         }
         catch (Exception ex)
         {
@@ -65,10 +65,10 @@ internal static class Crash
     public static void Report(Exception? ex, bool fatal)
     {
         Log(ex);
-        var text = $"{(fatal ? "Pixlink couldn't start." : "Something went wrong in Pixlink.")}\n\n" +
+        var text = $"{(fatal ? "Tethr Link couldn't start." : "Something went wrong in Tethr Link.")}\n\n" +
                    $"{ex?.GetType().Name}: {ex?.Message}\n\n" +
                    $"Details were saved to:\n{LogPath}\n\nPlease share that file in a GitHub issue.";
-        MessageBoxW(IntPtr.Zero, text, "Pixlink", 0x10 /* MB_ICONERROR */);
+        MessageBoxW(IntPtr.Zero, text, "Tethr Link", 0x10 /* MB_ICONERROR */);
         if (fatal) Environment.Exit(1);
     }
 

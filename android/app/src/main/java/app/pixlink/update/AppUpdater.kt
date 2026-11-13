@@ -81,7 +81,7 @@ object AppUpdater {
         val m = e.message.orEmpty()
         return when {
             "Unable to resolve host" in m || "timeout" in m.lowercase() -> "Couldn't download the update. Check your internet connection."
-            "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in m -> "This update is signed differently from the installed app. Uninstall Pixlink, then install the new version."
+            "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in m -> "This update is signed differently from the installed app. Uninstall Tethr Link, then install the new version."
             "INSTALL_FAILED_INSUFFICIENT_STORAGE" in m -> "Not enough storage to install the update."
             m.length > 140 -> "Android couldn't install the update. Tap Download to install it yourself."
             else -> m.ifEmpty { "Update failed" }

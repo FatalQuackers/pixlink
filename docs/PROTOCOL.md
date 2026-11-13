@@ -1,4 +1,4 @@
-# Pixlink protocol (v1)
+# Tethr Link protocol (v1)
 
 The Windows app is the **server**; the Pixel is the **client**.
 
@@ -23,17 +23,17 @@ The phone's **Connect using** setting picks the route: `auto` (Wi-Fi first, Blue
 
 ## Quiet mode (Pixel without the always-on notification)
 
-Opt-in on both sides. The PC (Settings → Connections → Let my Pixel find this PC over Bluetooth) advertises the same Bluetooth LE service iPhones use and sends `phoneWake: true` in `pc.info`. The phone makes a Companion Device Manager association with it (Android's own confirmation dialog), reads the PC id characteristic (which pairs them) to check it's the right PC, and calls `startObservingDevicePresence`. Android then binds `PixlinkCompanionService` whenever the PC is nearby, which keeps Pixlink running and lets it use the network without a foreground service, so no notification. If Android refuses a background start, Pixlink falls back to the normal foreground service.
+Opt-in on both sides. The PC (Settings → Connections → Let my Pixel find this PC over Bluetooth) advertises the same Bluetooth LE service iPhones use and sends `phoneWake: true` in `pc.info`. The phone makes a Companion Device Manager association with it (Android's own confirmation dialog), reads the PC id characteristic (which pairs them) to check it's the right PC, and calls `startObservingDevicePresence`. Android then binds `PixlinkCompanionService` whenever the PC is nearby, which keeps Tethr Link running and lets it use the network without a foreground service, so no notification. If Android refuses a background start, Tethr Link falls back to the normal foreground service.
 
 ## iPhone
 
-Pixlink for iPhone speaks the same protocol, with these differences:
+Tethr Link for iPhone speaks the same protocol, with these differences:
 
 - **Pairing:** iOS can't create a self-signed certificate, so the iPhone connects to the pairing screen without one (the PC allows that only while pairing is open) and sends `pair.request` with `platform: "ios"` and `needsIdentity: true`. The PC creates a client certificate for it and replies `pair.accept {pcName, pcId, identityP12, identityPassword}` (PKCS#12, base64). The iPhone stores it, reconnects with it and says `hello`. From then on the PC pins that certificate like an Android phone's. QR code only: receiving the UDP beacon needs an Apple permission apps outside the App Store can't get.
 - **Finding the PC again:** the PC advertises `<pcId>._pixlink._tcp` with Bonjour (a placeholder listener on port 47103). The iPhone browses for it to learn the PC's new address.
 - **hello:** `platform: "ios"`, `powerMode: false`, `canControl: false`.
-- **Supported:** `status`, `ping`, `photos.*`, `files.roots` / `files.list` (Pixlink's own folder on the iPhone), `file.get`, `file.put`, `file.chunk`, `clipboard.set`, `clipboard.text`, `phone.ring`. Notifications, texts, calls, hotspot and input aren't available on iOS.
-- **Notifications (Bluetooth LE):** the PC publishes GATT service `6f3c1e9a-2b7d-4c5e-9a1f-8d2b3c4e5f61` with characteristics `…5f62` (read, encrypted: the PC id; reading it makes the iPhone pair), `…5f63` (write, encrypted: `[battery 0–100 or 255, charging 0/1]`) and `…5f64` (notify, keeps the link up). The iPhone app connects as a central with the `bluetooth-central` background mode, so iOS keeps and restores the link with Pixlink closed. Once paired, the PC subscribes to Apple's ANCS on the iPhone and shows each notification as `notif.posted` with key `ios-<uid>`. Its buttons map to ANCS positive/negative actions (Answer/Decline for calls, Clear otherwise); dismissing on the PC sends Clear and never declines a call.
+- **Supported:** `status`, `ping`, `photos.*`, `files.roots` / `files.list` (Tethr Link's own folder on the iPhone), `file.get`, `file.put`, `file.chunk`, `clipboard.set`, `clipboard.text`, `phone.ring`. Notifications, texts, calls, hotspot and input aren't available on iOS.
+- **Notifications (Bluetooth LE):** the PC publishes GATT service `6f3c1e9a-2b7d-4c5e-9a1f-8d2b3c4e5f61` with characteristics `…5f62` (read, encrypted: the PC id; reading it makes the iPhone pair), `…5f63` (write, encrypted: `[battery 0–100 or 255, charging 0/1]`) and `…5f64` (notify, keeps the link up). The iPhone app connects as a central with the `bluetooth-central` background mode, so iOS keeps and restores the link with Tethr Link closed. Once paired, the PC subscribes to Apple's ANCS on the iPhone and shows each notification as `notif.posted` with key `ios-<uid>`. Its buttons map to ANCS positive/negative actions (Answer/Decline for calls, Clear otherwise); dismissing on the PC sends Clear and never declines a call.
 - **Screen casting:** started on the iPhone (Apple's broadcast button), never by the PC. The broadcast extension connects to port 47101 and first sends `"PXLI"` + `uint32 width` + `uint32 height` (big-endian), then normal mirror frames. The PC ends the cast by closing the connection.
 
 ## Several PCs

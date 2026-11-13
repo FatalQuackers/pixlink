@@ -26,7 +26,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                 val pi = PendingIntent.getActivity(context, 9, confirm, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                 val n = NotificationCompat.Builder(context, PixlinkApp.CHANNEL_MIRROR)
                     .setSmallIcon(R.drawable.ic_stat_link)
-                    .setContentTitle("Pixlink update ready")
+                    .setContentTitle("Tethr Link update ready")
                     .setContentText("Tap to install. Future updates install by themselves.")
                     .setContentIntent(pi)
                     .setAutoCancel(true)
@@ -37,7 +37,7 @@ class InstallResultReceiver : BroadcastReceiver() {
             else -> {
                 val msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "Install failed"
                 val hint = if (msg.contains("INCOMPATIBLE", ignoreCase = true) || msg.contains("signatures", ignoreCase = true))
-                    "This update is signed differently. Uninstall Pixlink and install the new version once; after that, updates install by themselves."
+                    "This update is signed differently. Uninstall Tethr Link and install the new version once; after that, updates install by themselves."
                 else msg
                 AppUpdater.setStatus(AppUpdater.Status.Failed(hint, UpdateChecker.available.value?.apkUrl))
             }

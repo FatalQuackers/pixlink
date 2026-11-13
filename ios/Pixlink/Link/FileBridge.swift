@@ -10,7 +10,7 @@ final class FileBridge {
     private var incoming: [String: (handle: FileHandle, url: URL)] = [:]
 
     func roots(_ m: Envelope) -> Envelope {
-        m.reply("files.roots", ["roots": [["name": "Pixlink on iPhone", "path": "/"]], "powerMode": false])
+        m.reply("files.roots", ["roots": [["name": "Tethr Link on iPhone", "path": "/"]], "powerMode": false])
     }
 
     /// Maps a PC-side path ("/", "/Folder/file.jpg") to a URL inside Pixlink's folder.

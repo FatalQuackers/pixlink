@@ -39,7 +39,7 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
         AVCaptureDevice.requestAccess(for: .video) { granted in
             DispatchQueue.main.async {
                 if granted { self.setUp() }
-                else { self.message.text = "Pixlink needs the camera to scan the QR code. Allow it in Settings → Pixlink → Camera, or paste the pairing link instead." }
+                else { self.message.text = "Tethr Link needs the camera to scan the QR code. Allow it in Settings → Tethr Link → Camera, or paste the pairing link instead." }
             }
         }
     }

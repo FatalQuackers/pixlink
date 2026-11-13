@@ -38,7 +38,7 @@ public sealed partial class HomePage : Page
     }
 
     public string ControlText(bool canControl, bool power) => canControl ? (power ? "On (Power mode)" : "On") : "View only";
-    public string ControlHint(bool canControl) => canControl ? "Click and type on your phone's screen" : "Turn on Screen control in Pixlink on your phone";
+    public string ControlHint(bool canControl) => canControl ? "Click and type on your phone's screen" : "Turn on Screen control in Tethr Link on your phone";
 
     private void OnDnd(object sender, RoutedEventArgs e)
     {

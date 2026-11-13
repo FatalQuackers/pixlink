@@ -63,7 +63,7 @@ fun LinkingScreen(pcName: String, onDone: () -> Unit, onRetry: () -> Unit) {
                         SuccessCheck()
                         Text("You're linked!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Pixlink is connected to ${(link as? LinkState.Connected)?.pcName ?: pcName}.",
+                            "Tethr Link is connected to ${(link as? LinkState.Connected)?.pcName ?: pcName}.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -85,7 +85,7 @@ fun LinkingScreen(pcName: String, onDone: () -> Unit, onRetry: () -> Unit) {
                         SearchingPulse()
                         Text("Linking to $pcName…", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Keep Pixlink open on your PC.",
+                            "Keep Tethr Link open on your PC.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

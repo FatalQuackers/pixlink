@@ -18,7 +18,7 @@ public partial class PhoneSession : ObservableObject
     private readonly AppSettings _settings = AppSettings.Load();
     private readonly System.Security.Cryptography.X509Certificates.X509Certificate2 _cert = Certificates.LoadOrCreate();
     private readonly ConcurrentDictionary<string, TaskCompletionSource<Envelope>> _pending = new();
-    private readonly Dictionary<string, BitmapImage> _icons = new();
+    private readonly Dictionary<string, BitmapImage> _icons = IconCache.LoadAll();
     private DispatcherQueue _ui = null!;
     private PhoneConnection? _conn;
     private readonly CancellationTokenSource _cts = new();
@@ -39,7 +39,7 @@ public partial class PhoneSession : ObservableObject
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(StatusText))] private bool _isPaired;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(StatusText))] private bool _isConnected;
-    [ObservableProperty] private string _phoneName = "Your Pixel";
+    [ObservableProperty] private string _phoneName = "Your phone";
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(BatteryText), nameof(BatteryGlyph))] private int _battery = -1;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(BatteryGlyph))] private bool _charging;
     [ObservableProperty] private bool _doNotDisturb;
@@ -156,7 +156,7 @@ public partial class PhoneSession : ObservableObject
         UpdatePhase();
         RebuildQuickActions();
         StartClipboardSync();
-        Log.Info("Pixlink started" + (AppSettings.IsPortable ? " (portable)" : ""));
+        Log.Info("Tethr Link started" + (AppSettings.IsPortable ? " (portable)" : ""));
 
         var server = new LinkServer(_cert, () => _settings.PhoneFingerprint, () => PairingOpen);
         server.Connected += OnConnected;
@@ -291,6 +291,9 @@ public partial class PhoneSession : ObservableObject
                 _ = SendAsync(Envelope.Of("notif.sync"));
                 _ = SendAsync(Envelope.Of("hotspot.get"));
                 _ = SendAsync(Envelope.Of("media.get"));
+                break;
+            case "sms.changed":
+                _ = OnSmsChangedAsync();
                 break;
             case "pc.ring":
                 if (m.Bool("ring") == false) FindMyPc.Stop(); else FindMyPc.Ring(PhoneName);
@@ -446,7 +449,7 @@ public partial class PhoneSession : ObservableObject
         else IPhoneBt.Stop();
     }
 
-    /// <summary>Opt-in: lets a Pixel find this PC over Bluetooth and drop its always-on notification.</summary>
+    /// <summary>Opt-in: lets a phone find this PC over Bluetooth and drop its always-on notification.</summary>
     public void SetAllowPhoneWake(bool allow)
     {
         _settings.AllowPhoneWake = allow;
@@ -601,25 +604,53 @@ public partial class PhoneSession : ObservableObject
     public ObservableCollection<Conversation> SmsThreads { get; } = new();
     public string? SmsError { get; private set; }
 
+    /// <summary>A text arrived or was sent on the phone (thread id when known). The Messages tab refreshes.</summary>
+    public event Action? SmsChanged;
+
+    /// <summary>
+    /// Loads (or refreshes) the text threads. Existing rows are updated in place, so the list
+    /// doesn't jump and the open thread stays selected.
+    /// </summary>
     public async Task LoadSmsThreadsAsync()
     {
         var r = await RequestAsync("sms.threads", new { limit = 80 }, TimeSpan.FromSeconds(15));
         SmsError = r?.Str("error");
         if (r is null || SmsError is not null) return;
-        SmsThreads.Clear();
+        var icon = _icons.GetValueOrDefault("com.google.android.apps.messaging") ?? _icons.GetValueOrDefault("com.samsung.android.messaging");
+        var index = 0;
         foreach (var t in r.Arr("threads")?.OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
         {
             var date = DateTimeOffset.FromUnixTimeMilliseconds(t["date"]?.GetValue<long>() ?? 0).LocalDateTime;
-            SmsThreads.Add(new Conversation
+            var id = t["threadId"]?.GetValue<long>();
+            var preview = t["snippet"]?.GetValue<string>() ?? "";
+            var time = date.Date == DateTime.Today ? date.ToString("t") : date.ToString("d MMM");
+            var existing = SmsThreads.FirstOrDefault(c => c.ThreadId == id);
+            if (existing is null)
             {
-                Name = t["name"]?.GetValue<string>() ?? t["address"]?.GetValue<string>() ?? "Unknown",
-                App = "sms", AppName = "Texts",
-                ThreadId = t["threadId"]?.GetValue<long>(),
-                Address = t["address"]?.GetValue<string>(),
-                Preview = t["snippet"]?.GetValue<string>() ?? "",
-                Time = date.Date == DateTime.Today ? date.ToString("t") : date.ToString("d MMM"),
-            });
+                existing = new Conversation
+                {
+                    Name = t["name"]?.GetValue<string>() ?? t["address"]?.GetValue<string>() ?? "Unknown",
+                    App = "sms", AppName = "Texts", ThreadId = id,
+                    Address = t["address"]?.GetValue<string>(),
+                };
+                SmsThreads.Insert(Math.Min(index, SmsThreads.Count), existing);
+            }
+            else
+            {
+                var from = SmsThreads.IndexOf(existing);
+                if (from != index && index < SmsThreads.Count) SmsThreads.Move(from, index);
+            }
+            existing.Preview = preview;
+            existing.Time = time;
+            existing.Icon ??= icon;
+            index++;
         }
+    }
+
+    private async Task OnSmsChangedAsync()
+    {
+        if (SmsThreads.Count > 0) await LoadSmsThreadsAsync();
+        SmsChanged?.Invoke();
     }
 
     public async Task LoadSmsMessagesAsync(Conversation c)
@@ -680,6 +711,7 @@ public partial class PhoneSession : ObservableObject
         if (app is null || b64 is null) return;
         var img = ImageFromBase64(b64);
         _icons[app] = img;
+        IconCache.Save(app, b64);
         foreach (var n in Notifications.Where(n => n.App == app)) n.Icon = img;
         foreach (var c in Conversations.Where(c => c.App == app)) c.Icon = img;
     }
@@ -857,7 +889,7 @@ public partial class PhoneSession : ObservableObject
         {
             // The phone opened its hotspot setting; give the user time to flip it, then try to join.
             progress?.Report(reply.Bool("openedSettings") == true
-                ? "On your phone, tap the Pixlink notification \"Your PC wants to use your hotspot\" and switch Hotspot on. This PC connects as soon as it appears…"
+                ? "On your phone, tap the Tethr Link notification \"Your PC wants to use your hotspot\" and switch Hotspot on. This PC connects as soon as it appears…"
                 : "Turn on the hotspot on your phone. This PC connects as soon as it appears…");
         }
         else

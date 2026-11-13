@@ -30,7 +30,7 @@ import java.util.UUID
  * companion app of a nearby device. So the phone becomes the "companion" of the PC: Android's own
  * Companion Device Manager asks once to link them over Bluetooth, then wakes Pixlink whenever the
  * PC is nearby (and lets it use the network in the background). The PC has to opt in too
- * (Settings → Connections → Let my Pixel find this PC over Bluetooth), which makes it advertise
+ * (Settings → Connections → Let my phone find this PC over Bluetooth), which makes it advertise
  * the same Bluetooth LE service iPhones use.
  */
 object QuietMode {
@@ -67,7 +67,7 @@ object QuietMode {
                 override fun onAssociationPending(intentSender: IntentSender) = onPending(intentSender)
                 override fun onAssociationCreated(associationInfo: AssociationInfo) = onCreated(associationInfo)
                 override fun onFailure(error: CharSequence?) =
-                    onError("Couldn't find your PC. Keep Pixlink open on it with Bluetooth on, and check Let my Pixel find this PC over Bluetooth is on in its settings.")
+                    onError("Couldn't find your PC. Keep Tethr Link open on it with Bluetooth on, and check Let my phone find this PC over Bluetooth is on in its settings.")
             })
         }.onFailure { onError(it.message ?: "Android couldn't start Bluetooth pairing.") }
     }
@@ -79,7 +79,7 @@ object QuietMode {
     suspend fun finish(ctx: Context, info: AssociationInfo): String? {
         val store = PairedStore(ctx)
         val address = info.deviceMacAddress?.toString()?.uppercase()
-            ?: return "Android didn't give Pixlink the PC's Bluetooth address. Try again."
+            ?: return "Android didn't give Tethr Link the PC's Bluetooth address. Try again."
         val pcId = readPcId(ctx, address)
         if (pcId == null) {
             runCatching { cdm(ctx).disassociate(info.id) }

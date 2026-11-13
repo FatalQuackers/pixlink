@@ -46,7 +46,9 @@ class MainActivity : ComponentActivity() {
         const val ACTION_SEND_FILES = "app.pixlink.SEND_FILES"
     }
 
-    private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+    private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        app.pixlink.messages.SmsBridge.startWatching(applicationContext)
+    }
 
     /** "Send files" (home screen, widget): pick files, then hand them to the share screen. */
     private val filePicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -198,7 +200,7 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Pixlink is made for Pixel phones", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+            Text("Tethr Link is made for Pixel phones", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
             Text(
                 "This phone isn't supported yet.",
                 Modifier.padding(top = 8.dp),

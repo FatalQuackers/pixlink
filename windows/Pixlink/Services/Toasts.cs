@@ -61,6 +61,8 @@ public static class Toasts
                 .AddText(string.IsNullOrEmpty(n.Title) ? n.AppName : n.Title)
                 .AddText(settings.ToastShowContent ? n.Text : "New notification")
                 .SetAttributionText($"{n.AppName} · {App.Session.PhoneName}");
+            // The phone app's own icon on the pop-up.
+            if (IconCache.PathFor(n.App) is { } logo) builder.SetAppLogoOverride(new Uri(logo), AppNotificationImageCrop.Default);
 
             if (!settings.ToastSound) builder.MuteAudio();
 

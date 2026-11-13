@@ -19,7 +19,7 @@
     <RuntimeIdentifier Condition="'$(Platform)' != 'ARM64'">win-x64</RuntimeIdentifier>
     <ApplicationIcon>Assets\Pixlink.ico</ApplicationIcon>
     <Version>0.1.0</Version>
-    <Product>Pixlink</Product>
+    <Product>Tethr Link</Product>
   </PropertyGroup>
 
   <ItemGroup>

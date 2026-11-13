@@ -34,7 +34,7 @@ public sealed partial class SettingsPage : Page
 
         DownloadText.Text = $"Saved in {FileTransfers.DownloadFolder}";
         LoadLayout();
-        VersionText.Text = $"Pixlink {Updater.Current}" + (AppSettings.IsPortable ? " · Portable (settings are saved in the Data folder next to Pixlink.exe)" : "");
+        VersionText.Text = $"Tethr Link {Updater.Current}" + (AppSettings.IsPortable ? " · Portable (settings are saved in the Data folder next to Pixlink.exe)" : "");
         AutoUpdateSwitch.IsOn = S.AutoCheckUpdates;
         FingerprintText.Text = $"This PC's certificate: {App.Session.PcFingerprint}";
         PhoneText.Text = $"Linked to {App.Session.PhoneName}";
@@ -149,7 +149,7 @@ public sealed partial class SettingsPage : Page
             if (update is null) UpdateStatus.Text = "You're on the latest version.";
             else
             {
-                UpdateStatus.Text = $"Pixlink {update.Version} is available. Click Update now at the top of the window.";
+                UpdateStatus.Text = $"Tethr Link {update.Version} is available. Click Update now at the top of the window.";
                 App.Window?.ShowUpdate(update);
             }
         }

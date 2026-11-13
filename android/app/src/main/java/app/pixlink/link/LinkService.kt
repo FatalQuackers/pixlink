@@ -56,6 +56,7 @@ class LinkService : LifecycleService() {
         status = StatusReporter(this)
 
         lifecycleScope.launch(Dispatchers.IO) { listenForPcs() }
+        app.pixlink.messages.SmsBridge.startWatching(this)
 
         // Automatic updates: check now and every 6 hours while Pixlink is running.
         lifecycleScope.launch(Dispatchers.IO) {
@@ -264,7 +265,7 @@ class LinkService : LifecycleService() {
     private fun describe(e: Exception, name: String, host: String, port: Int) = when (e) {
         is javax.net.ssl.SSLHandshakeException -> "Security check failed with $name"
         is java.net.SocketTimeoutException -> "Couldn't reach $name at $host:$port. Same Wi-Fi? Firewall?"
-        is java.net.ConnectException -> "$name refused the connection. Is Pixlink open on the PC?"
+        is java.net.ConnectException -> "$name refused the connection. Is Tethr Link open on the PC?"
         else -> "${e.javaClass.simpleName}: ${e.message}"
     }
 
@@ -314,6 +315,7 @@ class LinkService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        app.pixlink.messages.SmsBridge.stopWatching(this)
         runCatching { beaconSocket?.close() } // unblocks the beacon listener
         loops.values.forEach { it.cancel() }
         pairJob?.cancel()
@@ -339,7 +341,7 @@ class LinkService : LifecycleService() {
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val b = NotificationCompat.Builder(this, PixlinkApp.CHANNEL_LINK)
             .setSmallIcon(R.drawable.ic_stat_link)
-            .setContentTitle(if (connected) "Pixlink" else "Pixlink is ready")
+            .setContentTitle(if (connected) "Tethr Link" else "Tethr Link is ready")
             .setContentText(text)
             .setContentIntent(open)
             .setOngoing(true)

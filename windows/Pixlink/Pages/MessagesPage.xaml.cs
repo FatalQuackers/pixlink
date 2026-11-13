@@ -17,7 +17,13 @@ public sealed partial class MessagesPage : Page
     {
         InitializeComponent();
         Session.Conversations.CollectionChanged += OnConversationsChanged;
-        Unloaded += (_, _) => Session.Conversations.CollectionChanged -= OnConversationsChanged;
+        Session.SmsChanged += OnSmsChanged;
+        Unloaded += (_, _) =>
+        {
+            Session.Conversations.CollectionChanged -= OnConversationsChanged;
+            Session.SmsChanged -= OnSmsChanged;
+            if (_current is not null) _current.Messages.CollectionChanged -= OnBubblesChanged;
+        };
         UpdateEmptyList();
         ViewPicker.SelectedItem = Session.Settings.MessagesView switch { "google" => GoogleItem, "texts" => TextsItem, _ => PixlinkItem };
     }
@@ -60,9 +66,9 @@ public sealed partial class MessagesPage : Page
             NoChatsTitle.Text = "Loading your texts…";
             NoChatsText.Text = "";
             await Session.LoadSmsThreadsAsync();
-            NoChatsTitle.Text = Session.SmsError is null ? "No texts" : "Allow Pixlink to read texts";
+            NoChatsTitle.Text = Session.SmsError is null ? "No texts" : "Allow Tethr Link to read texts";
             NoChatsText.Text = Session.SmsError is null ? "Texts on your phone appear here." :
-                "On your phone, open Pixlink and allow SMS in Setup. If Android says \"Restricted setting\", open App info → ⋮ → Allow restricted settings first.";
+                "On your phone, open Tethr Link and allow SMS in Setup. If Android says \"Restricted setting\", open App info → ⋮ → Allow restricted settings first.";
             UpdateEmptyList();
         }
         else { NoChatsTitle.Text = "No chats yet"; NoChatsText.Text = "Messages from any app appear here when they arrive on your phone. For your full text history, open Texts."; }
@@ -105,7 +111,9 @@ public sealed partial class MessagesPage : Page
     private void OnConversationSelected(object sender, SelectionChangedEventArgs e)
     {
         if (ConversationList.SelectedItem is not Conversation c) return;
+        if (_current is not null) _current.Messages.CollectionChanged -= OnBubblesChanged;
         _current = c;
+        c.Messages.CollectionChanged += OnBubblesChanged;
         ThreadTitle.Text = c.Name;
         ThreadPicture.DisplayName = c.Name;
         Bubbles.ItemsSource = c.Messages;
@@ -122,8 +130,23 @@ public sealed partial class MessagesPage : Page
         if (_current == c && c.Messages.Count > 0) Bubbles.ScrollIntoView(c.Messages[^1]);
     }
 
+    /// <summary>New messages in the open chat: keep the newest in view.</summary>
+    private void OnBubblesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_current is { Messages.Count: > 0 } c)
+            DispatcherQueue.TryEnqueue(() => { if (_current == c && c.Messages.Count > 0) Bubbles.ScrollIntoView(c.Messages[^1]); });
+    }
+
+    /// <summary>A text arrived or was sent: refresh the open text thread.</summary>
+    private void OnSmsChanged() => DispatcherQueue.TryEnqueue(() =>
+    {
+        UpdateEmptyList();
+        if (_current is { ThreadId: not null } c) _ = LoadThreadAsync(c);
+    });
+
     private void ShowNothingSelected()
     {
+        if (_current is not null) _current.Messages.CollectionChanged -= OnBubblesChanged;
         _current = null;
         ConversationList.SelectedItem = null;
         ThreadView.Visibility = Visibility.Collapsed;

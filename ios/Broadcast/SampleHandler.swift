@@ -10,7 +10,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
         guard let pc = SharedStore.pc, let identity = SharedStore.loadIdentity() else {
-            stop("Open Pixlink and link your PC first.")
+            stop("Open Tethr Link and link your PC first.")
             return
         }
         let client = MirrorClient(pc: pc, identity: identity)

@@ -32,7 +32,7 @@
 
         <InfoBar x:Name="PowerBar" Grid.Row="1" Margin="16,0" Severity="Informational" IsClosable="True"
                  Title="Want to browse everything?"
-                 Message="Turn on Power mode in the Pixlink phone app to see all storage. For now you can browse the folders you shared." />
+                 Message="Turn on Power mode in the Tethr Link phone app to see all storage. For now you can browse the folders you shared." />
 
         <ListView x:Name="FileList" Grid.Row="2" SelectionMode="Extended" IsItemClickEnabled="True"
                   ItemClick="OnItemClick" SelectionChanged="OnSelection">

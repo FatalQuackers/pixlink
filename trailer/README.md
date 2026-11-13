@@ -1,4 +1,4 @@
-# Pixlink trailer
+# Tethr Link trailer
 
 The release trailer is a time-driven HTML page (`trailer.html`). `render.js` films it frame by frame with Puppeteer and ffmpeg, and `music.py` generates the soundtrack and UI sounds with NumPy.
 

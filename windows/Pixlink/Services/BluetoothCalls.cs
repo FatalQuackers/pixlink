@@ -19,7 +19,9 @@ public static class BluetoothCalls
         var selector = BluetoothDevice.GetDeviceSelectorFromPairingState(true);
         var devices = await DeviceInformation.FindAllAsync(selector);
         return devices.Any(d => d.Name.Contains(phoneName, StringComparison.OrdinalIgnoreCase)
-                             || d.Name.Contains("Pixel", StringComparison.OrdinalIgnoreCase));
+                             || d.Name.Contains("Pixel", StringComparison.OrdinalIgnoreCase)
+                             || d.Name.Contains("Galaxy", StringComparison.OrdinalIgnoreCase)
+                             || d.Name.Contains("Phone", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Opens Windows Bluetooth settings so the user can pair their phone.</summary>

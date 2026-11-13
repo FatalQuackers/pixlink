@@ -119,7 +119,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
             var codes by remember { mutableStateOf(store.sendCodes) }
             SwitchRow("Copy sign-in codes to my PC", "Verification codes from your texts and apps, ready to paste", codes) { codes = it; store.sendCodes = it }
             var onOpen by remember { mutableStateOf(store.sendClipboardOnOpen) }
-            SwitchRow("Send my clipboard when I open Pixlink", "Android only lets apps read the clipboard while they're open", onOpen) { onOpen = it; store.sendClipboardOnOpen = it }
+            SwitchRow("Send my clipboard when I open Tethr Link", "Android only lets apps read the clipboard while they're open", onOpen) { onOpen = it; store.sendClipboardOnOpen = it }
             SwitchRow("Control music and videos", "Play, pause and skip from your PC", media) { media = it; store.allowMediaControls = it }
             SwitchRow("Turn Do Not Disturb on and off", null, dnd) { dnd = it; store.allowDndControl = it }
 
@@ -146,7 +146,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
             Section("Staying connected")
             ListItem(
                 headlineContent = { Text("Keep running in the background") },
-                supportingContent = { Text("Open App info → Battery → Unrestricted, so Android doesn't disconnect Pixlink.") },
+                supportingContent = { Text("Open App info → Battery → Unrestricted, so Android doesn't disconnect Tethr Link.") },
                 trailingContent = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null) },
                 modifier = Modifier.clickable {
                     ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", ctx.packageName, null)))
@@ -166,15 +166,15 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                 early,
             ) { early = it; store.earlyUpdates = it }
             ListItem(
-                headlineContent = { Text("Pixlink ${UpdateChecker.currentVersion}") },
-                supportingContent = { Text(updateStatus ?: "Pixlink checks for updates when you open it.") },
+                headlineContent = { Text("Tethr Link ${UpdateChecker.currentVersion}") },
+                supportingContent = { Text(updateStatus ?: "Tethr Link checks for updates when you open it.") },
                 trailingContent = {
                     OutlinedButton(enabled = !checking, onClick = {
                         checking = true
                         scope.launch {
                             updateStatus = try {
                                 val u = UpdateChecker.check()
-                                if (u == null) "You're on the latest version." else "Pixlink ${u.version} is available. It installs from the home screen."
+                                if (u == null) "You're on the latest version." else "Tethr Link ${u.version} is available. It installs from the home screen."
                             } catch (e: Exception) {
                                 "Couldn't check for updates. Are you online?"
                             }
@@ -187,11 +187,11 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
             Section("About")
             ListItem(
                 headlineContent = { Text("Show the welcome tour again") },
-                supportingContent = { Text("Shows next time you open Pixlink without a linked PC") },
+                supportingContent = { Text("Shows next time you open Tethr Link without a linked PC") },
                 modifier = Modifier.clickable { store.onboardingDone = false },
             )
             ListItem(
-                headlineContent = { Text("Pixlink on GitHub") },
+                headlineContent = { Text("Tethr Link on GitHub") },
                 supportingContent = { Text("Open source (MIT). Not affiliated with Google or Microsoft.") },
                 modifier = Modifier.clickable {
                     ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FatalQuackers/pixlink")))

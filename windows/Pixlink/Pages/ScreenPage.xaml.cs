@@ -51,7 +51,7 @@ public sealed partial class ScreenPage : Page
         {
             _ = Session.SendAsync(Envelope.Of("mirror.stop"));
             Stop();
-            StartHint.Text = "Screen sharing stopped because Pixlink was minimized. Start it again anytime.";
+            StartHint.Text = "Screen sharing stopped because Tethr Link was minimized. Start it again anytime.";
         }
     }
 
@@ -95,7 +95,7 @@ public sealed partial class ScreenPage : Page
     private void ShowIPhoneHint()
     {
         StartButton.Visibility = Visibility.Collapsed;
-        StartHint.Text = "On your iPhone, open Pixlink and tap Cast screen, or long-press Screen Recording in Control Center and pick Pixlink. Your screen appears here.";
+        StartHint.Text = "On your iPhone, open Tethr Link and tap Cast screen, or long-press Screen Recording in Control Center and pick Tethr Link. Your screen appears here.";
     }
 
     private async void OnStart(object sender, RoutedEventArgs e)
@@ -109,7 +109,7 @@ public sealed partial class ScreenPage : Page
         Waiting.IsActive = true;
         StartHint.Text = Session.PowerMode
             ? "Check your phone and tap Start now to share your screen."
-            : "Check your phone: tap the Pixlink notification, then Start now.";
+            : "Check your phone: tap the Tethr Link notification, then Start now.";
         var s = Session.Settings;
         await Session.SendAsync(Envelope.Of("mirror.start", new { maxSize = s.MirrorMaxSize, bitrate = s.MirrorBitrateMbps * 1_000_000, fps = s.MirrorFps }));
     }

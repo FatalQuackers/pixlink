@@ -66,14 +66,14 @@ fun PairScreen(onScanned: (String) -> Unit, onEnterCode: () -> Unit, onBack: () 
     }) { pad ->
         Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) {
             if (hasCamera) QrCamera(onScanned)
-            else Text("Pixlink needs the camera to scan the pairing code.", Modifier.padding(32.dp))
+            else Text("Tethr Link needs the camera to scan the pairing code.", Modifier.padding(32.dp))
             // No camera (e.g. the Android emulator)? Copy the link on the PC and paste it here.
             Column(
                 Modifier.align(Alignment.BottomCenter).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text("Open Pixlink on your PC to see the code", style = MaterialTheme.typography.bodyLarge)
+                Text("Open Tethr Link on your PC to see the code", style = MaterialTheme.typography.bodyLarge)
                 OutlinedButton(onClick = {
                     val text = clipboard.getText()?.text?.trim().orEmpty()
                     if (PairingInfo.parse(text) != null) onScanned(text)

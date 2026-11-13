@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Pixlink trailer</title>
+<html><head><meta charset="utf-8"><title>Tethr Link trailer</title>
 <style>
 :root{--navy:#16213A;--blue:#3D7BFF;--deep:#2557D6;--sky:#E8EEF8;--mint:#C9F0DE;--slate:#4A5675;--line:#CDD7EA;--green:#1E9E63;--red:#E5484D}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -98,7 +98,7 @@ const photoGrads=['#FDBA74,#F472B6','#93C5FD,#3D7BFF','#86EFAC,#0EA5B7','#FDE68A
 function phoneApp(s){ // home grid -> Settings app (also used for the mirror)
   let icons='';
   for(let r=0;r<4;r++)for(let c=0;c<4;c++){const k=r*4+c;icons+=`<div class="appi" style="left:${30+c*66}px;top:${150+r*84}px;background:${appColors[k]}"></div>`}
-  const rows=[['Network & internet','Wi-Fi, hotspot','#3D7BFF'],['Connected devices','Bluetooth, Pixlink','#1E9E63'],['Apps','Recent apps, default apps','#F2A93B'],['Notifications','History, conversations','#8B5CF6'],['Battery','82%','#22C55E'],['Display','Dark theme, font size','#0EA5B7'],['Sound & vibration','Volume, haptics','#EC4899'],['Wallpaper & style','Colours, icons','#F97316'],['Storage','64% used','#64748B']];
+  const rows=[['Network & internet','Wi-Fi, hotspot','#3D7BFF'],['Connected devices','Bluetooth, Tethr Link','#1E9E63'],['Apps','Recent apps, default apps','#F2A93B'],['Notifications','History, conversations','#8B5CF6'],['Battery','82%','#22C55E'],['Display','Dark theme, font size','#0EA5B7'],['Sound & vibration','Volume, haptics','#EC4899'],['Wallpaper & style','Colours, icons','#F97316'],['Storage','64% used','#64748B']];
   let list='';rows.forEach((r,i)=>{list+=`<div class="row" style="top:${i*64}px"><i style="background:${r[2]}"></i>${r[0]}<small>${r[1]}</small>${i==5?`<div class="ma-tog" style="position:absolute;right:20px;top:20px;width:42px;height:24px;border-radius:12px;background:#C5CDDD"><div class="ma-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div>`:''}</div>`});
   return `<div class="layer home ma-grid" style="inset:0">${icons}
    <div style="position:absolute;left:22px;top:536px;width:256px;height:44px;border-radius:22px;background:rgba(255,255,255,.75)"></div></div>
@@ -137,7 +137,7 @@ else{html+=`<div class="title" style="top:${L.tY+20}px;font-size:${L.tS}px">${va
 const eY=L.tall?640:250, eI=L.tall?260:220;
 html+=`<div id="end" class="a" style="left:0;top:${eY}px;width:${L.W}px;text-align:center">
  <img id="eIcon" src="icon.png" style="width:${eI}px;height:${eI}px;border-radius:${eI*0.23}px;box-shadow:0 30px 60px -20px rgba(37,87,214,.55)">
- <div id="eName" style="font-size:${L.tall?120:104}px;font-weight:700;letter-spacing:-.04em;margin-top:${L.tall?40:28}px">Pixlink</div>
+ <div id="eName" style="font-size:${L.tall?120:104}px;font-weight:700;letter-spacing:-.04em;margin-top:${L.tall?40:28}px">Tethr Link</div>
  <div id="eBtn" style="display:inline-block;margin-top:${L.tall?44:26}px;background:var(--blue);color:#fff;font-size:${L.tall?46:36}px;font-weight:650;padding:${L.tall?'22px 56px':'16px 44px'};border-radius:999px;letter-spacing:-.01em">Download now</div>
  <div id="eUrl" style="margin-top:${L.tall?36:24}px;font-size:${L.tall?36:30}px;font-weight:500;color:var(--slate);letter-spacing:-.01em">github.com/FatalQuackers/pixlink</div>
 </div>`;
@@ -178,13 +178,13 @@ let callsH='';calls.forEach((c,i)=>callsH+=`<div style="position:absolute;left:2
 document.getElementById('lin').innerHTML=`
 <div class="wall"></div>
 <div id="win">
- <div class="tbar"><img src="icon.png">Pixlink<span class="dots"><span>–</span><span>□</span><span>✕</span></span></div>
+ <div class="tbar"><img src="icon.png">Tethr Link<span class="dots"><span>–</span><span>□</span><span>✕</span></span></div>
  <div class="layer" id="wSplash" style="left:0;top:34px;width:920px;height:514px;text-align:center">
-   <img src="icon.png" style="width:110px;height:110px;border-radius:26px;margin-top:150px"><div style="font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:18px">Pixlink</div>
+   <img src="icon.png" style="width:110px;height:110px;border-radius:26px;margin-top:150px"><div style="font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:18px">Tethr Link</div>
    <div style="font-size:14px;color:var(--slate);margin-top:8px">Your Pixel, on your PC</div></div>
  <div class="layer" id="wPair" style="left:0;top:34px;width:920px;height:514px;text-align:center">
    <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:110px">Link your phone</div>
-   <div style="font-size:15px;color:var(--slate);margin-top:10px">On your Pixel, open Pixlink and type this code</div>
+   <div style="font-size:15px;color:var(--slate);margin-top:10px">On your Pixel, open Tethr Link and type this code</div>
    <div style="display:flex;gap:14px;justify-content:center;margin-top:34px">${'48217'.split('').map(d=>`<div style="width:70px;height:88px;border-radius:14px;background:#EEF2FA;font-size:46px;font-weight:700;line-height:88px">${d}</div>`).join('')}</div>
    <div style="font-size:13px;color:#7C86A0;margin-top:26px">or scan the QR code</div></div>
  <div class="layer" id="wPairOk" style="left:0;top:34px;width:920px;height:514px;text-align:center;background:#FBFCFE">

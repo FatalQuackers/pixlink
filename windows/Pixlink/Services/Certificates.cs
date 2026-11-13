@@ -18,7 +18,7 @@ public static class Certificates
         }
 
         using var rsa = RSA.Create(2048);
-        var req = new CertificateRequest($"CN=Pixlink PC ({Environment.MachineName})", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var req = new CertificateRequest($"CN=Tethr Link PC ({Environment.MachineName})", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         req.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
         req.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, false));
         req.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.1") }, false)); // server auth
@@ -35,7 +35,7 @@ public static class Certificates
     public static (string fingerprint, string p12Base64, string password) CreatePhoneIdentity(string phoneName)
     {
         using var rsa = RSA.Create(2048);
-        var req = new CertificateRequest($"CN=Pixlink iPhone ({phoneName.Replace(",", " ").Replace("=", " ")})", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var req = new CertificateRequest($"CN=Tethr Link iPhone ({phoneName.Replace(",", " ").Replace("=", " ")})", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         req.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
         req.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, false));
         req.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.2") }, false)); // client auth

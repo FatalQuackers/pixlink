@@ -14,7 +14,7 @@
             <Button Content="Copy all" Click="OnCopy" />
             <Button Content="Open log folder" Click="OnOpenFolder" />
             <TextBlock VerticalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       Text="What Pixlink did, newest first. No message contents are logged." />
+                       Text="What Tethr Link did, newest first. No message contents are logged." />
         </StackPanel>
         <ListView Grid.Row="2" ItemsSource="{x:Bind Entries}" SelectionMode="None">
             <ListView.ItemTemplate>

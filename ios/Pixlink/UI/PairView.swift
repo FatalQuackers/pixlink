@@ -27,7 +27,7 @@ struct PairView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 16) {
-                    Step(number: 1, text: "Open Pixlink on your Windows PC")
+                    Step(number: 1, text: "Open Tethr Link on your Windows PC")
                     Step(number: 2, text: "Connect your iPhone and PC to the same Wi-Fi")
                     Step(number: 3, text: "Scan the QR code on your PC")
                 }
@@ -61,7 +61,7 @@ struct PairView: View {
                         .disabled(working)
                 }
 
-                Text("The 5-digit code works on Pixel phones only. On iPhone, use the QR code.")
+                Text("The 5-digit code works on Android phones only. On iPhone, use the QR code.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -70,13 +70,13 @@ struct PairView: View {
         .sheet(isPresented: $scanning) {
             ScannerSheet { code in
                 scanning = false
-                if let info = PairingInfo(code) { start(info) } else { error = "That isn't a Pixlink code. Scan the QR code on Pixlink's pairing screen on your PC." }
+                if let info = PairingInfo(code) { start(info) } else { error = "That isn't a Tethr Link code. Scan the QR code on Tethr Link's pairing screen on your PC." }
             }
         }
         .alert("Paste pairing link", isPresented: $pasting) {
             TextField("pixlink://pair?…", text: $pastedText)
             Button("Link") {
-                if let info = PairingInfo(pastedText) { start(info) } else { error = "That link isn't a Pixlink pairing link." }
+                if let info = PairingInfo(pastedText) { start(info) } else { error = "That link isn't a Tethr Link pairing link." }
             }
             Button("Cancel", role: .cancel) {}
         }

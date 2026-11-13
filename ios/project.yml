@@ -31,7 +31,7 @@ targets:
     info:
       path: Pixlink/Info.plist
       properties:
-        CFBundleDisplayName: Pixlink
+        CFBundleDisplayName: Tethr Link
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
@@ -40,11 +40,11 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
-        NSCameraUsageDescription: Pixlink uses the camera to scan the QR code on your PC.
-        NSPhotoLibraryUsageDescription: Pixlink shows your photos on your PC when you open the Photos tab there.
-        NSLocalNetworkUsageDescription: Pixlink connects to your PC on your Wi-Fi.
+        NSCameraUsageDescription: Tethr Link uses the camera to scan the QR code on your PC.
+        NSPhotoLibraryUsageDescription: Tethr Link shows your photos on your PC when you open the Photos tab there.
+        NSLocalNetworkUsageDescription: Tethr Link connects to your PC on your Wi-Fi.
         NSBonjourServices: [_pixlink._tcp]
-        NSBluetoothAlwaysUsageDescription: Pixlink uses Bluetooth so your PC can show your iPhone's notifications and battery, even when Pixlink is closed.
+        NSBluetoothAlwaysUsageDescription: Tethr Link uses Bluetooth so your PC can show your iPhone's notifications and battery, even when Tethr Link is closed.
         UIBackgroundModes: [bluetooth-central]
         CFBundleURLTypes:
           - CFBundleURLName: app.pixlink.pair
@@ -70,7 +70,7 @@ targets:
     info:
       path: Broadcast/Info.plist
       properties:
-        CFBundleDisplayName: Pixlink
+        CFBundleDisplayName: Tethr Link
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:

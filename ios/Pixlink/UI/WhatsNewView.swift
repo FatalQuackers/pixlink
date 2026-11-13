@@ -70,7 +70,7 @@ struct WhatsNewView: View {
 
                 VStack(spacing: 4) {
                     Text("What's new").font(.largeTitle.bold())
-                    Text("Pixlink \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")")
+                    Text("Tethr Link \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")")
                         .foregroundStyle(.secondary)
                 }
 

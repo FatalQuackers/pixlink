@@ -63,7 +63,7 @@ public sealed partial class UpdatesPage : Page
     {
         SetLook(Look.Checking);
         StatusTitle.Text = "Checking for updates…";
-        StatusDetail.Text = $"Installed: Pixlink {Updater.Current}";
+        StatusDetail.Text = $"Installed: Tethr Link {Updater.Current}";
         InstallButton.Visibility = Visibility.Collapsed;
         CheckButton.IsEnabled = false;
         try
@@ -74,7 +74,7 @@ public sealed partial class UpdatesPage : Page
             {
                 SetLook(Look.UpToDate);
                 StatusTitle.Text = "You're up to date";
-                StatusDetail.Text = $"Pixlink {Updater.Current} is the latest version. Last checked at {DateTime.Now:t}.";
+                StatusDetail.Text = $"Tethr Link {Updater.Current} is the latest version. Last checked at {DateTime.Now:t}.";
             }
             else ShowAvailable(_update);
         }
@@ -90,7 +90,7 @@ public sealed partial class UpdatesPage : Page
     private void ShowAvailable(Updater.Update u)
     {
         SetLook(Look.Available);
-        StatusTitle.Text = u.IsEarly ? $"Pixlink {u.Version} is available early" : $"Pixlink {u.Version} is available";
+        StatusTitle.Text = u.IsEarly ? $"Tethr Link {u.Version} is available early" : $"Tethr Link {u.Version} is available";
         StatusDetail.Text = $"You have {Updater.Current}." + (u.Published is { } p ? $" Released {p.LocalDateTime:d MMMM}." : "");
         InstallLabel.Text = $"Install {u.Version}";
         InstallButton.Visibility = Visibility.Visible;

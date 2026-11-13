@@ -105,7 +105,7 @@ fun ActivityScreen(onBack: () -> Unit) {
                             }.isSuccess
                             if (!opened) Toast.makeText(ctx, "That file isn't available anymore.", Toast.LENGTH_SHORT).show()
                         } else {
-                            ctx.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Pixlink", e.detail ?: ""))
+                            ctx.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Tethr Link", e.detail ?: ""))
                             Toast.makeText(ctx, "Copied", Toast.LENGTH_SHORT).show()
                         }
                     },

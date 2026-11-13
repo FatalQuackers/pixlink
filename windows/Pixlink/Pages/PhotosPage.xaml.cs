@@ -32,7 +32,7 @@ public sealed partial class PhotosPage : Page
         var r = await Session.RequestAsync("photos.list", new { offset = 0, limit = 2000 }, TimeSpan.FromSeconds(30));
         Loading.IsActive = false;
         var arr = r?.Arr("photos");
-        if (arr is null || arr.Count == 0) { StatusText.Text = "No photos found — check Pixlink has photo access on your phone"; return; }
+        if (arr is null || arr.Count == 0) { StatusText.Text = "No photos found — check Tethr Link has photo access on your phone"; return; }
         foreach (var o in arr.OfType<System.Text.Json.Nodes.JsonObject>())
         {
             _photos.Add(new PhotoItem

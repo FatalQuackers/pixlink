@@ -82,7 +82,7 @@ fun CodeEntryScreen(onBack: () -> Unit, onPairStarted: (pcName: String) -> Unit)
         scope.launch {
             val pcs = runCatching { PairingDiscovery.discover(ctx) }.getOrDefault(emptyList())
             state = when (pcs.size) {
-                0 -> CodeState.Problem("Couldn't find a PC showing a code. Make sure Pixlink is open on your PC and both are on the same Wi-Fi.")
+                0 -> CodeState.Problem("Couldn't find a PC showing a code. Make sure Tethr Link is open on your PC and both are on the same Wi-Fi.")
                 1 -> { pair(pcs.first()); CodeState.Searching }
                 else -> CodeState.Choose(pcs)
             }
@@ -103,7 +103,7 @@ fun CodeEntryScreen(onBack: () -> Unit, onPairStarted: (pcName: String) -> Unit)
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             Text(
-                "Type the 5-digit code shown in Pixlink on your PC",
+                "Type the 5-digit code shown in Tethr Link on your PC",
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )

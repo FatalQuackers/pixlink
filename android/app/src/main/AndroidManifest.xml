@@ -32,7 +32,7 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <!-- Quiet mode: Pixlink as the companion app of the PC (no always-on notification). -->
+    <!-- Quiet mode: Tethr Link as the companion app of the PC (no always-on notification). -->
     <uses-feature android:name="android.software.companion_device_setup" android:required="false" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND" />
@@ -75,7 +75,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Lets a scanned pixlink:// link from any QR app open Pixlink -->
+            <!-- Lets a scanned pixlink:// link from any QR app open Tethr Link -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -124,7 +124,7 @@
             android:noHistory="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <receiver android:name=".widget.PixlinkWidget" android:exported="true" android:label="Pixlink">
+        <receiver android:name=".widget.PixlinkWidget" android:exported="true" android:label="Tethr Link">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -152,7 +152,7 @@
         <service
             android:name=".mirror.ControlService"
             android:exported="false"
-            android:label="Pixlink screen control"
+            android:label="Tethr Link screen control"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

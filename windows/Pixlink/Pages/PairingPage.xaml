@@ -49,7 +49,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Left: what Pixlink does + how to link -->
+            <!-- Left: what Tethr Link does + how to link -->
             <StackPanel x:Name="Hero" Spacing="22" VerticalAlignment="Center" Opacity="0">
                 <StackPanel.RenderTransform><TranslateTransform x:Name="HeroShift" /></StackPanel.RenderTransform>
 
@@ -66,7 +66,7 @@
                     </Border>
                 </Grid>
 
-                <TextBlock Text="Link your Pixel to this PC" Style="{StaticResource TitleLargeTextBlockStyle}" TextWrapping="Wrap" />
+                <TextBlock Text="Link your phone to this PC" Style="{StaticResource TitleLargeTextBlockStyle}" TextWrapping="Wrap" />
                 <TextBlock TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="16"
                            Text="Texts, calls, photos, files and your phone's screen, right here. Everything stays on your Wi-Fi." />
 
@@ -76,7 +76,7 @@
                         <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PixlinkBlueBrush}">
                             <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold" />
                         </Border>
-                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Install Pixlink on your Pixel" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Install Tethr Link on your phone" />
                     </Grid>
                     <Grid ColumnSpacing="14">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -93,7 +93,7 @@
                         <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="Scan the QR code or type the 5-digit code in the app" />
                     </Grid>
                     <TextBlock TextWrapping="Wrap" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Text="Using an iPhone? Install Pixlink for iPhone and scan the QR code with it. iPhones get photos, files, clipboard and screen casting." />
+                               Text="Using an iPhone? Install Tethr Link for iPhone and scan the QR code with it. iPhones get photos, files, clipboard and screen casting." />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -107,7 +107,7 @@
                 <Border x:Name="QrCard" Style="{StaticResource PanelCardStyle}" Padding="20" Opacity="0">
                     <Border.RenderTransform><TranslateTransform x:Name="QrShift" /></Border.RenderTransform>
                     <StackPanel Spacing="12" HorizontalAlignment="Center">
-                        <TextBlock Text="Scan with the Pixlink app" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" />
+                        <TextBlock Text="Scan with the Tethr Link app" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" />
                         <Border Background="White" CornerRadius="12" Padding="14">
                             <Image x:Name="QrImage" Width="220" Height="220" />
                         </Border>
@@ -122,7 +122,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                             <Button Content="New code" Click="OnRefresh" />
                             <Button x:Name="CopyButton" Content="Copy link" Click="OnCopy"
-                                    ToolTipService.ToolTip="For emulators without a camera: paste this link in the Pixlink app" />
+                                    ToolTipService.ToolTip="For emulators without a camera: paste this link in the Tethr Link app" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

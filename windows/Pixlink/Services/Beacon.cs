@@ -6,7 +6,7 @@ using System.Text;
 namespace Pixlink.Services;
 
 /// <summary>
-/// Announces "Pixlink PC is here" on every local network every few seconds (UDP broadcast,
+/// Announces "Tethr Link PC is here" on every local network every few seconds (UDP broadcast,
 /// port 47102), so the paired phone can find this PC again when its IP address changes —
 /// for example after joining the phone's own hotspot.
 /// </summary>
