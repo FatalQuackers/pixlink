@@ -40,19 +40,19 @@ const stage=document.getElementById('stage');stage.style.width=W+'px';stage.styl
 document.body.style.width=W+'px';document.body.style.height=H+'px';
 
 const STEPS=[
- {title:'Install on your Pixel',items:[
-   'Open the latest release and tap Tethr Link‑android.apk',
+ {title:'Install on your phone',items:[
+   'Open the latest release and tap TethrLink‑android.apk',
    'Allow your browser to install unknown apps',
    'Tap Install, then Install anyway if Play Protect asks',
    'Open Tethr Link and allow notification access']},
  {title:'Install on your PC',items:[
-   'Download Tethr Link‑windows‑x64.zip from the latest release',
+   'Download TethrLink‑windows‑x64.zip from the latest release',
    'Right-click the zip, choose Extract All, pick a folder',
    'Open Pixlink.exe. If SmartScreen appears, click More info, then Run anyway',
    'Tick Private networks in Windows Firewall and click Allow']},
  {title:'Link them',items:[
    'Tethr Link on your PC shows a QR code and a 5‑digit code',
-   'On your Pixel, tap Enter 5‑digit code (or Scan QR code)',
+   'On your phone, tap Enter 5‑digit code (or Scan QR code)',
    'Type the code. That’s it, you’re linked']}];
 const STEP_T=[[5.5,28],[28,48.5],[48.5,61]];
 const ITEM_T=[[5.5,11,15.5,21.5],[28,33,38.5,43.5],[48.5,52,55.5]];
@@ -68,7 +68,7 @@ html+=`<div id="intro" class="a" style="left:${TX.x}px;top:${introY}px;width:${T
  <div id="iT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;line-height:1">Set up Tethr Link</div>
  <div id="iS" style="font-size:${TALL?40:36}px;font-weight:500;color:var(--slate);margin-top:18px;letter-spacing:-.02em">It takes about 5 minutes.</div>
  <div id="iN" style="margin-top:${TALL?50:56}px;font-size:${TALL?32:28}px;font-weight:650;letter-spacing:-.01em">You need</div>
- ${['A Pixel on Android 13 or newer','A Windows 10 or 11 PC','Both on the same Wi-Fi'].map((s,i)=>`<div class="iR" id="iR${i}" style="margin-top:16px;font-size:${TALL?32:28}px;font-weight:500;display:flex;gap:16px;align-items:center;color:#33405E"><span style="width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none"></span>${s}</div>`).join('')}
+ ${['An Android phone (13+) or iPhone','A Windows 10 or 11 PC','Both on the same Wi-Fi'].map((s,i)=>`<div class="iR" id="iR${i}" style="margin-top:16px;font-size:${TALL?32:28}px;font-weight:500;display:flex;gap:16px;align-items:center;color:#33405E"><span style="width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none"></span>${s}</div>`).join('')}
 </div>`;
 // step pills
 const pS=TALL?28:24;
@@ -238,11 +238,11 @@ document.getElementById('lin').innerHTML=`
   <div class="wt"><img src="icon.png" style="width:16px;height:16px;border-radius:4px">Tethr Link<span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
   <div style="position:absolute;left:80px;top:120px;width:260px;height:260px;padding:10px;background:#fff;border-radius:14px;border:1px solid #E3E8F2"><div style="position:relative;width:240px;height:240px">${qr}</div></div>
   <div style="position:absolute;left:400px;top:126px;font-size:28px;font-weight:700;letter-spacing:-.02em">Link your phone</div>
-  <div style="position:absolute;left:400px;top:170px;width:360px;font-size:14px;color:#4A5675;line-height:1.45">On your Pixel, open Tethr Link and type this code, or scan the QR code.</div>
+  <div style="position:absolute;left:400px;top:170px;width:360px;font-size:14px;color:#4A5675;line-height:1.45">On your phone, open Tethr Link and type this code, or scan the QR code.</div>
   <div style="position:absolute;left:400px;top:236px;display:flex;gap:10px">${'48217'.split('').map(d=>`<div style="width:58px;height:74px;border-radius:12px;background:#EEF2FA;font-size:38px;font-weight:700;text-align:center;line-height:74px">${d}</div>`).join('')}</div>
   <div id="lLinked" class="layer" style="left:0;top:34px;width:820px;height:494px;background:#FBFCFE;text-align:center">
     <div id="lOk" style="width:110px;height:110px;border-radius:50%;background:var(--green);margin:130px auto 0;display:flex;align-items:center;justify-content:center"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="lTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
-    <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:22px">Linked to Pixel 9</div>
+    <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:22px">Linked to Galaxy S25</div>
     <div style="font-size:14px;color:#4A5675;margin-top:8px">Your notifications will show up here.</div></div>
 </div>
 <div id="lFw" class="win" style="left:230px;top:100px;width:540px;height:420px">
@@ -257,7 +257,7 @@ document.getElementById('lin').innerHTML=`
 </div>
 <div id="lToast" style="position:absolute;left:660px;top:452px;width:320px;height:100px;border-radius:12px;background:#fff;box-shadow:0 18px 40px -10px rgba(22,33,58,.4);border:1px solid #E7EBF3;padding:14px 16px 0 66px">
   <div style="position:absolute;left:16px;top:20px;width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;font-weight:700;text-align:center;line-height:36px">S</div>
-  <div style="font-size:11px;color:#7C86A0">Messages · Pixel 9</div><div style="font-size:14px;font-weight:700;margin-top:3px">Sam</div><div style="font-size:13px;color:#33405E;margin-top:2px">Are you still coming tonight?</div></div>
+  <div style="font-size:11px;color:#7C86A0">Messages · My phone</div><div style="font-size:14px;font-weight:700;margin-top:3px">Sam</div><div style="font-size:13px;color:#33405E;margin-top:2px">Are you still coming tonight?</div></div>
 <div style="position:absolute;left:0;top:585px;width:1000px;height:40px;background:rgba(243,246,252,.92);border-top:1px solid rgba(22,33,58,.08)">
   ${[0,1,2,3,4].map(i=>`<div style="position:absolute;top:9px;left:${434+i*30}px;width:22px;height:22px;border-radius:6px;background:${['#9AB3E6','#7FC8A9','#3D7BFF','#F2C46B','#B9A7EE'][i]}"></div>`).join('')}
   <div style="position:absolute;right:14px;top:12px;font-size:12px;font-weight:600">10:24</div></div>

@@ -122,14 +122,14 @@ let html=`
 <div class="glow" id="g2" style="width:${L.W*0.8}px;height:${L.W*0.8}px;background:radial-gradient(circle,rgba(201,240,222,.55),rgba(201,240,222,0) 65%)"></div>`;
 
 // opening titles
-const tl=L.tall?[['t1','Your Pixel.',0],['t2','Your PC.',1],['t3','Linked.',2]]:[['t1','Your Pixel.',0],['t2','Your PC.',0],['t3','Linked.',0]];
+const tl=L.tall?[['t1','Your phone.',0],['t2','Your PC.',1],['t3','Linked.',2]]:[['t1','Your phone.',0],['t2','Your PC.',0],['t3','Linked.',0]];
 if(L.tall){ tl.forEach(([id,txt,row])=>html+=`<div class="title" id="${id}" style="top:${L.tY+row*L.tS*1.08}px;font-size:${L.tS}px">${txt}</div>`); }
-else { html+=`<div class="title" style="top:${L.tY}px;font-size:${L.tS}px"><span id="t1">Your Pixel.</span> <span id="t2">Your PC.</span> <span id="t3">Linked.</span></div>`; }
+else { html+=`<div class="title" style="top:${L.tY}px;font-size:${L.tS}px"><span id="t1">Your phone.</span> <span id="t2">Your PC.</span> <span id="t3">Linked.</span></div>`; }
 const subTop=L.tall?L.tY+3*L.tS*1.08+40:L.tY+L.tS*1.3;
-html+=`<div class="title" id="tsub" style="top:${subTop}px;font-size:${L.subS}px;font-weight:500;color:var(--slate);letter-spacing:-.02em">Phone Link, built for Pixel.</div>`;
+html+=`<div class="title" id="tsub" style="top:${subTop}px;font-size:${L.subS}px;font-weight:500;color:var(--slate);letter-spacing:-.02em">Phone Link, for every phone.</div>`;
 
 // closing values
-const vals=[['v1','Free.'],['v2','Open source.'],['v3','Made for Pixel.']];
+const vals=[['v1','Free.'],['v2','Open source.'],['v3','Any phone.']];
 if(L.tall){vals.forEach(([id,txt],i)=>html+=`<div class="title" id="${id}" style="top:${L.tY+i*L.tS*1.08}px;font-size:${L.tS}px">${txt}</div>`)}
 else{html+=`<div class="title" style="top:${L.tY+20}px;font-size:${L.tS}px">${vals.map(([id,txt])=>`<span id="${id}" style="display:inline-block">${txt}</span>`).join(' ')}</div>`}
 
@@ -161,7 +161,7 @@ html+=`<div id="devs" class="a" style="left:0;top:0;width:${L.W}px;height:${L.H}
  </div>
 </div></div>`;
 html+=`<div id="hcard" style="width:${L.W}px;height:${L.H}px;padding:0 ${L.W*0.06}px"><div id="htext" style="font-size:${L.tall?150:176}px"></div></div>
-<img id="hicon" src="icon.png" style="left:${L.W/2}px;top:${L.H/2}px;width:${L.tall?360:300}px;height:${L.tall?360:300}px;border-radius:${L.tall?83:69}px;box-shadow:0 0 120px rgba(61,123,255,.6)">
+<img id="hicon" src="icon.png" style="left:${L.W/2}px;top:${L.H/2}px;width:${L.tall?360:300}px;height:${L.tall?360:300}px;border-radius:${L.tall?83:69}px;box-shadow:0 0 120px rgba(61,123,255,.6);opacity:0">
 <div id="hflash" style="width:${L.W}px;height:${L.H}px;opacity:0"></div>`;
 stage.innerHTML=html;
 
@@ -181,24 +181,24 @@ document.getElementById('lin').innerHTML=`
  <div class="tbar"><img src="icon.png">Tethr Link<span class="dots"><span>–</span><span>□</span><span>✕</span></span></div>
  <div class="layer" id="wSplash" style="left:0;top:34px;width:920px;height:514px;text-align:center">
    <img src="icon.png" style="width:110px;height:110px;border-radius:26px;margin-top:150px"><div style="font-size:32px;font-weight:700;letter-spacing:-.03em;margin-top:18px">Tethr Link</div>
-   <div style="font-size:14px;color:var(--slate);margin-top:8px">Your Pixel, on your PC</div></div>
+   <div style="font-size:14px;color:var(--slate);margin-top:8px">Your phone, on your PC</div></div>
  <div class="layer" id="wPair" style="left:0;top:34px;width:920px;height:514px;text-align:center">
    <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:110px">Link your phone</div>
-   <div style="font-size:15px;color:var(--slate);margin-top:10px">On your Pixel, open Tethr Link and type this code</div>
+   <div style="font-size:15px;color:var(--slate);margin-top:10px">On your phone, open Tethr Link and type this code</div>
    <div style="display:flex;gap:14px;justify-content:center;margin-top:34px">${'48217'.split('').map(d=>`<div style="width:70px;height:88px;border-radius:14px;background:#EEF2FA;font-size:46px;font-weight:700;line-height:88px">${d}</div>`).join('')}</div>
    <div style="font-size:13px;color:#7C86A0;margin-top:26px">or scan the QR code</div></div>
  <div class="layer" id="wPairOk" style="left:0;top:34px;width:920px;height:514px;text-align:center;background:#FBFCFE">
    <div id="okCircle" style="width:110px;height:110px;border-radius:50%;background:var(--green);margin:150px auto 0;display:flex;align-items:center;justify-content:center">
     <svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="okTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
-   <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:24px">Linked to Pixel 9</div></div>
+   <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:24px">Linked to Galaxy S25</div></div>
  <div class="layer" id="wMain" style="left:0;top:0;width:920px;height:548px">
   <div class="layer side">
    <div style="position:absolute;left:18px;top:20px;width:38px;height:70px;border:3px solid var(--navy);border-radius:9px"></div>
-   <div style="position:absolute;left:70px;top:22px;font-size:19px;font-weight:700;letter-spacing:-.01em">Pixel 9</div>
+   <div style="position:absolute;left:70px;top:22px;font-size:19px;font-weight:700;letter-spacing:-.01em">Galaxy S25</div>
    <div style="position:absolute;left:70px;top:48px;font-size:12px;color:var(--green);font-weight:600">● Connected</div>
    <div style="position:absolute;left:70px;top:68px;font-size:12px;color:var(--slate)">Battery 82%</div>
    ${tilesH}
-   <div id="drop" style="position:absolute;left:16px;top:420px;width:218px;height:76px;border:2px dashed #C3CDE0;border-radius:12px;text-align:center;font-size:12px;font-weight:600;color:#7C86A0;padding-top:16px">Drop files to send<br><span style="font-weight:500">to Pixel 9</span>
+   <div id="drop" style="position:absolute;left:16px;top:420px;width:218px;height:76px;border:2px dashed #C3CDE0;border-radius:12px;text-align:center;font-size:12px;font-weight:600;color:#7C86A0;padding-top:16px">Drop files to send<br><span style="font-weight:500">to Galaxy S25</span>
      <div id="dropBar" style="position:absolute;left:16px;bottom:12px;width:182px;height:6px;border-radius:3px;background:#DCE3F0;overflow:hidden"><div id="dropFill" style="height:6px;width:0;background:var(--blue)"></div></div></div>
   </div>
   <div class="tabs">${tabsH}<div id="tabLine"></div></div>
@@ -233,19 +233,19 @@ document.getElementById('lin').innerHTML=`
      <div style="position:absolute;left:470px;top:40px;font-size:12px;color:#7C86A0;line-height:1.6">Click to tap<br>Drag to swipe<br>Type to type</div></div>
 
   <div class="layer panel" id="pHot"><div style="position:absolute;left:0;top:90px;width:670px;text-align:center">
-     ${wifiSvg('bigWifi',150)}<div style="font-size:22px;font-weight:700;margin-top:8px">Pixel 9 hotspot</div>
+     ${wifiSvg('bigWifi',150)}<div style="font-size:22px;font-weight:700;margin-top:8px">Galaxy S25 hotspot</div>
      <div id="hotStatus" style="font-size:14px;color:var(--slate);margin-top:6px">Not connected</div></div></div>
 
   <div class="layer panel" id="pCalls"><div class="h" style="position:absolute;left:24px;top:18px">Recent calls</div>${callsH}</div>
 
   <div class="layer panel" id="pPhotos"><div class="h" style="position:absolute;left:24px;top:18px">Photos</div>
-     <div class="meta" style="position:absolute;left:100px;top:24px">from Pixel 9</div>${photosH}</div>
+     <div class="meta" style="position:absolute;left:100px;top:24px">from Galaxy S25</div>${photosH}</div>
  </div>
 </div>
 <div id="callToast" style="position:absolute;left:668px;top:392px;width:284px;height:156px;border-radius:14px;background:#fff;box-shadow:0 18px 40px -10px rgba(22,33,58,.4);border:1px solid #E7EBF3">
   <div class="av" style="left:18px;top:18px;width:48px;height:48px;font-size:20px;background:#EC4899">M</div>
   <div style="position:absolute;left:80px;top:20px;font-size:17px;font-weight:700">Mum</div>
-  <div id="callState" style="position:absolute;left:80px;top:44px;font-size:12.5px;color:var(--slate)">Incoming call · Pixel 9</div>
+  <div id="callState" style="position:absolute;left:80px;top:44px;font-size:12.5px;color:var(--slate)">Incoming call · Galaxy S25</div>
   <div id="ansBtn" style="position:absolute;left:18px;top:94px;width:118px;height:40px;border-radius:20px;background:var(--green);color:#fff;font-size:13.5px;font-weight:700;text-align:center;line-height:40px">Answer</div>
   <div id="decBtn" style="position:absolute;left:146px;top:94px;width:118px;height:40px;border-radius:20px;background:var(--red);color:#fff;font-size:13.5px;font-weight:700;text-align:center;line-height:40px">Decline</div>
 </div>
@@ -407,7 +407,7 @@ function renderBase(t){
  const toast=win(t,38.8,44.0,0.35);op('#callToast',toast);st('#callToast',{transform:`translateY(${(1-P(t,38.8,39.3,eout))*30}px)`});
  const ans=t>=40.45;
  const sec=Math.max(0,Math.floor(t-40.45));
- $('callState').textContent=ans?`On call · 00:0${Math.min(sec,9)}`:'Incoming call · Pixel 9';
+ $('callState').textContent=ans?`On call · 00:0${Math.min(sec,9)}`:'Incoming call · Galaxy S25';
  st('#ansBtn',{background:ans?'#EEF2FA':'#1E9E63',color:ans?'#16213A':'#fff',transform:`scale(${t>40.3&&t<40.5?0.94:1})`});
  $('ansBtn').textContent=ans?'Mute':'Answer';$('decBtn').textContent=ans?'End call':'Decline';
  $('pCallState').textContent=ans?`00:0${Math.min(sec,9)} · on your PC`:'Incoming call';
@@ -485,12 +485,12 @@ const HC=[]; // timeline
 let ci=0;
 const card=(b0,b1,text,sty)=>HC.push({t0:b0*HB,t1:b1*HB,type:'card',text,sty:sty??(ci++%4)});
 const shot=(b0,b1,src,speed,f,z)=>HC.push({t0:b0*HB,t1:b1*HB,type:'shot',src,speed,f,z});
-card(0,2,'Your Pixel.',3);card(2,4,'Your PC.',3);card(4,6,'Linked.',0);
+card(0,2,'Your phone.',3);card(2,4,'Your PC.',3);card(4,6,'Linked.',0);
 HC.push({t0:6*HB,t1:8*HB,type:'icon'});
 const feats=[['Link in seconds.',10.0,1.6,()=>both(),0.95],['Every PC.',13.4,1.2,()=>phPt(150,210),1.9],['Reply from your PC.',19.2,2.8,()=>lapPt(620,330),1.6],
  ['Your screen. Live.',26.6,3.0,()=>lapPt(620,300),1.8],['One-click hotspot.',33.3,1.7,()=>lapPt(430,300),1.25],['Take calls.',39.6,1.45,()=>lapPt(800,470),2.1],['Files, both ways.',45.8,2.0,()=>both(),0.95]];
 feats.forEach((f,i)=>{const b=8+i*4;card(b,b+1,f[0]);shot(b+1,b+4,f[1],f[2],f[3],f[4]);});
-['Free.','Open source.','No account.','Encrypted.','No ads.','Pixel ready.'].forEach((w,i)=>card(36+i,37+i,w));
+['Free.','Open source.','No account.','Encrypted.','No ads.','Any phone.'].forEach((w,i)=>card(36+i,37+i,w));
 HC.push({t0:42*HB,t1:44*HB,type:'icon'});
 [[12.2,()=>lapPt(500,300),1.3],[14.9,()=>phPt(150,210),2.0],[23.2,()=>lapPt(620,330),1.7],[29.5,()=>phPt(150,320),1.5],[35.7,()=>lapPt(500,250),1.6],[41.5,()=>phPt(150,300),1.6],[48.5,()=>phPt(150,90),2.2],[31.3,()=>lapPt(620,280),2.0]]
  .forEach((m,i)=>shot(44+i,45+i,m[0],1.0,m[1],m[2]));
