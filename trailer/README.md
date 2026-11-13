@@ -20,3 +20,5 @@ A 68-second how-to-set-up walkthrough: `setup.html` (preview with `setup.html?f=
 ## Tethr Link reveal
 
 A 56-second, keynote-style reveal of the new name: `reveal.html` (preview with `reveal.html?f=wide&t=18`). Sound: `python3 reveal_music.py` (writes `reveal.wav`). Render and mux: `bash renderreveal.sh wide` and `bash renderreveal.sh tall` (write `rwide/final.mp4` and `rtall/final.mp4`). Without the full `puppeteer` package, `render.js` uses `puppeteer-core` with Chrome at `/usr/bin/google-chrome` (or `$CHROME`).
+
+Fast cut: `reveal.html?m=fast` re-times the same scenes to 128 BPM (24 s) with beat punches. Sound: `python3 reveal_fast_music.py`; render: `bash renderfast.sh wide` and `bash renderfast.sh tall` (write `rfwide/final.mp4`, `rftall/final.mp4`).

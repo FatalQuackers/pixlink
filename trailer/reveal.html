@@ -66,6 +66,7 @@ body{font-family:'Inter Display','Inter',sans-serif;color:#fff;-webkit-font-smoo
   <div id="url" class="sub"></div>
 
   <div id="vignette"></div>
+  <div id="flash" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none"></div>
   <div id="fade"></div>
 </div>
 <script>
@@ -130,7 +131,7 @@ const letters=[...document.querySelectorAll('#name .letter')];
 
 const FEATS=[['Notifications.','notif'],['Messages.','bubble'],['Calls.','call'],['Photos.','photos'],['Files.','file'],['Your screen.','mirror']];
 
-function render(t){
+function renderSlow(t){
   // ---------- glow + vignette ----------
   const g=tall?1200:1400;
   css($('glow'),{width:g+'px',height:g+'px',left:(CX-g/2)+'px',top:(CY-g/2+(t>17&&t<20?0:0))+'px',
@@ -247,6 +248,29 @@ function render(t){
 
   // ---------- global fades ----------
   css($('fade'),{opacity:(1-out(prog(t,0,0.6))+io(prog(t,55,56.5))).toFixed(3)});
+}
+// ---------- fast cut (?m=fast): the same scenes, re-timed to 128 BPM with punches ----------
+const FAST=Q.get('m')==='fast';
+const BEAT=60/128;
+// [fast time, original time] key points; everything in between is stretched linearly.
+const MAP=[[0,1.6],[4*BEAT,6.2],[8*BEAT,13],[12*BEAT,17.4],[16*BEAT,21.6],[28*BEAT,38.1],[36*BEAT,46.2],[52*BEAT,56.5]];
+const HITS=[0,4*BEAT,8*BEAT,12*BEAT,16*BEAT,28*BEAT,36*BEAT];
+function warp(t){for(let i=1;i<MAP.length;i++){const [a,oa]=MAP[i-1],[b,ob]=MAP[i];if(t<=b)return oa+(ob-oa)*clamp((t-a)/(b-a));}return MAP[MAP.length-1][1];}
+function render(t){
+  if(!FAST){renderSlow(t);stage.style.transform='';return;}
+  renderSlow(warp(t));
+  // a quick zoom punch on every beat during the features and the build, bigger on section hits
+  const sinceBeat=(t%BEAT)/BEAT;
+  const busy=(t>=16*BEAT&&t<36*BEAT);
+  let s=1+(busy?0.025*Math.pow(1-sinceBeat,3):0);
+  let flash=0;
+  for(const h of HITS){const d=t-h;if(d>=0&&d<0.5){s+=0.07*Math.pow(1-d/0.5,3);flash=Math.max(flash,(h===0?0:0.55)*Math.pow(1-d/0.25,2)*(d<0.25?1:0));}}
+  stage.style.transform=`scale(${s.toFixed(4)})`;
+  $('flash').style.opacity=flash.toFixed(3);
+  // in the fast cut the feature word slams in
+  const f=$('feat'); if(parseFloat(f.style.opacity||0)>0){const ot=warp(t);const lt=(ot-21.6)%2.75;f.style.transform=`scale(${(1+0.35*Math.pow(1-clamp(lt/0.35),3)).toFixed(3)})`;}
+  // end fade over the last beat
+  $('fade').style.opacity=Math.max(parseFloat($('fade').style.opacity||0),io(prog(t,51*BEAT,52*BEAT))).toFixed(3);
 }
 render(+(Q.get('t')||0));
 </script>
