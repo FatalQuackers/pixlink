@@ -55,9 +55,9 @@ jobs:
           exit 1
       - name: Build release APK
         run: |
-          V="${VERSION#v}"
+          V="${VERSION#[vV]}"
           # What's new screen: ship this version's notes inside the app.
-          if [ -f "${{ github.workspace }}/notes/$VERSION.md" ]; then mkdir -p app/src/main/assets && cp "${{ github.workspace }}/notes/$VERSION.md" app/src/main/assets/whatsnew.md; fi
+          if [ -f "${{ github.workspace }}/notes/v${VERSION#[vV]}.md" ]; then mkdir -p app/src/main/assets && cp "${{ github.workspace }}/notes/v${VERSION#[vV]}.md" app/src/main/assets/whatsnew.md; fi
           ./gradlew assembleRelease --stacktrace -PversionCode=${{ github.run_number }} -PversionName="$V" $SIGN_ARGS
       - uses: actions/upload-artifact@v4
         with:
@@ -76,9 +76,9 @@ jobs:
         shell: pwsh
         # MSBuild (not dotnet build) so WinUI XAML errors are reported with file and line.
         run: |
-          $v = "$env:VERSION".TrimStart('v')
+          $v = "$env:VERSION".TrimStart('v','V')
           # What's new screen: ship this version's notes inside the app.
-          if (Test-Path "notes/$env:VERSION.md") { Copy-Item "notes/$env:VERSION.md" windows/Pixlink/whatsnew.md }
+          if (Test-Path "notes/v$v.md") { Copy-Item "notes/v$v.md" windows/Pixlink/whatsnew.md }
           # Package downloads occasionally fail on the build servers; try the restore a few times.
           for ($i = 1; $i -le 3; $i++) {
             msbuild windows/Pixlink/Pixlink.csproj /t:Restore /p:Configuration=Release /p:Platform=x64 /v:minimal
@@ -100,7 +100,7 @@ jobs:
             $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" -ErrorAction SilentlyContinue
             if (-not $iscc) { choco install innosetup -y --no-progress | Out-Null; $iscc = Get-Item "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" }
           }
-          $env:PIXLINK_VERSION = "$env:VERSION".TrimStart('v')
+          $env:PIXLINK_VERSION = "$env:VERSION".TrimStart('v','V')
           & ($iscc.Source ?? $iscc.FullName) windows/installer/Pixlink.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
@@ -125,12 +125,12 @@ jobs:
       - name: Generate the Xcode project
         run: |
           # What's new screen: ship this version's notes inside the app.
-          if [ -f "../notes/$VERSION.md" ]; then cp "../notes/$VERSION.md" whatsnew.txt; else : > whatsnew.txt; fi
+          if [ -f "../notes/v${VERSION#[vV]}.md" ]; then cp "../notes/v${VERSION#[vV]}.md" whatsnew.txt; else : > whatsnew.txt; fi
           brew install xcodegen
           xcodegen generate
       - name: Build
         run: |
-          V="${VERSION#v}"
+          V="${VERSION#[vV]}"
           xcodebuild -project Pixlink.xcodeproj -target Pixlink -configuration Release -sdk iphoneos \
             SYMROOT="$PWD/build" MARKETING_VERSION="$V" CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
@@ -155,19 +155,23 @@ jobs:
     permissions:
       contents: write
     steps:
+      # A rebuild's tag, normalized (someone may type V1.0.3).
+      - run: |
+          IN="${{ inputs.tag || github.ref_name }}"
+          echo "TAG=v${IN#[vV]}" >> "$GITHUB_ENV"
       - name: Move the tag to this build (rebuilds only)
         if: inputs.tag
         uses: actions/checkout@v4
       - if: inputs.tag
         run: |
-          git tag -f "${{ inputs.tag }}"
-          git push -f origin "refs/tags/${{ inputs.tag }}"
+          git tag -f "$TAG"
+          git push -f origin "refs/tags/$TAG"
       - uses: actions/download-artifact@v4
         with:
           path: dist
       - name: Release notes
         run: |
-          if [ -f "${{ github.workspace }}/notes/${{ inputs.tag || github.ref_name }}.md" ]; then cp "notes/${{ inputs.tag || github.ref_name }}.md" release-notes.md; else echo "Bug fixes and improvements." > release-notes.md; fi
+          if [ -f "${{ github.workspace }}/notes/$TAG.md" ]; then cp "notes/$TAG.md" release-notes.md; else echo "Bug fixes and improvements." > release-notes.md; fi
           # The build number lets installed apps spot a rebuild of the same version.
           printf '\n<!-- build:%s -->\n' "${{ github.run_number }}" >> release-notes.md
       - name: Package files
@@ -183,8 +187,8 @@ jobs:
       - if: inputs.tag
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: Pixlink ${{ inputs.tag }}
+          tag_name: ${{ env.TAG }}
+          name: Pixlink ${{ env.TAG }}
           overwrite_files: true
           make_latest: true
           prerelease: false
