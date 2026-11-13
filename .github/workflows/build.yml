@@ -125,7 +125,7 @@ jobs:
       - name: Generate the Xcode project
         run: |
           # What's new screen: ship this version's notes inside the app.
-          if [ -f "../notes/$VERSION.md" ]; then cp "../notes/$VERSION.md" whatsnew.txt; fi
+          if [ -f "../notes/$VERSION.md" ]; then cp "../notes/$VERSION.md" whatsnew.txt; else : > whatsnew.txt; fi
           brew install xcodegen
           xcodegen generate
       - name: Build
