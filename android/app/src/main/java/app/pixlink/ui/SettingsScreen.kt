@@ -194,7 +194,7 @@ fun SettingsScreen(onBack: () -> Unit, onChooseApps: () -> Unit) {
                 headlineContent = { Text("Tethr Link on GitHub") },
                 supportingContent = { Text("Open source (MIT). Not affiliated with Google or Microsoft.") },
                 modifier = Modifier.clickable {
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FatalQuackers/pixlink")))
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FatalQuackers/tethr-link")))
                 },
             )
         }

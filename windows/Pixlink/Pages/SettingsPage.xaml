@@ -306,8 +306,8 @@
             </Border>
 
             <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,20,0,0">
-                <HyperlinkButton Content="Tethr Link on GitHub" NavigateUri="https://github.com/FatalQuackers/pixlink" />
-                <HyperlinkButton Content="Report a problem" NavigateUri="https://github.com/FatalQuackers/pixlink/issues" />
+                <HyperlinkButton Content="Tethr Link on GitHub" NavigateUri="https://github.com/FatalQuackers/tethr-link" />
+                <HyperlinkButton Content="Report a problem" NavigateUri="https://github.com/FatalQuackers/tethr-link/issues" />
                 <HyperlinkButton Content="Open crash log folder" Click="OnOpenLogs" />
             </StackPanel>
             <TextBlock Style="{StaticResource Hint}" Text="Open source (MIT). Not affiliated with Google or Microsoft." />

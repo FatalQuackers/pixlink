@@ -83,7 +83,7 @@ html+=`<div id="outro" class="a" style="left:0;top:${TALL?560:240}px;width:${W}p
  <div id="oC" style="width:${TALL?170:150}px;height:${TALL?170:150}px;border-radius:50%;background:var(--green);margin:0 auto;display:flex;align-items:center;justify-content:center"><svg width="${TALL?90:80}" height="${TALL?90:80}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="oTick" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
  <div id="oT" style="font-size:${TALL?104:96}px;font-weight:700;letter-spacing:-.04em;margin-top:40px">You’re all set.</div>
  <div id="oS" style="font-size:${TALL?38:34}px;font-weight:500;color:var(--slate);margin:20px auto 0;max-width:${TALL?900:1200}px;letter-spacing:-.02em">Tethr Link updates itself from now on. Want screen control and the hotspot switch? Turn on Power mode in Settings.</div>
- <div id="oU" style="font-size:${TALL?34:30}px;font-weight:600;color:var(--blue);margin-top:${TALL?50:40}px">github.com/FatalQuackers/pixlink</div>
+ <div id="oU" style="font-size:${TALL?34:30}px;font-weight:600;color:var(--blue);margin-top:${TALL?50:40}px">github.com/FatalQuackers/tethr-link</div>
 </div>`;
 // devices
 html+=`<div class="dev" id="lap"><div class="lapframe"><div class="scr" id="lin" style="width:1000px;height:625px;border-radius:6px;background:#dfe8fb"></div></div><div class="lapbase"></div></div>
@@ -97,14 +97,14 @@ const sb=`<div class="sbar"><span>10:24</span><span>▾ ▮ 82%</span></div>`;
 const kl=['1','2','3','4','5','6','7','8','9','','0','⌫'];
 document.getElementById('pin').innerHTML=`
 <div class="layer" id="pBrowser" style="inset:0;background:#fff">
-  <div style="position:absolute;left:12px;top:32px;width:276px;height:34px;border-radius:17px;background:#EEF2FA;font-size:11px;padding:10px 14px;color:#4A5675">🔒 github.com/FatalQuackers/pixlink/releases</div>
+  <div style="position:absolute;left:12px;top:32px;width:276px;height:34px;border-radius:17px;background:#EEF2FA;font-size:11px;padding:10px 14px;color:#4A5675">🔒 github.com/FatalQuackers/tethr-link/releases</div>
   <div style="position:absolute;left:18px;top:86px;font-size:22px;font-weight:700;letter-spacing:-.02em">Tethr Link v1.0.2</div>
   <div style="position:absolute;left:196px;top:91px;font-size:11px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 8px">Latest</div>
   <div class="gl" style="left:18px;top:128px;width:250px"></div><div class="gl" style="left:18px;top:146px;width:210px"></div><div class="gl" style="left:18px;top:164px;width:236px"></div>
   <div style="position:absolute;left:18px;top:200px;font-size:15px;font-weight:700">Assets</div>
-  ${[['pApk','Pixlink-android.apk','18 MB'],['pZip','Pixlink-windows-x64.zip','92 MB'],['pSrc','Source code (zip)','']].map((r,i)=>`<div id="${r[0]}" style="position:absolute;left:12px;top:${228+i*48}px;width:276px;height:42px;border:1px solid #E3E8F2;border-radius:10px;font-size:12.5px;font-weight:600;padding:12px 12px 0 38px;color:#2557D6">
+  ${[['pApk','TethrLink-android.apk','18 MB'],['pZip','TethrLink-windows-x64.zip','92 MB'],['pSrc','Source code (zip)','']].map((r,i)=>`<div id="${r[0]}" style="position:absolute;left:12px;top:${228+i*48}px;width:276px;height:42px;border:1px solid #E3E8F2;border-radius:10px;font-size:12.5px;font-weight:600;padding:12px 12px 0 38px;color:#2557D6">
     <span style="position:absolute;left:12px;top:12px;width:16px;height:18px;border-radius:3px;background:#C7D3EA"></span>${r[1]}<span style="position:absolute;right:12px;top:13px;color:#7C86A0;font-weight:500">${r[2]}</span></div>`).join('')}
-  <div id="pSnack" style="position:absolute;left:12px;top:560px;width:276px;height:50px;border-radius:12px;background:#2A3350;color:#fff;font-size:12.5px;padding:17px 14px">Pixlink-android.apk downloaded
+  <div id="pSnack" style="position:absolute;left:12px;top:560px;width:276px;height:50px;border-radius:12px;background:#2A3350;color:#fff;font-size:12.5px;padding:17px 14px">TethrLink-android.apk downloaded
     <span id="pOpen" style="position:absolute;right:8px;top:9px;padding:7px 12px;color:#9DBBFF;font-weight:700">Open</span></div>
 </div>
 <div class="layer" id="pUnk" style="inset:0"><div class="dim"></div>
@@ -191,16 +191,16 @@ document.getElementById('lin').innerHTML=`
 <div class="layer" style="inset:0;background:radial-gradient(circle at 20% 15%,#BBD2FF 0,transparent 45%),radial-gradient(circle at 85% 80%,#C9F0DE 0,transparent 40%),linear-gradient(135deg,#DCE7FF,#EEF3FF)"></div>
 <div class="win" id="lBrowser" style="left:50px;top:24px;width:900px;height:550px">
   <div class="wt" style="background:#E9EEF7"><span style="background:#fff;border-radius:8px 8px 0 0;padding:6px 14px;margin-top:6px">Release Tethr Link v1.0.2</span><span class="x"><span>–</span><span>□</span><span>✕</span></span></div>
-  <div style="height:40px;border-bottom:1px solid #EDF0F6;padding:8px 14px"><div style="height:24px;border-radius:12px;background:#EEF2FA;font-size:12px;color:#4A5675;padding:5px 14px">🔒 github.com/FatalQuackers/pixlink/releases/latest</div></div>
+  <div style="height:40px;border-bottom:1px solid #EDF0F6;padding:8px 14px"><div style="height:24px;border-radius:12px;background:#EEF2FA;font-size:12px;color:#4A5675;padding:5px 14px">🔒 github.com/FatalQuackers/tethr-link/releases/latest</div></div>
   <div style="position:absolute;left:60px;top:100px;font-size:30px;font-weight:700;letter-spacing:-.02em">Tethr Link v1.0.2</div>
   <div style="position:absolute;left:290px;top:108px;font-size:12px;font-weight:700;color:var(--green);border:1.5px solid var(--green);border-radius:10px;padding:2px 9px">Latest</div>
   <div class="gl" style="left:60px;top:160px;width:520px"></div><div class="gl" style="left:60px;top:180px;width:460px"></div><div class="gl" style="left:60px;top:200px;width:500px"></div>
   <div style="position:absolute;left:60px;top:240px;font-size:17px;font-weight:700">Assets</div>
-  ${[['lApk','Pixlink-android.apk','18 MB'],['lZip','Pixlink-windows-x64.zip','92 MB'],['lSrc','Source code (zip)','']].map((r,i)=>`<div style="position:absolute;left:60px;top:${274+i*46}px;width:780px;height:40px;border-bottom:1px solid #EDF0F6;font-size:14px;font-weight:600;color:#2557D6;padding:10px 0 0 30px">
+  ${[['lApk','TethrLink-android.apk','18 MB'],['lZip','TethrLink-windows-x64.zip','92 MB'],['lSrc','Source code (zip)','']].map((r,i)=>`<div style="position:absolute;left:60px;top:${274+i*46}px;width:780px;height:40px;border-bottom:1px solid #EDF0F6;font-size:14px;font-weight:600;color:#2557D6;padding:10px 0 0 30px">
     <span style="position:absolute;left:4px;top:11px;width:14px;height:17px;border-radius:3px;background:#C7D3EA"></span><span id="${r[0]}">${r[1]}</span><span style="position:absolute;right:10px;top:11px;color:#7C86A0;font-weight:500">${r[2]}</span></div>`).join('')}
   <div id="lDl" style="position:absolute;left:560px;top:70px;width:320px;height:126px;border-radius:10px;background:#fff;box-shadow:0 12px 30px -8px rgba(22,33,58,.35);padding:14px 16px;border:1px solid #E3E8F2">
     <div style="font-size:13px;font-weight:700">Downloads</div>
-    <div style="font-size:13px;font-weight:600;margin-top:12px">Pixlink-windows-x64.zip</div><div style="font-size:11.5px;color:var(--green);margin-top:3px">92 MB · Done</div>
+    <div style="font-size:13px;font-weight:600;margin-top:12px">TethrLink-windows-x64.zip</div><div style="font-size:11.5px;color:var(--green);margin-top:3px">92 MB · Done</div>
     <span id="lShow" style="position:absolute;left:16px;top:94px;font-size:12.5px;font-weight:600;color:var(--deep)">Show in folder</span></div>
 </div>
 <div class="win" id="lExp" style="left:110px;top:50px;width:780px;height:480px">
@@ -208,7 +208,7 @@ document.getElementById('lin').innerHTML=`
   <div style="position:absolute;left:0;top:34px;width:170px;height:446px;background:#F3F6FB;border-right:1px solid #E7EBF3;padding:16px;font-size:12.5px;line-height:2.3;color:#33405E">🏠 Home<br>🖥 Desktop<br><span id="lNavD">⬇ Downloads</span><br><span id="lNavDoc">📄 Documents</span><br>🖼 Pictures</div>
   <div style="position:absolute;left:190px;top:48px;font-size:11.5px;color:#7C86A0;display:flex;gap:250px"><span>Name</span><span>Size</span></div>
   <div id="lFilesZip" class="layer" style="left:180px;top:70px;width:590px;height:300px">
-    <div id="lZipRow" style="position:absolute;left:0;top:0;width:580px;height:34px;border-radius:6px;font-size:13px;padding:8px 10px 0 40px">Pixlink-windows-x64.zip<span style="position:absolute;left:12px;top:7px;width:18px;height:20px;border-radius:3px;background:#F2C46B"></span><span style="position:absolute;left:300px;top:8px;color:#7C86A0">92 MB</span></div>
+    <div id="lZipRow" style="position:absolute;left:0;top:0;width:580px;height:34px;border-radius:6px;font-size:13px;padding:8px 10px 0 40px">TethrLink-windows-x64.zip<span style="position:absolute;left:12px;top:7px;width:18px;height:20px;border-radius:3px;background:#F2C46B"></span><span style="position:absolute;left:300px;top:8px;color:#7C86A0">92 MB</span></div>
   </div>
   <div id="lFilesExe" class="layer" style="left:180px;top:70px;width:590px;height:300px">
     ${[['lExeRow','Pixlink.exe','#3D7BFF','1 MB'],['','Pixlink.dll','#C7D3EA','4 MB'],['','Microsoft.WindowsAppRuntime.dll','#C7D3EA','2 MB'],['','resources.pri','#C7D3EA','1 MB'],['','Assets','#F2C46B','']].map((r,i)=>`<div ${r[0]?`id="${r[0]}"`:''} style="position:absolute;left:0;top:${i*36}px;width:580px;height:34px;border-radius:6px;font-size:13px;padding:8px 10px 0 40px">${r[1]}<span style="position:absolute;left:12px;top:7px;width:18px;height:20px;border-radius:${i==0?6:3}px;background:${r[2]}"></span><span style="position:absolute;left:300px;top:8px;color:#7C86A0">${r[3]}</span></div>`).join('')}

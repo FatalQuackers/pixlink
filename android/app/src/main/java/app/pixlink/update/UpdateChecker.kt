@@ -20,7 +20,7 @@ object UpdateChecker {
     data class Update(val version: String, val apkUrl: String, val pageUrl: String)
 
     private val BUILD_MARKER = Regex("<!--\\s*build:(\\d+)\\s*-->")
-    private const val LATEST = "https://api.github.com/repos/FatalQuackers/pixlink/releases/latest"
+    private const val LATEST = "https://api.github.com/repos/FatalQuackers/tethr-link/releases/latest"
 
     private val _available = MutableStateFlow<Update?>(null)
     /** The newer release, if one was found. The home screen shows a banner for it. */
@@ -43,7 +43,7 @@ object UpdateChecker {
     suspend fun check(): Update? = withContext(Dispatchers.IO) {
         val json = if (early) {
             // The newest release of any kind (pre-releases included) that has an APK attached.
-            Codec.parseToJsonElement(get("https://api.github.com/repos/FatalQuackers/pixlink/releases?per_page=10")).jsonArray
+            Codec.parseToJsonElement(get("https://api.github.com/repos/FatalQuackers/tethr-link/releases?per_page=10")).jsonArray
                 .map { it.jsonObject }
                 .filter { it["draft"]?.jsonPrimitive?.content != "true" }
                 .filter { r -> r["assets"]?.jsonArray?.any { it.jsonObject["name"]?.jsonPrimitive?.content?.endsWith(".apk") == true } == true }

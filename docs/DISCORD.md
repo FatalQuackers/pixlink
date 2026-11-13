@@ -43,8 +43,8 @@ Everything needed to set up the official server once someone is at a PC signed i
 > **Welcome to Tethr Link** 👋
 > Tethr Link puts your phone on your Windows PC: notifications, texts, calls, photos, files, your screen and more. It's free and open source, for any Android phone (13+) and iPhone.
 >
-> **Get it:** https://fatalquackers.github.io/pixlink
-> **Watch the reveal:** https://fatalquackers.github.io/pixlink/videos.html
+> **Get it:** https://fatalquackers.github.io/tethr-link
+> **Watch the reveal:** https://fatalquackers.github.io/tethr-link/videos.html
 >
 > Need help? Ask in #setup-help. Found a bug? #bug-reports.
 
@@ -62,11 +62,11 @@ Everything needed to set up the official server once someone is at a PC signed i
 > Store rules mean a few features might change on the store versions (we'll keep everything we can and tell you exactly what's different).
 >
 > **Help us get there:** invite a friend who uses a phone and a PC → (invite link)
-> Watch the reveal: https://fatalquackers.github.io/pixlink/videos.html
+> Watch the reveal: https://fatalquackers.github.io/tethr-link/videos.html
 
 ### #announcements (first post)
 > **Pixlink is now Tethr Link** 🎉
 > New name, and it's not just for Pixels anymore: every Android 13+ phone and iPhones are supported.
 > Also new: live Messages updates, app icons everywhere, Find my PC, Lock PC, a home screen widget, themes, and an option to hide the always-on notification.
-> Download: https://github.com/FatalQuackers/pixlink/releases/latest
+> Download: https://github.com/FatalQuackers/tethr-link/releases/latest
 > (reveal trailer attached)

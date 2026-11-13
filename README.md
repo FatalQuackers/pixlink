@@ -1,14 +1,14 @@
 # Tethr Link 
 
-Website: https://fatalquackers.github.io/pixlink/ 
+Website: https://fatalquackers.github.io/tethr-link/ 
 
 **Your phone, on your Windows PC.** Tethr Link (formerly Pixlink) is a free, open-source companion app that links any Android phone, or an iPhone, to a Windows PC: notifications and texts, screen mirroring with control, one-click hotspot, calls through your PC, your photo gallery and your phone's files.
 
 > Tethr Link is an independent open-source project. It is not made by, affiliated with, or endorsed by Google, Apple or Microsoft. Android and Pixel are trademarks of Google LLC; iPhone is a trademark of Apple Inc.
 
-[![Watch the Tethr Link trailer](website/videos/trailer-16x9.jpg)](https://fatalquackers.github.io/pixlink/#trailer)
+[![Watch the Tethr Link trailer](website/videos/trailer-16x9.jpg)](https://fatalquackers.github.io/tethr-link/#trailer)
 
-**[Watch the trailer](https://fatalquackers.github.io/pixlink/videos.html)**: the launch trailer, a 29-second hype cut and a setup guide, each in widescreen and vertical.
+**[Watch the trailer](https://fatalquackers.github.io/tethr-link/videos.html)**: the launch trailer, a 29-second hype cut and a setup guide, each in widescreen and vertical.
 
 ## Features
 
@@ -43,13 +43,13 @@ Website: https://fatalquackers.github.io/pixlink/
 
 Tethr Link isn't on Google Play yet, so for now you install it from this page. It takes about 5 minutes.
 
-**Prefer to watch?** [Watch the setup guide](https://fatalquackers.github.io/pixlink/videos.html#setup).
+**Prefer to watch?** [Watch the setup guide](https://fatalquackers.github.io/tethr-link/videos.html#setup).
 
 **You need:** an Android phone on Android 13 or newer, a Windows 10 or 11 PC, and both on the same Wi-Fi.
 
 ### 1. Install on your phone
 
-1. On your phone, open the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest) and tap **Pixlink-android.apk** to download it.
+1. On your phone, open the [latest release](https://github.com/FatalQuackers/tethr-link/releases/latest) and tap **TethrLink-android.apk** to download it.
 2. Open the downloaded file. If your phone asks, allow your browser to **install unknown apps**.
 3. Tap **Install**. If Google Play Protect warns you, tap **More details → Install anyway** (this happens because the app isn't on the Play Store yet).
 4. Open Tethr Link and go through **Setup**: Notification access, Calls/contacts/photos, Texts and Screen control. Tethr Link shows where to find it in each list.
@@ -60,8 +60,8 @@ Tethr Link isn't on Google Play yet, so for now you install it from this page. I
 
 Pick one:
 
-- **Installer (recommended):** download **Pixlink-Setup-x64.exe** from the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest) and run it. No admin needed. It adds Start menu and desktop shortcuts, can start Tethr Link when you sign in, and shows up in Windows' Installed apps so you can uninstall it.
-- **Portable:** download **Pixlink-windows-x64-portable.zip**, right-click → **Extract All** anywhere (even a USB stick) and run **Pixlink.exe**. Its settings stay in a `Data` folder next to it, and it leaves nothing behind on the PC.
+- **Installer (recommended):** download **TethrLink-Setup-x64.exe** from the [latest release](https://github.com/FatalQuackers/tethr-link/releases/latest) and run it. No admin needed. It adds Start menu and desktop shortcuts, can start Tethr Link when you sign in, and shows up in Windows' Installed apps so you can uninstall it.
+- **Portable:** download **TethrLink-windows-x64-portable.zip**, right-click → **Extract All** anywhere (even a USB stick) and run **Pixlink.exe**. Its settings stay in a `Data` folder next to it, and it leaves nothing behind on the PC.
 
 Then:
 
@@ -81,7 +81,7 @@ Tethr Link for iPhone does notifications and call alerts (over Bluetooth, like P
 
 **Not possible on iPhone** (Apple rules): replying to messages, text history, call audio on the PC, controlling the screen and switching the hotspot. iOS also pauses apps you're not using: notifications and battery keep coming over Bluetooth, but photos, files and clipboard need Tethr Link open on the iPhone.
 
-1. Download `Pixlink-iOS.ipa` from the [latest release](https://github.com/FatalQuackers/pixlink/releases/latest).
+1. Download `TethrLink-iOS.ipa` from the [latest release](https://github.com/FatalQuackers/tethr-link/releases/latest).
 2. Install it with [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io) on your PC. They sign it with your own Apple ID (free accounts need a refresh every 7 days).
 3. On your iPhone, go to Settings → General → VPN & Device Management and trust your Apple ID. On iOS 16+, also turn on Settings → Privacy & Security → Developer Mode.
 4. Open Tethr Link on the iPhone and scan the QR code on your PC. The 5-digit code is Android-only.
@@ -98,7 +98,7 @@ You can test the Android app without installing it on your phone, using Google's
 
 1. Install [Android Studio](https://developer.android.com/studio) and open it.
 2. Click **More Actions → Virtual Device Manager → Create device**. Pick **Pixel 8**, then a system image with API 35, and click **Finish**. Press ▶ to start it.
-3. Drag **Pixlink-android.apk** onto the emulator window to install it.
+3. Drag **TethrLink-android.apk** onto the emulator window to install it.
 4. Open Tethr Link on your PC and click **Copy link** under the QR code.
 5. In the emulator, open Tethr Link, tap **Scan QR code**, then tap **Paste pairing link**. The emulator shares your PC's clipboard.
 
@@ -112,7 +112,7 @@ The emulator has no real phone calls or photos, but pairing, notifications and s
 
 ### Troubleshooting
 
-- **Tethr Link doesn't open on Windows:** download the newest release. If it still won't start, it shows an error and saves details to `%LOCALAPPDATA%\Pixlink\crash.log`; please attach that file to a [GitHub issue](https://github.com/FatalQuackers/pixlink/issues).
+- **Tethr Link doesn't open on Windows:** download the newest release. If it still won't start, it shows an error and saves details to `%LOCALAPPDATA%\Pixlink\crash.log`; please attach that file to a [GitHub issue](https://github.com/FatalQuackers/tethr-link/issues).
 - **It connects, then drops straight away:** update to the newest release on both phone and PC. The phone's home screen shows the reason for the last disconnect; please include it if you report a problem.
 - **The phone can't find the PC:** check both are on the same Wi-Fi (not a guest network), and that Tethr Link is allowed in Windows Firewall on private networks.
 - **The QR code expired:** click **Get a new code** on your PC.
@@ -167,7 +167,7 @@ Every push to `main` is built automatically by GitHub Actions and published as a
 - **Rebuild a version:** Actions → Build → **Run workflow**, enter an existing tag (for example `v1.0.3`). It moves that version to the latest code and replaces its files, without a new version number.
 
 
-Download the latest version from [Releases](https://github.com/FatalQuackers/pixlink/releases/latest). Both apps check for updates by themselves.
+Download the latest version from [Releases](https://github.com/FatalQuackers/tethr-link/releases/latest). Both apps check for updates by themselves.
 
 To publish a new version: create a release on GitHub with a tag like `v1.0.1` (or push that tag). GitHub Actions builds both apps and attaches them to the release.
 

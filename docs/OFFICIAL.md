@@ -17,7 +17,7 @@ Only the account owner can do this, because it needs your ID and a payment.
 1. **Create an account** at the Android Developer Console (search "Android Developer Console developer verification").
    - **Full distribution account:** a one-off **US$25** fee, identity verification (government ID), and a verified contact email and phone number. The fee is the same as Google Play's. This is the one Tethr Link needs, because anyone can download it.
    - **Limited distribution account:** free, no ID, but only for up to 20 devices. Fine for testing on your own phones; not for public releases.
-2. **Verify your website.** Google asks for an official site, verified with Google Search Console. Use `https://fatalquackers.github.io/pixlink`.
+2. **Verify your website.** Google asks for an official site, verified with Google Search Console. Use `https://fatalquackers.github.io/tethr-link`.
 3. **Register the package name** `app.pixlink` on the **Packages** page.
 4. **Prove you own the signing key.** Google gives you a small file or token to include in a signed APK. Sign it with the same key the releases use: it's the `pixlink-release.jks` you saved (the one in the `ANDROID_KEYSTORE_BASE64` GitHub secret), alias `pixlink`. Upload that APK.
    - Keep that keystore safe. If it's lost, you can't register or update the app under the same name.
@@ -25,7 +25,7 @@ Only the account owner can do this, because it needs your ID and a payment.
 
 ## Also worth doing
 
-- **Report Play Protect's warning as a false positive.** Google has an "appeal a Play Protect warning" form for developers. Submit the latest `Pixlink-android.apk` with a short note that it's the open-source app at github.com/FatalQuackers/pixlink. Repeat if a new version gets flagged.
+- **Report Play Protect's warning as a false positive.** Google has an "appeal a Play Protect warning" form for developers. Submit the latest `TethrLink-android.apk` with a short note that it's the open-source app at github.com/FatalQuackers/tethr-link. Repeat if a new version gets flagged.
 - **Explain the permissions.** Tethr Link asks for notification access, accessibility (Screen control) and SMS, which scanners treat as high-risk. The app only uses them for what's described on each screen, and the source is public, which helps the appeal.
 - **Offer an app store install later.** Being listed in an open-source store (for example IzzyOnDroid, used through the Droid-ify or Neo Store apps) means updates come through a store installer. It doesn't replace developer verification, but it makes restricted settings less likely.
 
@@ -35,4 +35,4 @@ People can always install it themselves:
 
 1. Play Protect dialog: **More details → Install anyway**.
 2. If "Install anyway" is missing: Play Store → profile picture → **Play Protect** → ⚙ → turn off **Scan apps with Play Protect**, install, then turn it back on.
-3. If the phone shows "unverified developer": Android's one-time "advanced flow" (a 24-hour wait, then re-authenticate), or install from a PC with `adb install Pixlink-android.apk`.
+3. If the phone shows "unverified developer": Android's one-time "advanced flow" (a 24-hour wait, then re-authenticate), or install from a PC with `adb install TethrLink-android.apk`.

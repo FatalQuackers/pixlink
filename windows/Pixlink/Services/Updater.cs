@@ -16,7 +16,7 @@ public static class Updater
     /// <summary>The steps the updating screen shows.</summary>
     public enum Stage { Downloading, Installing, Restarting }
 
-    private const string Latest = "https://api.github.com/repos/FatalQuackers/pixlink/releases/latest";
+    private const string Latest = "https://api.github.com/repos/FatalQuackers/tethr-link/releases/latest";
     private static readonly HttpClient Http = CreateClient();
 
     private static HttpClient CreateClient()
@@ -51,7 +51,7 @@ public static class Updater
         JsonObject json;
         if (Early)
         {
-            var all = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/pixlink/releases?per_page=10"))!.AsArray()
+            var all = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/tethr-link/releases?per_page=10"))!.AsArray()
                 .Select(r => r!.AsObject())
                 .Where(r => r["draft"]?.GetValue<bool>() != true)
                 .Where(r => r["assets"]?.AsArray().Any(a => a!["name"]?.GetValue<string>().EndsWith("windows-x64.zip") == true) == true)
@@ -80,7 +80,7 @@ public static class Updater
     /// <summary>Recent releases with their notes, newest first.</summary>
     public static async Task<List<ReleaseInfo>> RecentReleasesAsync()
     {
-        var arr = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/pixlink/releases?per_page=8"))!.AsArray();
+        var arr = JsonNode.Parse(await Http.GetStringAsync("https://api.github.com/repos/FatalQuackers/tethr-link/releases?per_page=8"))!.AsArray();
         var list = new List<ReleaseInfo>();
         foreach (var r in arr.Select(x => x!.AsObject()))
         {

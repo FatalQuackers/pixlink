@@ -110,7 +110,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-windows-setup
-          path: windows/installer/Pixlink-Setup-x64.exe
+          path: windows/installer/TethrLink-Setup-x64.exe
 
   ios:
     # Pixlink for iPhone, as an .ipa to install with AltStore or Sideloadly (they sign it with
@@ -134,17 +134,17 @@ jobs:
           xcodebuild -project Pixlink.xcodeproj -target Pixlink -configuration Release -sdk iphoneos \
             SYMROOT="$PWD/build" MARKETING_VERSION="$V" CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
-      - name: Package Pixlink-iOS.ipa
+      - name: Package TethrLink-iOS.ipa
         run: |
           APP=build/Release-iphoneos/Pixlink.app
           codesign -f -s - --entitlements Broadcast/Broadcast.entitlements "$APP/PlugIns/PixlinkBroadcast.appex"
           codesign -f -s - --entitlements Pixlink/Pixlink.entitlements "$APP"
           mkdir -p Payload && cp -R "$APP" Payload/
-          zip -qry Pixlink-iOS.ipa Payload
+          zip -qry TethrLink-iOS.ipa Payload
       - uses: actions/upload-artifact@v4
         with:
           name: pixlink-ios
-          path: ios/Pixlink-iOS.ipa
+          path: ios/TethrLink-iOS.ipa
 
   release:
     # Only version tags (or a rebuild of one) become releases. The iPhone app is attached when it
@@ -176,13 +176,13 @@ jobs:
           printf '\n<!-- build:%s -->\n' "${{ github.run_number }}" >> release-notes.md
       - name: Package files
         run: |
-          cp dist/pixlink-android/*.apk Pixlink-android.apk
-          (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64.zip .)
-          cp dist/pixlink-windows-setup/Pixlink-Setup-x64.exe Pixlink-Setup-x64.exe
-          if [ -f dist/pixlink-ios/Pixlink-iOS.ipa ]; then cp dist/pixlink-ios/Pixlink-iOS.ipa Pixlink-iOS.ipa; fi
+          cp dist/pixlink-android/*.apk TethrLink-android.apk
+          (cd dist/pixlink-windows-x64 && zip -qr ../../TethrLink-windows-x64.zip .)
+          cp dist/pixlink-windows-setup/TethrLink-Setup-x64.exe TethrLink-Setup-x64.exe
+          if [ -f dist/pixlink-ios/TethrLink-iOS.ipa ]; then cp dist/pixlink-ios/TethrLink-iOS.ipa TethrLink-iOS.ipa; fi
           # Portable: same app plus a marker that keeps settings in a Data folder next to Pixlink.exe.
           printf 'Tethr Link portable\r\n\r\nTethr Link keeps its settings in the Data folder next to this file, so you can run it from a USB stick.\r\nDelete this file to use the normal location (%%LOCALAPPDATA%%\\Pixlink) instead.\r\n' > dist/pixlink-windows-x64/portable.txt
-          (cd dist/pixlink-windows-x64 && zip -qr ../../Pixlink-windows-x64-portable.zip .)
+          (cd dist/pixlink-windows-x64 && zip -qr ../../TethrLink-windows-x64-portable.zip .)
       # Rebuild of an existing version: replace its files (re-creating the release if it was deleted).
       - if: inputs.tag
         uses: softprops/action-gh-release@v2
@@ -194,11 +194,11 @@ jobs:
           prerelease: false
           body_path: release-notes.md
           files: |
-            Pixlink-android.apk
-            Pixlink-Setup-x64.exe
-            Pixlink-windows-x64-portable.zip
-            Pixlink-windows-x64.zip
-            Pixlink-iOS.ipa
+            TethrLink-android.apk
+            TethrLink-Setup-x64.exe
+            TethrLink-windows-x64-portable.zip
+            TethrLink-windows-x64.zip
+            TethrLink-iOS.ipa
 
 
       - if: ${{ !inputs.tag }}
@@ -214,20 +214,20 @@ jobs:
           append_body: true
           body: |
             ## Install
-            - **Pixel:** download `Pixlink-android.apk` on your phone and open it.
-            - **Windows (installer):** download `Pixlink-Setup-x64.exe` and run it. No admin needed; it adds Start menu and desktop shortcuts and an uninstaller.
-            - **iPhone:** download `Pixlink-iOS.ipa` and install it with AltStore or Sideloadly (free, signs it with your Apple ID).
-            - **Windows (portable):** download `Pixlink-windows-x64-portable.zip`, extract it anywhere (even a USB stick) and run `Pixlink.exe`. Settings stay in its own folder.
+            - **Pixel:** download `TethrLink-android.apk` on your phone and open it.
+            - **Windows (installer):** download `TethrLink-Setup-x64.exe` and run it. No admin needed; it adds Start menu and desktop shortcuts and an uninstaller.
+            - **iPhone:** download `TethrLink-iOS.ipa` and install it with AltStore or Sideloadly (free, signs it with your Apple ID).
+            - **Windows (portable):** download `TethrLink-windows-x64-portable.zip`, extract it anywhere (even a USB stick) and run `Pixlink.exe`. Settings stay in its own folder.
 
-            Full steps: https://github.com/FatalQuackers/pixlink#how-to-install
+            Full steps: https://github.com/FatalQuackers/tethr-link#how-to-install
 
             Already have Pixlink? Both apps update themselves: look for the update banner.
           files: |
-            Pixlink-android.apk
-            Pixlink-Setup-x64.exe
-            Pixlink-windows-x64-portable.zip
-            Pixlink-windows-x64.zip
-            Pixlink-iOS.ipa
+            TethrLink-android.apk
+            TethrLink-Setup-x64.exe
+            TethrLink-windows-x64-portable.zip
+            TethrLink-windows-x64.zip
+            TethrLink-iOS.ipa
 
   pages:
     # Publishes website/ to GitHub Pages, plus an unlisted test page with the latest builds at
@@ -257,9 +257,9 @@ jobs:
         run: |
           out="website/test/$SLUG"
           mkdir -p "$out"
-          [ -d dist/pixlink-ios ] && cp dist/pixlink-ios/*.ipa "$out/Pixlink-iOS.ipa"
-          [ -d dist/pixlink-windows-setup ] && cp dist/pixlink-windows-setup/*.exe "$out/Pixlink-Setup-x64.exe"
-          [ -d dist/pixlink-android ] && cp dist/pixlink-android/*.apk "$out/Pixlink-android.apk"
+          [ -d dist/pixlink-ios ] && cp dist/pixlink-ios/*.ipa "$out/TethrLink-iOS.ipa"
+          [ -d dist/pixlink-windows-setup ] && cp dist/pixlink-windows-setup/*.exe "$out/TethrLink-Setup-x64.exe"
+          [ -d dist/pixlink-android ] && cp dist/pixlink-android/*.apk "$out/TethrLink-android.apk"
           sed -e "s/{{BUILD}}/${{ github.run_number }}/g" -e "s/{{DATE}}/$(date -u '+%-d %b %Y %H:%M UTC')/g" \
               -e "s/{{COMMIT}}/${GITHUB_SHA::7}/g" .github/test-page.html > "$out/index.html"
       - uses: actions/upload-pages-artifact@v3
