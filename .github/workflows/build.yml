@@ -231,18 +231,16 @@ jobs:
     environment:
       name: github-pages
     continue-on-error: true
+    env:
+      SLUG: ${{ secrets.TEST_PAGE_SLUG }}
     steps:
       - uses: actions/checkout@v4
-      - name: Add the test builds page
-        env:
-          SLUG: ${{ secrets.TEST_PAGE_SLUG }}
+      - name: Download the builds
         if: env.SLUG != ''
         uses: actions/download-artifact@v4
         with:
           path: dist
       - name: Build the test builds page
-        env:
-          SLUG: ${{ secrets.TEST_PAGE_SLUG }}
         if: env.SLUG != ''
         run: |
           out="website/test/$SLUG"
