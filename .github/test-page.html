@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pixlink test build</title>
+<link rel="icon" href="../../icon.png">
+<style>
+  :root { color-scheme: light dark; --blue: #3d7bff; }
+  body { font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; padding: 48px 20px; }
+  main { max-width: 620px; margin: 0 auto; }
+  header { display: flex; gap: 16px; align-items: center; margin-bottom: 8px; }
+  header img { width: 56px; height: 56px; border-radius: 14px; }
+  h1 { font-size: 28px; margin: 0; }
+  .meta { color: GrayText; font-size: 14px; margin: 0 0 32px; }
+  .file { border: 1px solid color-mix(in srgb, CanvasText 15%, transparent); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .file h2 { font-size: 19px; margin: 0 0 6px; }
+  .file p { margin: 0 0 14px; }
+  .file ol { margin: 0 0 14px; padding-left: 20px; }
+  a.dl { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; }
+  .note { font-size: 14px; color: GrayText; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="../../icon.png" alt=""><h1>Pixlink test build</h1></header>
+  <p class="meta">Build {{BUILD}} · {{DATE}} · {{COMMIT}}. This page always has the newest build. Please don't share the link.</p>
+
+  <div class="file">
+    <h2>Windows PC</h2>
+    <p>Run the installer. If Windows SmartScreen warns you, click <b>More info</b>, then <b>Run anyway</b>.</p>
+    <a class="dl" href="Pixlink-Setup-x64.exe" download>Download for Windows</a>
+  </div>
+
+  <div class="file">
+    <h2>iPhone</h2>
+    <ol>
+      <li>Download the file on your PC and install it on your iPhone with <a href="https://sideloadly.io">Sideloadly</a> or <a href="https://altstore.io">AltStore</a>, signing in with your Apple ID.</li>
+      <li>On the iPhone: Settings → General → VPN &amp; Device Management → trust your Apple ID. Then Settings → Privacy &amp; Security → turn on Developer Mode.</li>
+      <li>Open Pixlink, scan the QR code on your PC, then tap <b>Set up notifications</b> and accept the Bluetooth pairing on both.</li>
+    </ol>
+    <a class="dl" href="Pixlink-iOS.ipa" download>Download for iPhone</a>
+  </div>
+
+  <div class="file">
+    <h2>Pixel</h2>
+    <p>Open this page on your Pixel, download the app and open it. If Play Protect warns you, tap <b>More details</b>, then <b>Install anyway</b>.</p>
+    <a class="dl" href="Pixlink-android.apk" download>Download for Pixel</a>
+  </div>
+
+  <p class="note">Found a problem? Tell whoever sent you this link what happened and what you expected.</p>
+</main>
+</body>
+</html>
